@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>a, b, c 를 움직이면 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>a, b, c 를 움직이면</h1>
+  <span class="caption">공통수학1 · 방정식과 부등식 — 계수 하나가 바뀌면 포물선이 어떻게 되는지</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="a">a = <span id="aText">1.00</span></label>
+      <input type="range" id="a" min="-3" max="3" value="1" step="0.05" />
+    </div>
+    <div class="group">
+      <label for="b">b = <span id="bText">0.00</span></label>
+      <input type="range" id="b" min="-6" max="6" value="0" step="0.1" />
+    </div>
+    <div class="group">
+      <label for="c">c = <span id="cText">-2.00</span></label>
+      <input type="range" id="c" min="-6" max="6" value="-2" step="0.1" />
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="vertexForm" checked /> 꼭짓점·축 보기</label>
+      <label class="check"><input type="checkbox" id="showRoots" checked /> 근(x절편) 보기</label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">식</span><span class="val" id="eq">y = x² − 2</span></div>
+        <div><span class="key"><span class="swatch shape"></span>꼭짓점</span><span class="val" id="vertex">(0, −2)</span></div>
+        <div><span class="key">축</span><span class="val" id="axis">x = 0</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>판별식 D = b² − 4ac</span><span class="val" id="disc">8.00</span></div>
+        <div><span class="key">근</span><span class="val" id="roots">−1.41, 1.41</span></div>
+        <div class="rule"><strong id="rule">D &gt; 0 → 서로 다른 두 근</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        <b>a</b> 는 폭과 방향을 정합니다. a 의 부호가 바뀌는 순간 포물선이 뒤집힙니다.
+        |a| 가 커질수록 좁아집니다.<br /><br />
+        <b>b</b> 를 움직이면 꼭짓점이 <em>비스듬히</em> 움직입니다. 축이 x = −b/2a 이기 때문입니다.
+        b 만으로는 위아래로만 움직이지 않는다는 점을 꼭 확인시켜 주세요.<br /><br />
+        <b>c</b> 는 y절편입니다. c 만 바꾸면 모양은 그대로 위아래로만 움직입니다.
+        그러다 곡선이 x축에서 떨어지는 순간 <b>D &lt; 0</b> 이 되어 근이 사라집니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const NAVY = "#201f5e", LIME = "#c3e02f";
+let W = 0, H = 0, S = 40;
+const YR = 6;   // 세로로 보이는 범위 (−YR ~ YR)
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  S = H / (2 * YR);
+}
+const sx = x => W / 2 + x * S;
+const sy = y => H / 2 - y * S;
+const fmt = v => (Math.abs(v) < 5e-3 ? 0 : v).toFixed(2).replace("-", "−");
+
+function line(x1, y1, x2, y2) {
+  ctx.beginPath(); ctx.moveTo(sx(x1), sy(y1)); ctx.lineTo(sx(x2), sy(y2)); ctx.stroke();
+}
+
+function draw() {
+  const a = +$("a").value, b = +$("b").value, c = +$("c").value;
+  const xL = -W / (2 * S), xR = W / (2 * S);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 모눈
+  ctx.strokeStyle = "rgba(0,0,0,0.07)"; ctx.lineWidth = 1;
+  for (let x = Math.ceil(xL); x <= xR; x++) line(x, -YR, x, YR);
+  for (let y = -Math.floor(YR); y <= YR; y++) line(xL, y, xR, y);
+
+  // 축
+  ctx.strokeStyle = "rgba(0,0,0,0.5)";
+  line(xL, 0, xR, 0); line(0, -YR, 0, YR);
+
+  const f = x => a * x * x + b * x + c;
+  const D = b * b - 4 * a * c;
+
+  // a = 0 이면 직선이 된다
+  if (Math.abs(a) < 1e-6) {
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+    line(xL, f(xL), xR, f(xR));
+  } else {
+    const vx = -b / (2 * a), vy = f(vx);
+
+    if ($("vertexForm").checked) {
+      ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1.4;
+      ctx.setLineDash([6, 4]);
+      line(vx, -YR, vx, YR);
+      ctx.setLineDash([]);
+    }
+
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    for (let px = 0; px <= W; px += 2) {
+      const x = (px - W / 2) / S, y = f(x);
+      px === 0 ? ctx.moveTo(sx(x), sy(y)) : ctx.lineTo(sx(x), sy(y));
+    }
+    ctx.stroke();
+
+    if ($("vertexForm").checked) {
+      ctx.fillStyle = NAVY;
+      ctx.beginPath(); ctx.arc(sx(vx), sy(vy), 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#000";
+      ctx.font = "500 15px Pretendard Variable, sans-serif";
+      ctx.fillText(`(${fmt(vx)}, ${fmt(vy)})`, sx(vx) + 12, sy(vy) + (a > 0 ? 22 : -12));
+    }
+
+    if ($("showRoots").checked && D >= 0) {
+      const r1 = (-b - Math.sqrt(D)) / (2 * a), r2 = (-b + Math.sqrt(D)) / (2 * a);
+      for (const r of D === 0 ? [r1] : [r1, r2]) {
+        ctx.fillStyle = LIME;
+        ctx.beginPath(); ctx.arc(sx(r), sy(0), 7, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6; ctx.stroke();
+      }
+    }
+  }
+
+  // y절편
+  ctx.fillStyle = "#000";
+  ctx.beginPath(); ctx.arc(sx(0), sy(c), 4, 0, Math.PI * 2); ctx.fill();
+
+  // ---- 읽는 값 ----
+  const sign = (v, first) => (v < 0 ? " − " : first ? "" : " + ") + Math.abs(v).toFixed(2).replace(/\.00$/, "");
+  let eq = "y = ";
+  eq += (a < 0 ? "−" : "") + (Math.abs(a) === 1 ? "" : Math.abs(a).toFixed(2).replace(/\.00$/, "")) + "x²";
+  if (Math.abs(b) > 5e-3) eq += sign(b) + "x";
+  if (Math.abs(c) > 5e-3) eq += sign(c);
+
+  $("aText").textContent = a.toFixed(2);
+  $("bText").textContent = b.toFixed(2);
+  $("cText").textContent = c.toFixed(2);
+  $("eq").textContent = eq;
+  $("disc").textContent = fmt(D);
+
+  if (Math.abs(a) < 1e-6) {
+    $("vertex").textContent = "—";
+    $("axis").textContent = "—";
+    $("roots").textContent = Math.abs(b) < 1e-6 ? "—" : fmt(-c / b);
+    $("rule").textContent = "a = 0 → 이차함수가 아님";
+  } else {
+    const vx = -b / (2 * a), vy = f(vx);
+    $("vertex").textContent = `(${fmt(vx)}, ${fmt(vy)})`;
+    $("axis").textContent = `x = ${fmt(vx)}`;
+    if (D > 5e-3) {
+      $("roots").textContent =
+        `${fmt((-b - Math.sqrt(D)) / (2 * a))}, ${fmt((-b + Math.sqrt(D)) / (2 * a))}`;
+      $("rule").textContent = "D > 0 → 서로 다른 두 근";
+    } else if (D > -5e-3) {
+      $("roots").textContent = fmt(-b / (2 * a)) + " (중근)";
+      $("rule").textContent = "D = 0 → 중근 · x축에 접함";
+    } else {
+      $("roots").textContent = "없음 (허근)";
+      $("rule").textContent = "D < 0 → 실근 없음 · x축과 안 만남";
+    }
+  }
+}
+
+for (const id of ["a", "b", "c", "vertexForm", "showRoots"]) {
+  $(id).addEventListener("input", draw);
+  $(id).addEventListener("change", draw);
+}
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

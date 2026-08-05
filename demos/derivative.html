@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>미분계수는 접선의 기울기 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>미분계수는 접선의 기울기</h1>
+  <span class="caption">미적분Ⅰ · 미분 — 간격을 줄이면 할선이 접선이 됩니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="fn">함수</label>
+      <select id="fn">
+        <option value="sq">f(x) = x²</option>
+        <option value="cub">f(x) = x³ − 3x</option>
+        <option value="sin">f(x) = sin x</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="a">점 a = <span id="aText">1.00</span></label>
+      <input type="range" id="a" min="-3" max="3" value="1" step="0.01" />
+    </div>
+
+    <div class="group">
+      <label for="h">간격 h = <span id="hText">1.50</span></label>
+      <input type="range" id="h" min="0.02" max="2.5" value="1.5" step="0.01" />
+      <label class="check" style="margin-top: 12px;">
+        <input type="checkbox" id="run" /> h 를 0 으로 보내기
+      </label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">Δx = h</span><span class="val" id="dx">1.50</span></div>
+        <div><span class="key">Δy = f(a+h) − f(a)</span><span class="val" id="dy">0.00</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>평균변화율 Δy/Δx</span><span class="val" id="avg">0.00</span></div>
+        <div><span class="key"><span class="swatch shape"></span>미분계수 f′(a)</span><span class="val" id="der">0.00</span></div>
+        <div><span class="key">두 값의 차</span><span class="val" id="gap">0.00</span></div>
+        <div class="rule"><strong>f′(a) = lim<sub>h→0</sub> Δy/Δx</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        <b>평균변화율</b>은 두 점 A, B 를 잇는 <em>할선</em>의 기울기입니다.
+        h 를 줄이면 B 가 A 로 다가오고, 할선이 점점 <em>접선</em>에 붙습니다.<br /><br />
+        h 가 0 이 되는 순간을 직접 대입할 수는 없습니다(0으로 나누게 되니까).
+        그래서 “다가가는 값”, 즉 극한으로 정의한 것이 미분계수입니다.<br /><br />
+        오른쪽 <b>두 값의 차</b>가 h 와 함께 0으로 줄어드는 것을 확인해 보세요.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const FN = {
+  sq:  { f: x => x * x,           d: x => 2 * x },
+  cub: { f: x => x ** 3 - 3 * x,  d: x => 3 * x * x - 3 },
+  sin: { f: Math.sin,             d: Math.cos }
+};
+
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+let W = 0, H = 0, S = 1, YR = 4;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+// 두 점 A, B 가 항상 화면 안에 들어오도록 배율을 정한다 (가로·세로 같은 배율)
+function fit(a, h, fa, fb) {
+  const needY = Math.max(3.2, Math.abs(fa) + 0.9, Math.abs(fb) + 0.9);
+  const needX = Math.max(3.2, Math.abs(a) + 1.2, Math.abs(a + h) + 1.2);
+  S = Math.min(H / (2 * needY), W / (2 * needX));
+  YR = H / (2 * S);
+}
+const sx = x => W / 2 + x * S;
+const sy = y => H / 2 - y * S;
+
+function line(x1, y1, x2, y2) {
+  ctx.beginPath(); ctx.moveTo(sx(x1), sy(y1)); ctx.lineTo(sx(x2), sy(y2)); ctx.stroke();
+}
+function dot(x, y, r, color) {
+  ctx.beginPath(); ctx.arc(sx(x), sy(y), r, 0, Math.PI * 2);
+  ctx.fillStyle = color; ctx.fill();
+}
+
+function draw() {
+  const fn = FN[$("fn").value];
+  const a = +$("a").value, h = +$("h").value;
+  const fa = fn.f(a), fb = fn.f(a + h);
+  const avg = (fb - fa) / h, der = fn.d(a);
+
+  fit(a, h, fa, fb);
+  const xL = -W / (2 * S), xR = W / (2 * S);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 모눈
+  ctx.strokeStyle = "rgba(0,0,0,0.07)"; ctx.lineWidth = 1;
+  for (let x = Math.ceil(xL); x <= xR; x++) line(x, -YR, x, YR);
+  for (let y = -Math.floor(YR); y <= YR; y++) line(xL, y, xR, y);
+
+  // 축
+  ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  line(xL, 0, xR, 0); line(0, -YR, 0, YR);
+
+  // 할선 (라임) — 곡선 아래에 깔아서 곡선을 가리지 않게
+  ctx.strokeStyle = "#c3e02f"; ctx.lineWidth = 4;
+  line(xL, fa + avg * (xL - a), xR, fa + avg * (xR - a));
+
+  // 접선 (검정 점선)
+  ctx.strokeStyle = "rgba(0,0,0,0.7)"; ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  line(xL, fa + der * (xL - a), xR, fa + der * (xR - a));
+  ctx.setLineDash([]);
+
+  // 곡선
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let px = 0; px <= W; px += 2) {
+    const x = (px - W / 2) / S, y = fn.f(x);
+    if (!isFinite(y)) continue;
+    px === 0 ? ctx.moveTo(sx(x), sy(y)) : ctx.lineTo(sx(x), sy(y));
+  }
+  ctx.stroke();
+
+  // Δx, Δy 삼각형
+  ctx.strokeStyle = "rgba(0,0,0,0.4)"; ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  line(a, fa, a + h, fa); line(a + h, fa, a + h, fb);
+  ctx.setLineDash([]);
+
+  dot(a, fa, 6, "#201f5e");
+  dot(a + h, fb, 6, "#000");
+
+  // 이름표
+  ctx.fillStyle = "#000";
+  ctx.font = "500 15px Pretendard Variable, sans-serif";
+  ctx.fillText("A", sx(a) + 10, sy(fa) - 10);
+  ctx.fillText("B", sx(a + h) + 10, sy(fb) - 10);
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.fillText("Δx", (sx(a) + sx(a + h)) / 2 - 8, sy(fa) + 20);
+  ctx.fillText("Δy", sx(a + h) + 8, (sy(fa) + sy(fb)) / 2);
+
+  $("aText").textContent = a.toFixed(2);
+  $("hText").textContent = h.toFixed(2);
+  $("dx").textContent = h.toFixed(2);
+  $("dy").textContent = (fb - fa).toFixed(3);
+  $("avg").textContent = avg.toFixed(3);
+  $("der").textContent = der.toFixed(3);
+  $("gap").textContent = Math.abs(avg - der).toFixed(3);
+}
+
+for (const id of ["fn", "a", "h"]) $(id).addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+
+// h → 0 애니메이션 : 매 프레임 조금씩 줄이고, 다 줄면 다시 처음으로
+(function loop() {
+  if ($("run").checked) {
+    const el = $("h");
+    let h = +el.value * 0.975;
+    if (h < 0.021) h = 2.5;
+    el.value = h;
+    draw();
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

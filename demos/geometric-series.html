@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>무한등비급수 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>무한등비급수</h1>
+  <span class="caption">미적분Ⅱ · 수열의 극한 — 무한히 더하는데 값이 정해집니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="r">공비 r = <span id="rText">0.50</span></label>
+      <input type="range" id="r" min="-0.95" max="1.15" value="0.5" step="0.01" />
+    </div>
+    <div class="group">
+      <label for="n">항의 개수 n = <span id="nText">6</span></label>
+      <input type="range" id="n" min="1" max="40" value="6" step="1" />
+      <label class="check" style="margin-top: 12px;">
+        <input type="checkbox" id="run" /> 항을 하나씩 더하기
+      </label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">첫째항 a</span><span class="val">1</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>부분합 S<sub>n</sub></span><span class="val" id="sn">1.9688</span></div>
+        <div><span class="key"><span class="swatch shape"></span>극한 a / (1 − r)</span><span class="val" id="lim">2.0000</span></div>
+        <div><span class="key">마지막 항 ar<sup>n−1</sup></span><span class="val" id="last">0.0313</span></div>
+        <div class="rule"><strong id="rule">|r| &lt; 1 → 수렴</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        위쪽 띠는 각 항을 <b>순서대로 이어 붙인 것</b>입니다. 항을 아무리 더해도 띠 전체가
+        점선(극한값)을 넘지 못하고 다가가기만 합니다.<br /><br />
+        아래는 부분합 S<sub>n</sub> 을 점으로 찍은 것입니다. 점들이 한 높이로 모이는 게 <em>수렴</em>입니다.<br /><br />
+        r 을 1 보다 크게 하거나 −1 보다 작게 해 보세요. 항이 줄어들지 않아 합이 한 값으로 모이지
+        않습니다. <b>|r| &lt; 1</b> 이라는 조건이 왜 필요한지가 한 번에 보입니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#d9f26e", NAVY = "#201f5e";
+let W = 0, H = 0;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function draw() {
+  const r = +$("r").value, n = +$("n").value;
+  const conv = Math.abs(r) < 1;
+  const lim = conv ? 1 / (1 - r) : NaN;
+
+  // 부분합 목록
+  const S = [];
+  let s = 0, term = 1;
+  for (let k = 0; k < n; k++) { s += term; S.push(s); term *= r; }
+  const Sn = S[S.length - 1];
+
+  // 가로 배율 : 극한값(또는 최대 부분합)이 화면에 들어오게
+  const maxV = Math.max(2, conv ? Math.abs(lim) * 1.25 : Math.max(...S.map(Math.abs)) * 1.15);
+  const pad = { l: 70, r: 60, t: 60, b: 60 };
+  const X = v => pad.l + ((v + (conv && lim < 0 ? maxV : 0)) / maxV) * (W - pad.l - pad.r);
+  const zero = X(0);
+
+  ctx.clearRect(0, 0, W, H);
+
+  const bandY = H * 0.26, bandH = 44;
+
+  // 극한선
+  if (conv) {
+    ctx.strokeStyle = NAVY; ctx.lineWidth = 2;
+    ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.moveTo(X(lim), bandY - 34); ctx.lineTo(X(lim), H - pad.b + 10); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = NAVY;
+    ctx.font = "500 15px Pretendard Variable, sans-serif";
+    ctx.fillText("a / (1 − r) = " + lim.toFixed(3), X(lim) + 10, bandY - 40);
+  }
+
+  // ① 항을 이어 붙인 띠
+  let acc = 0;
+  term = 1;
+  for (let k = 0; k < n; k++) {
+    const x0 = X(acc), x1 = X(acc + term);
+    ctx.fillStyle = k % 2 ? "#c3e02f" : LIME;
+    ctx.fillRect(Math.min(x0, x1), bandY, Math.abs(x1 - x0), bandH);
+    ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 1;
+    ctx.strokeRect(Math.min(x0, x1), bandY, Math.abs(x1 - x0), bandH);
+    acc += term; term *= r;
+  }
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.font = "400 14px JetBrains Mono, monospace";
+  ctx.fillText("a + ar + ar² + …", pad.l, bandY - 14);
+
+  // 축
+  ctx.strokeStyle = "rgba(0,0,0,0.45)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l - 20, bandY + bandH + 22); ctx.lineTo(W - pad.r, bandY + bandH + 22); ctx.stroke();
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillText("0", zero - 4, bandY + bandH + 42);
+
+  // ② 부분합 점 찍기
+  const gTop = H * 0.55, gBot = H - pad.b;
+  ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  ctx.beginPath(); ctx.moveTo(pad.l - 20, gBot); ctx.lineTo(W - pad.r, gBot); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l - 20, gTop - 10); ctx.lineTo(pad.l - 20, gBot); ctx.stroke();
+
+  const gy = i => gBot - ((i + 1) / Math.max(n, 8)) * (gBot - gTop);
+  S.forEach((v, i) => {
+    ctx.strokeStyle = "rgba(0,0,0,0.18)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(zero, gy(i)); ctx.lineTo(X(v), gy(i)); ctx.stroke();
+    ctx.fillStyle = i === n - 1 ? NAVY : "rgba(0,0,0,0.45)";
+    ctx.beginPath(); ctx.arc(X(v), gy(i), i === n - 1 ? 6 : 3.5, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.font = "400 14px JetBrains Mono, monospace";
+  ctx.fillText("S1, S2, S3, …", pad.l, gTop - 18);
+
+  $("rText").textContent = r.toFixed(2);
+  $("nText").textContent = n;
+  $("sn").textContent = Sn.toFixed(4);
+  $("lim").textContent = conv ? lim.toFixed(4) : "없음";
+  $("last").textContent = Math.pow(r, n - 1).toFixed(4);
+  $("rule").textContent = conv
+    ? "|r| < 1 → 수렴한다"
+    : Math.abs(r - 1) < 1e-9 ? "r = 1 → 계속 커진다 (발산)" : "|r| ≥ 1 → 발산한다";
+}
+
+for (const id of ["r", "n"]) $(id).addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+
+let acc2 = 0;
+(function loop() {
+  if ($("run").checked) {
+    acc2 += 0.03;
+    if (acc2 >= 1) {
+      acc2 = 0;
+      const el = $("n");
+      el.value = +el.value >= 40 ? 1 : +el.value + 1;
+      draw();
+    }
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

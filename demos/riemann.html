@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>구분구적법과 정적분 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>구분구적법과 정적분</h1>
+  <span class="caption">미적분Ⅰ · 적분 — 직사각형을 잘게 쪼갤수록 넓이가 한 값으로 모입니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="fn">함수와 구간</label>
+      <select id="fn">
+        <option value="sq">f(x) = x² · [0, 2]</option>
+        <option value="cub">f(x) = x³ · [0, 2]</option>
+        <option value="sin">f(x) = sin x · [0, π]</option>
+        <option value="sqrt">f(x) = √x · [0, 4]</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="n">직사각형 개수 n = <span id="nText">6</span></label>
+      <input type="range" id="n" min="1" max="120" value="6" step="1" />
+      <label class="check" style="margin-top: 12px;">
+        <input type="checkbox" id="run" /> n 을 자동으로 늘리기
+      </label>
+    </div>
+
+    <div class="group">
+      <label for="mode">직사각형의 높이</label>
+      <select id="mode">
+        <option value="left">왼쪽 끝 값</option>
+        <option value="right">오른쪽 끝 값</option>
+        <option value="mid">가운데 값</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">밑변 Δx</span><span class="val" id="dx">0.33</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>직사각형 넓이의 합</span><span class="val" id="sum">0.00</span></div>
+        <div><span class="key"><span class="swatch shape"></span>정적분의 값</span><span class="val" id="exact">0.00</span></div>
+        <div><span class="key">오차</span><span class="val" id="err">0.00</span></div>
+        <div class="rule"><strong>lim<sub>n→∞</sub> Σ f(x<sub>k</sub>)Δx = ∫ f(x)dx</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        곡선 아래의 넓이는 곧바로 구할 수 없으니, 구할 줄 아는 도형(직사각형)으로 <em>근사</em>합니다.<br /><br />
+        n 이 작을 때는 왼쪽 끝을 쓰느냐 오른쪽 끝을 쓰느냐에 따라 값이 꽤 다릅니다.
+        그런데 n 을 키우면 <b>어느 쪽을 써도 같은 값</b>으로 모입니다. 그 값이 정적분입니다.<br /><br />
+        오차 칸이 0 으로 줄어드는 속도를 같이 보면 “왜 극한으로 정의하는가”가 설명됩니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const FN = {
+  sq:   { f: x => x * x,      F: x => x ** 3 / 3,        a: 0, b: 2,           label: "x²" },
+  cub:  { f: x => x ** 3,     F: x => x ** 4 / 4,        a: 0, b: 2,           label: "x³" },
+  sin:  { f: Math.sin,        F: x => 1 - Math.cos(x),   a: 0, b: Math.PI,     label: "sin x" },
+  sqrt: { f: Math.sqrt,       F: x => (2 / 3) * x ** 1.5, a: 0, b: 4,          label: "√x" }
+};
+
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+let W = 0, H = 0;
+const PAD = { l: 64, r: 48, t: 48, b: 56 };
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function draw() {
+  const fn = FN[$("fn").value];
+  const n = +$("n").value;
+  const mode = $("mode").value;
+  const { f, F, a, b } = fn;
+
+  const dx = (b - a) / n;
+  let yMax = 0;
+  for (let i = 0; i <= 200; i++) yMax = Math.max(yMax, f(a + ((b - a) * i) / 200));
+  yMax *= 1.18;
+
+  const X = x => PAD.l + ((x - a) / (b - a)) * (W - PAD.l - PAD.r);
+  const Y = y => H - PAD.b - (y / yMax) * (H - PAD.t - PAD.b);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 축
+  ctx.strokeStyle = "rgba(0,0,0,0.45)"; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(X(a), PAD.t); ctx.lineTo(X(a), Y(0)); ctx.lineTo(X(b) + 24, Y(0));
+  ctx.stroke();
+
+  // 직사각형
+  let sum = 0;
+  ctx.lineWidth = n > 60 ? 0.5 : 1;
+  for (let k = 0; k < n; k++) {
+    const x0 = a + k * dx;
+    const xs = mode === "left" ? x0 : mode === "right" ? x0 + dx : x0 + dx / 2;
+    const y = f(xs);
+    sum += y * dx;
+
+    ctx.fillStyle = "#d9f26e";
+    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+    const px = X(x0), pw = X(x0 + dx) - X(x0), py = Y(y), ph = Y(0) - Y(y);
+    ctx.fillRect(px, py, pw, ph);
+    ctx.strokeRect(px, py, pw, ph);
+  }
+
+  // 곡선
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  for (let i = 0; i <= 300; i++) {
+    const x = a + ((b - a) * i) / 300;
+    i === 0 ? ctx.moveTo(X(x), Y(f(x))) : ctx.lineTo(X(x), Y(f(x)));
+  }
+  ctx.stroke();
+
+  // 눈금 이름
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.font = "400 14px JetBrains Mono, monospace";
+  ctx.fillText(a.toFixed(0), X(a) - 4, Y(0) + 24);
+  ctx.fillText($("fn").value === "sin" ? "π" : b.toFixed(0), X(b) - 4, Y(0) + 24);
+  ctx.fillStyle = "#000";
+  ctx.font = "500 16px Pretendard Variable, sans-serif";
+  ctx.fillText("y = " + fn.label, X(b) - 90, PAD.t + 6);
+
+  const exact = F(b) - F(a);
+  $("nText").textContent = n;
+  $("dx").textContent = dx.toFixed(4);
+  $("sum").textContent = sum.toFixed(4);
+  $("exact").textContent = exact.toFixed(4);
+  $("err").textContent = Math.abs(sum - exact).toFixed(4);
+}
+
+for (const id of ["fn", "n", "mode"]) $(id).addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+
+// n 자동으로 늘리기
+let acc = 0;
+(function loop() {
+  if ($("run").checked) {
+    acc += 0.35;
+    if (acc >= 1) {
+      acc = 0;
+      const el = $("n");
+      el.value = +el.value >= 120 ? 1 : +el.value + 1;
+      draw();
+    }
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

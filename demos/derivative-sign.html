@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>f 와 f′ 를 나란히 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>f 와 f′ 를 나란히</h1>
+  <span class="caption">미적분Ⅰ · 미분 — 도함수의 부호가 증가·감소를 정합니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="fn">함수</label>
+      <select id="fn">
+        <option value="cubic">f(x) = x³ − 3x</option>
+        <option value="quartic">f(x) = x⁴/4 − 2x²</option>
+        <option value="cube">f(x) = x³ (극값이 없는 예)</option>
+        <option value="sin">f(x) = sin x</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="a">x = <span id="aText">-2.00</span></label>
+      <input type="range" id="a" min="-3" max="3" value="-2" step="0.01" />
+      <label class="check" style="margin-top: 12px;">
+        <input type="checkbox" id="run" /> 왼쪽에서 오른쪽으로 훑기
+      </label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">f(x)</span><span class="val" id="fv">-2.00</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>f′(x) · 접선의 기울기</span><span class="val" id="dv">9.00</span></div>
+        <div><span class="key">f 의 증감</span><span class="val" id="mono">증가</span></div>
+        <div><span class="key">극값</span><span class="val" id="ext">x = −1, 1</span></div>
+        <div class="rule"><strong id="rule">f′ &gt; 0 → f 는 증가</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        위가 f, 아래가 f′ 입니다. 아래 그래프가 <b>x축 위</b>에 있는 구간에서는 위 곡선이 올라가고,
+        <b>x축 아래</b>에 있는 구간에서는 내려갑니다.<br /><br />
+        아래 그래프가 x축을 <em>지나는</em> 자리가 바로 극값입니다. 부호가 + 에서 − 로 바뀌면 극대,
+        − 에서 + 로 바뀌면 극소.<br /><br />
+        x³ 을 골라 보세요. f′(0) = 0 이지만 부호가 바뀌지 않아 <b>극값이 아닙니다</b>.
+        “f′ = 0 이면 극값”이라는 오해를 깨는 데 이 예가 제일 빠릅니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const FN = {
+  cubic:   { f: x => x ** 3 - 3 * x,        d: x => 3 * x * x - 3,      ext: "x = −1 (극대), x = 1 (극소)" },
+  quartic: { f: x => x ** 4 / 4 - 2 * x * x, d: x => x ** 3 - 4 * x,    ext: "x = −2, 2 (극소), x = 0 (극대)" },
+  cube:    { f: x => x ** 3,                d: x => 3 * x * x,          ext: "없음 (f′(0)=0 이지만 극값 아님)" },
+  sin:     { f: Math.sin,                   d: Math.cos,                ext: "x = ±π/2 …" }
+};
+
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#c3e02f", NAVY = "#201f5e";
+let W = 0, H = 0;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function draw() {
+  const fn = FN[$("fn").value];
+  const a = +$("a").value;
+  const XR = 3.4;                       // 가로로 보이는 범위
+  const S = W / (2 * XR);               // 가로 배율 (두 그래프 공통)
+  const gap = 10;
+  const top = { y0: gap, y1: H / 2 - gap };            // 위 칸
+  const bot = { y0: H / 2 + gap, y1: H - gap };        // 아래 칸
+  for (const g of [top, bot]) { g.cy = (g.y0 + g.y1) / 2; g.half = (g.y1 - g.y0) / 2; }
+
+  // 각 칸의 세로 배율 — 값이 너무 크면 잘라서 보여 준다
+  // 지금 보고 있는 점은 언제나 칸 안에 들어오도록 need 를 함께 넘긴다
+  const span = (g, fun, need) => {
+    let m = 0.6;
+    for (let i = 0; i <= 200; i++) m = Math.max(m, Math.abs(fun(-XR + (2 * XR * i) / 200)));
+    return (g.half * 0.88) / Math.max(Math.min(m, 5), need * 1.08, 0.6);
+  };
+  const sT = span(top, fn.f, Math.abs(fn.f(a)));
+  const sB = span(bot, fn.d, Math.abs(fn.d(a)));
+
+  const X = x => W / 2 + x * S;
+  const YT = y => top.cy - y * sT;
+  const YB = y => bot.cy - y * sB;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const fa = fn.f(a), da = fn.d(a);
+
+  // 두 칸을 각각 그린다 (칸 밖으로 넘치지 않게 잘라 냄)
+  const panel = (g, Y, fun, color, extra) => {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, g.y0, W, g.y1 - g.y0); ctx.clip();
+
+    // f′ 이 양수인 구간 = 라임
+    ctx.fillStyle = "rgba(217,242,110,0.45)";
+    for (let px = 0; px < W; px += 2) {
+      if (fn.d((px - W / 2) / S) > 0) ctx.fillRect(px, g.y0, 3, g.y1 - g.y0);
+    }
+
+    // 모눈 · 축
+    ctx.strokeStyle = "rgba(0,0,0,0.09)"; ctx.lineWidth = 1;
+    for (let x = -3; x <= 3; x++) {
+      ctx.beginPath(); ctx.moveTo(X(x), g.y0); ctx.lineTo(X(x), g.y1); ctx.stroke();
+    }
+    ctx.strokeStyle = "rgba(0,0,0,0.5)";
+    ctx.beginPath(); ctx.moveTo(0, Y(0)); ctx.lineTo(W, Y(0)); ctx.stroke();
+
+    if (extra) extra();
+
+    ctx.strokeStyle = color; ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    for (let px = 0; px <= W; px += 2) {
+      const x = (px - W / 2) / S;
+      px === 0 ? ctx.moveTo(X(x), Y(fun(x))) : ctx.lineTo(X(x), Y(fun(x)));
+    }
+    ctx.stroke();
+
+    // 지금 보고 있는 x
+    ctx.strokeStyle = "rgba(0,0,0,0.45)"; ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(a), g.y0); ctx.lineTo(X(a), g.y1); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(X(a), Y(fun(a)), 6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  };
+
+  panel(top, YT, fn.f, "#000", () => {
+    ctx.strokeStyle = "rgba(0,0,0,0.65)"; ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(X(-XR), YT(fa + da * (-XR - a)));
+    ctx.lineTo(X(XR), YT(fa + da * (XR - a)));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+  panel(bot, YB, fn.d, NAVY);
+
+  // 두 칸의 경계선
+  ctx.strokeStyle = "rgba(0,0,0,0.18)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
+
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.font = "600 17px Pretendard Variable, sans-serif";
+  ctx.fillText("f", 22, top.y0 + 26);
+  ctx.fillText("f′", 22, bot.y0 + 26);
+
+  $("aText").textContent = a.toFixed(2);
+  $("fv").textContent = fa.toFixed(3);
+  $("dv").textContent = da.toFixed(3);
+  $("ext").textContent = fn.ext;
+  const mono = da > 1e-3 ? "증가" : da < -1e-3 ? "감소" : "기울기 0";
+  $("mono").textContent = mono;
+  $("rule").textContent =
+    da > 1e-3 ? "f′ > 0 → f 는 증가" : da < -1e-3 ? "f′ < 0 → f 는 감소" : "f′ = 0 → 접선이 수평";
+}
+
+for (const id of ["fn", "a"]) $(id).addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+
+(function loop() {
+  if ($("run").checked) {
+    const el = $("a");
+    el.value = +el.value >= 3 ? -3 : +el.value + 0.012;
+    draw();
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

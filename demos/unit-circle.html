@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>단위원과 삼각함수 그래프 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>단위원과 삼각함수 그래프</h1>
+  <span class="caption">대수 · 삼각함수 — 원 위의 점이 돌면 그래프가 그려집니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="fn">그릴 함수</label>
+      <select id="fn">
+        <option value="sin">y = sin θ (높이)</option>
+        <option value="cos">y = cos θ (가로 길이)</option>
+        <option value="tan">y = tan θ (기울기)</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="th">각 θ = <span id="thText">60°</span></label>
+      <input type="range" id="th" min="0" max="360" value="60" step="1" />
+      <label class="check" style="margin-top: 12px;">
+        <input type="checkbox" id="run" /> 자동으로 돌리기
+      </label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">θ (호도법)</span><span class="val" id="rad">1.047</span></div>
+        <div><span class="key"><span class="swatch shape"></span>sin θ · 높이</span><span class="val" id="sin">0.866</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>cos θ · 가로</span><span class="val" id="cos">0.500</span></div>
+        <div><span class="key">tan θ</span><span class="val" id="tan">1.732</span></div>
+        <div class="rule"><strong>sin²θ + cos²θ = 1</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        sin θ 는 원 위의 점의 <em>높이</em>, cos θ 는 <em>가로 길이</em>입니다. 그 이상도 이하도 아닙니다.<br /><br />
+        점이 한 바퀴 도는 동안 높이가 오르내리는 것을 그대로 오른쪽에 옮겨 그린 것이 사인 곡선입니다.
+        <b>주기가 360°</b>인 이유도, 값이 −1과 1 사이인 이유도 원을 보면 바로 보입니다.<br /><br />
+        직각삼각형의 두 변으로 sin, cos 을 배우면 90°가 넘는 각을 설명할 수 없습니다.
+        단위원으로 정의를 넓히면 몇 도든 값이 정해집니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const NAVY = "#201f5e", LIME = "#c3e02f";
+let W = 0, H = 0;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function draw() {
+  const deg = +$("th").value;
+  const th = (deg * Math.PI) / 180;
+  const kind = $("fn").value;
+
+  const R = Math.min(H * 0.32, W * 0.17);
+  const cy = H / 2;
+  const cx = 40 + R + 24;
+  const gx0 = cx + R + 76, gx1 = W - 44;
+  const gw = gx1 - gx0;
+
+  const gx = t => gx0 + (t / (2 * Math.PI)) * gw;   // 각 → 그래프 가로 위치
+  const gy = v => cy - v * R;                       // 값 → 화면 세로 (원과 같은 배율)
+
+  const val = t => kind === "sin" ? Math.sin(t) : kind === "cos" ? Math.cos(t) : Math.tan(t);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.lineWidth = 1;
+
+  // ---- 왼쪽 : 단위원 ----
+  ctx.strokeStyle = "rgba(0,0,0,0.35)";
+  ctx.beginPath(); ctx.moveTo(cx - R - 24, cy); ctx.lineTo(cx + R + 24, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy - R - 24); ctx.lineTo(cx, cy + R + 24); ctx.stroke();
+
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+
+  const px = cx + R * Math.cos(th), py = cy - R * Math.sin(th);
+
+  // 각을 나타내는 부채꼴
+  ctx.fillStyle = "rgba(0,0,0,0.07)";   // 각을 나타내는 부채꼴은 연하게 (cos 막대와 겹치지 않도록)
+  ctx.beginPath(); ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, R * 0.42, 0, -th, true);
+  ctx.closePath(); ctx.fill();
+
+  // cos (가로) · sin (세로)
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = LIME;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, cy); ctx.stroke();
+  ctx.strokeStyle = NAVY;
+  ctx.beginPath(); ctx.moveTo(px, cy); ctx.lineTo(px, py); ctx.stroke();
+
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke();
+
+  ctx.fillStyle = "#000";
+  ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fill();
+
+  ctx.font = "500 15px Pretendard Variable, sans-serif";
+  ctx.fillText("P", px + 10, py - 10);
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.font = "400 14px JetBrains Mono, monospace";
+  ctx.fillText("1", (cx + px) / 2 - 14, (cy + py) / 2 - 8);
+
+  // ---- 오른쪽 : 그래프 ----
+  ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(gx0, cy); ctx.lineTo(gx1 + 10, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx0, cy - R - 24); ctx.lineTo(gx0, cy + R + 24); ctx.stroke();
+
+  // ±1 안내선
+  ctx.strokeStyle = "rgba(0,0,0,0.12)";
+  for (const v of [-1, 1]) {
+    ctx.beginPath(); ctx.moveTo(gx0, gy(v)); ctx.lineTo(gx1, gy(v)); ctx.stroke();
+  }
+
+  // 90° 눈금
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.font = "400 13px JetBrains Mono, monospace";
+  for (const d of [90, 180, 270, 360]) {
+    const x = gx(((d * Math.PI) / 180));
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.beginPath(); ctx.moveTo(x, cy - R - 20); ctx.lineTo(x, cy + R + 20); ctx.stroke();
+    ctx.fillText(d + "°", x - 14, cy + R + 42);
+  }
+
+  // 곡선 전체 (연하게) + 지금까지 그린 부분 (진하게)
+  const CLIP = 1.9;   // tan 이 화면 밖으로 튀는 것을 막는다
+  function curve(upTo, color, width) {
+    ctx.strokeStyle = color; ctx.lineWidth = width;
+    ctx.beginPath();
+    let pen = false;
+    for (let i = 0; i <= 720; i++) {
+      const t = (i / 720) * Math.PI * 2;
+      if (t > upTo) break;
+      const v = val(t);
+      if (!isFinite(v) || Math.abs(v) > CLIP) { pen = false; continue; }
+      const X = gx(t), Y = gy(v);
+      pen ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+      pen = true;
+    }
+    ctx.stroke();
+  }
+  curve(Math.PI * 2, "rgba(0,0,0,0.18)", 2);
+  curve(th, "#000", 2.6);
+
+  // 원 위의 점 → 그래프 위의 점 연결
+  const v = val(th);
+  if (isFinite(v) && Math.abs(v) <= CLIP) {
+    if (kind === "sin") {
+      ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(gx(th), gy(v)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.fillStyle = kind === "cos" ? LIME : NAVY;
+    ctx.beginPath(); ctx.arc(gx(th), gy(v), 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1.4; ctx.stroke();
+  }
+
+  ctx.fillStyle = "#000";
+  ctx.font = "500 16px Pretendard Variable, sans-serif";
+  ctx.fillText("y = " + kind + " θ", gx1 - 78, cy - R - 30);
+
+  $("thText").textContent = deg + "°";
+  $("rad").textContent = th.toFixed(3);
+  $("sin").textContent = Math.sin(th).toFixed(3);
+  $("cos").textContent = Math.cos(th).toFixed(3);
+  const t = Math.tan(th);
+  $("tan").textContent = Math.abs(Math.cos(th)) < 1e-3 ? "정의되지 않음" : t.toFixed(3);
+}
+
+for (const id of ["fn", "th"]) $(id).addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+
+(function loop() {
+  if ($("run").checked) {
+    const el = $("th");
+    el.value = (+el.value + 1) % 361;
+    draw();
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

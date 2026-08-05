@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>벡터의 내적 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>벡터의 내적</h1>
+  <span class="caption">기하 · 평면벡터 — 내적은 정사영의 길이입니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="la">|a| = <span id="laText">3.0</span></label>
+      <input type="range" id="la" min="0.5" max="4" value="3" step="0.05" />
+    </div>
+    <div class="group">
+      <label for="lb">|b| = <span id="lbText">2.0</span></label>
+      <input type="range" id="lb" min="0.5" max="4" value="2" step="0.05" />
+    </div>
+    <div class="group">
+      <label for="th">두 벡터가 이루는 각 θ = <span id="thText">50°</span></label>
+      <input type="range" id="th" min="0" max="180" value="50" step="1" />
+      <label class="check" style="margin-top: 12px;">
+        <input type="checkbox" id="run" /> θ 를 0° 에서 180° 까지 돌리기
+      </label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">a</span><span class="val" id="va">(3.00, 0.00)</span></div>
+        <div><span class="key">b</span><span class="val" id="vb">(1.29, 1.53)</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>|b|cos θ · 정사영</span><span class="val" id="proj">1.29</span></div>
+        <div><span class="key"><span class="swatch shape"></span>a · b</span><span class="val" id="dot">3.86</span></div>
+        <div><span class="key">성분으로 계산</span><span class="val" id="comp">3.86</span></div>
+        <div class="rule"><strong id="rule">θ &lt; 90° → 내적은 양수</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        내적 <b>a·b = |a||b|cos θ</b> 에서 <em>|b|cos θ</em> 는 b 를 a 방향으로 <b>정사영한 길이</b>입니다.
+        라임색 막대가 그것입니다.<br /><br />
+        θ 를 0° 에서 180° 까지 돌려 보세요. 90° 를 지나는 순간 정사영이 반대쪽으로 넘어가고
+        내적의 <b>부호가 바뀝니다</b>. “내적이 0 이면 수직”이 왜 성립하는지가 이 장면입니다.<br /><br />
+        아래 두 줄은 정의로 구한 값과 성분으로 구한 값입니다. 항상 같습니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#c3e02f", NAVY = "#201f5e";
+let W = 0, H = 0, S = 60;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  S = Math.min(H / 9, W / 12);
+}
+const ox = () => W * 0.36, oy = () => H * 0.62;
+const sx = x => ox() + x * S;
+const sy = y => oy() - y * S;
+
+function arrow(x, y, color, width) {
+  const x1 = sx(x), y1 = sy(y), x0 = sx(0), y0 = sy(0);
+  ctx.strokeStyle = color; ctx.lineWidth = width;
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  const ang = Math.atan2(y1 - y0, x1 - x0), s = 13;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x1 - s * Math.cos(ang - 0.4), y1 - s * Math.sin(ang - 0.4));
+  ctx.lineTo(x1 - s * Math.cos(ang + 0.4), y1 - s * Math.sin(ang + 0.4));
+  ctx.closePath(); ctx.fill();
+}
+
+function draw() {
+  const la = +$("la").value, lb = +$("lb").value;
+  const deg = +$("th").value, th = (deg * Math.PI) / 180;
+
+  const A = { x: la, y: 0 };                                  // a 는 x축 위에 고정
+  const B = { x: lb * Math.cos(th), y: lb * Math.sin(th) };
+  const proj = lb * Math.cos(th);
+  const dot = la * proj;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 모눈 · 축
+  ctx.strokeStyle = "rgba(0,0,0,0.07)"; ctx.lineWidth = 1;
+  for (let x = -6; x <= 8; x++) { ctx.beginPath(); ctx.moveTo(sx(x), 0); ctx.lineTo(sx(x), H); ctx.stroke(); }
+  for (let y = -4; y <= 5; y++) { ctx.beginPath(); ctx.moveTo(0, sy(y)); ctx.lineTo(W, sy(y)); ctx.stroke(); }
+  ctx.strokeStyle = "rgba(0,0,0,0.4)";
+  ctx.beginPath(); ctx.moveTo(0, sy(0)); ctx.lineTo(W, sy(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sx(0), 0); ctx.lineTo(sx(0), H); ctx.stroke();
+
+  // 각 표시
+  ctx.fillStyle = "rgba(0,0,0,0.08)";
+  ctx.beginPath(); ctx.moveTo(sx(0), sy(0));
+  ctx.arc(sx(0), sy(0), 46, 0, -th, true);
+  ctx.closePath(); ctx.fill();
+
+  // 정사영 막대 (a 방향, 길이 |b|cosθ)
+  ctx.strokeStyle = LIME; ctx.lineWidth = 9;
+  ctx.beginPath(); ctx.moveTo(sx(0), sy(0)); ctx.lineTo(sx(proj), sy(0)); ctx.stroke();
+
+  // b 에서 a 로 내린 수선
+  ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1.4;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(sx(B.x), sy(B.y)); ctx.lineTo(sx(proj), sy(0)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  arrow(A.x, A.y, "#000", 3);
+  arrow(B.x, B.y, NAVY, 3);
+
+  ctx.font = "600 18px Pretendard Variable, sans-serif";
+  ctx.fillStyle = "#000";
+  ctx.fillText("a", sx(A.x) + 12, sy(A.y) - 12);
+  ctx.fillStyle = NAVY;
+  ctx.fillText("b", sx(B.x) + 12, sy(B.y) - 10);
+  ctx.fillStyle = "#000";
+  ctx.font = "500 15px Pretendard Variable, sans-serif";
+  ctx.fillText("θ = " + deg + "°", sx(0) + 54, sy(0) - 14);
+  ctx.fillText("|b|cos θ = " + proj.toFixed(2), sx(proj / 2) - 30, sy(0) + 34);
+
+  const f = v => v.toFixed(2).replace("-", "−");
+  $("laText").textContent = la.toFixed(1);
+  $("lbText").textContent = lb.toFixed(1);
+  $("thText").textContent = deg + "°";
+  $("va").textContent = `(${f(A.x)}, ${f(A.y)})`;
+  $("vb").textContent = `(${f(B.x)}, ${f(B.y)})`;
+  $("proj").textContent = f(proj);
+  $("dot").textContent = f(dot);
+  $("comp").textContent = f(A.x * B.x + A.y * B.y);
+  $("rule").textContent =
+    deg < 89.5 ? "θ < 90° → 내적은 양수"
+    : deg <= 90.5 ? "θ = 90° → 내적은 0 (수직)"
+    : "θ > 90° → 내적은 음수";
+}
+
+for (const id of ["la", "lb", "th"]) $(id).addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+
+let dir = 1;
+(function loop() {
+  if ($("run").checked) {
+    const el = $("th");
+    let v = +el.value + dir * 0.4;
+    if (v >= 180) { v = 180; dir = -1; }
+    if (v <= 0) { v = 0; dir = 1; }
+    el.value = v;
+    draw();
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

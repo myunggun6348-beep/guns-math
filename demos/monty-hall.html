@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>몬티 홀 문제 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+<style>
+  /* 이 자료에만 쓰는 문·막대 */
+  .doors { display: flex; gap: var(--md); justify-content: center; align-items: flex-end; height: 100%; padding: var(--xl) var(--sm); }
+  .door {
+    position: relative;
+    /* 폰에서는 화면 폭에 맞춰 문이 좁아진다 */
+    width: min(150px, 28vw); height: min(250px, 46vw);
+    min-width: 84px;
+    border: 2px solid var(--primary);
+    border-radius: var(--r-md) var(--r-md) 0 0;
+    background: var(--canvas);
+    font-family: inherit; font-size: 18px; font-weight: 480;
+    cursor: pointer;
+    transition: transform 0.16s ease;
+  }
+  .door:hover:not(:disabled) { transform: translateY(-4px); }
+  .door:disabled { cursor: default; }
+  .door .no { position: absolute; top: 12px; left: 0; right: 0; font-size: 15px; opacity: 0.5; }
+  .door .knob { position: absolute; right: 18px; top: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+  .door.picked { background: var(--surface-soft); box-shadow: 0 0 0 3px var(--primary); }
+  .door.open-car { background: var(--block-lime); }
+  .door.open-goat { background: var(--surface-soft); color: rgba(0,0,0,0.55); }
+  .door .face { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .stagewrap { display: flex; flex-direction: column; height: 100%; }
+  .panel .btn { width: 100%; justify-content: center; }
+  .say { padding: var(--lg) var(--lg) 0; text-align: center; font-size: 20px; font-weight: 400; }
+  .bars { padding: var(--lg) var(--xxl) var(--xxl); }
+  .bar-row { margin-bottom: var(--md); }
+  .bar-row .lab { display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 6px; }
+  .bar { height: 22px; background: var(--surface-soft); border-radius: var(--r-xs); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--primary); }
+  .bar-row.keep .bar span { background: var(--block-navy); }
+  .bar-row.swap .bar span { background: #c3e02f; }
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>몬티 홀 문제</h1>
+  <span class="caption">확률과 통계 · 확률 — 직접 해 보고, 1000번 돌려서 확인합니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host">
+    <div class="stagewrap">
+      <p class="say" id="say">문 세 개 중 하나에 자동차가 있습니다. 하나를 골라 보세요.</p>
+      <div class="doors" id="doors"></div>
+      <div class="bars">
+        <div class="bar-row keep">
+          <div class="lab"><span>안 바꿨을 때 승률</span><span id="keepTxt">—</span></div>
+          <div class="bar"><span id="keepBar" style="width:0%"></span></div>
+        </div>
+        <div class="bar-row swap">
+          <div class="lab"><span>바꿨을 때 승률</span><span id="swapTxt">—</span></div>
+          <div class="bar"><span id="swapBar" style="width:0%"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <div class="group">
+      <span class="caption">직접 해 보기</span>
+      <p class="note" id="hint">문을 하나 고르면, 진행자가 염소가 있는 다른 문 하나를 열어 줍니다.</p>
+      <button class="btn btn-primary" id="reset" style="margin-top: 12px;">새 판 시작</button>
+    </div>
+
+    <div class="group">
+      <span class="caption">내 기록</span>
+      <div class="readout">
+        <div><span class="key">안 바꿔서 이김</span><span class="val" id="myKeep">0 / 0</span></div>
+        <div><span class="key">바꿔서 이김</span><span class="val" id="mySwap">0 / 0</span></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">시뮬레이션</span>
+      <button class="btn btn-secondary" id="run100">100번 돌리기</button>
+      <button class="btn btn-secondary" id="run1000" style="margin-top: 8px;">1000번 돌리기</button>
+      <button class="btn btn-secondary" id="clear" style="margin-top: 8px;">기록 지우기</button>
+      <div class="readout" style="margin-top: 16px;">
+        <div><span class="key">돌린 판 수</span><span class="val" id="trials">0</span></div>
+        <div class="rule"><strong>바꾸면 2/3, 안 바꾸면 1/3</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        처음 고른 문이 정답일 확률은 <b>1/3</b>. 이 값은 진행자가 문을 열어도 <em>변하지 않습니다</em>.
+        진행자는 정답을 알고 일부러 염소 문을 열기 때문에 새로운 정보가 내 문에는 안 생깁니다.<br /><br />
+        그러면 남은 확률 <b>2/3</b> 은 통째로 남은 문 하나에 몰립니다. 그래서 바꾸는 쪽이 두 배 유리합니다.<br /><br />
+        문이 세 개라 헷갈리면 100개라고 생각해 보세요. 하나 고른 뒤 진행자가 98개를 열어 준다면,
+        바꾸겠습니까?
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const rnd = n => Math.floor(Math.random() * n);
+
+// ---- 한 판을 실제로 진행한다 (시뮬레이션도 같은 규칙을 씁니다) ----
+function playRound(pick, swap) {
+  const car = rnd(3);
+  // 진행자는 내가 고르지 않았고 자동차도 없는 문을 연다
+  const opts = [0, 1, 2].filter(d => d !== pick && d !== car);
+  const opened = opts[rnd(opts.length)];
+  const final = swap ? [0, 1, 2].find(d => d !== pick && d !== opened) : pick;
+  return { car, opened, final, win: final === car };
+}
+
+// ---- 통계 ----
+const stat = { keepWin: 0, keepN: 0, swapWin: 0, swapN: 0 };
+const mine = { keepWin: 0, keepN: 0, swapWin: 0, swapN: 0 };
+
+function paint() {
+  const pct = (w, n) => (n ? (w / n) * 100 : 0);
+  const k = pct(stat.keepWin, stat.keepN), s = pct(stat.swapWin, stat.swapN);
+  $("keepBar").style.width = k + "%";
+  $("swapBar").style.width = s + "%";
+  $("keepTxt").textContent = stat.keepN ? `${k.toFixed(1)}%  (${stat.keepWin}/${stat.keepN})` : "—";
+  $("swapTxt").textContent = stat.swapN ? `${s.toFixed(1)}%  (${stat.swapWin}/${stat.swapN})` : "—";
+  $("trials").textContent = stat.keepN + stat.swapN;
+  $("myKeep").textContent = `${mine.keepWin} / ${mine.keepN}`;
+  $("mySwap").textContent = `${mine.swapWin} / ${mine.swapN}`;
+}
+
+function simulate(times) {
+  for (let i = 0; i < times; i++) {
+    for (const swap of [false, true]) {
+      const r = playRound(rnd(3), swap);
+      if (swap) { stat.swapN++; if (r.win) stat.swapWin++; }
+      else      { stat.keepN++; if (r.win) stat.keepWin++; }
+    }
+  }
+  paint();
+}
+
+// ---- 직접 해 보기 ----
+let phase = "pick", car = 0, pick = -1, opened = -1;
+const doors = $("doors");
+
+function renderDoors() {
+  doors.innerHTML = "";
+  for (let d = 0; d < 3; d++) {
+    const b = document.createElement("button");
+    b.className = "door";
+    if (d === pick) b.classList.add("picked");
+    let face = "";
+    if (phase === "done" || d === opened) {
+      face = d === car ? "🚗 자동차" : "🐐 염소";
+      b.classList.add(d === car ? "open-car" : "open-goat");
+    }
+    b.innerHTML = `<span class="no">${d + 1}번</span><span class="face">${face}</span>` +
+                  (face ? "" : '<span class="knob"></span>');
+    b.disabled = (phase === "done") || (phase === "choose" && d === opened);
+    b.addEventListener("click", () => clickDoor(d));
+    doors.appendChild(b);
+  }
+}
+
+function newRound() {
+  phase = "pick"; car = rnd(3); pick = -1; opened = -1;
+  $("say").textContent = "문 세 개 중 하나에 자동차가 있습니다. 하나를 골라 보세요.";
+  $("hint").textContent = "문을 하나 고르면, 진행자가 염소가 있는 다른 문 하나를 열어 줍니다.";
+  renderDoors();
+}
+
+function clickDoor(d) {
+  if (phase === "pick") {
+    pick = d;
+    const opts = [0, 1, 2].filter(x => x !== pick && x !== car);
+    opened = opts[rnd(opts.length)];
+    phase = "choose";
+    $("say").textContent = `${opened + 1}번은 염소였습니다. ${pick + 1}번을 그대로 둘까요, 남은 문으로 바꿀까요?`;
+    $("hint").textContent = "그대로 두려면 고른 문을, 바꾸려면 남은 문을 누르세요.";
+    renderDoors();
+    return;
+  }
+  if (phase === "choose") {
+    const swap = d !== pick;
+    const win = d === car;
+    if (swap) { mine.swapN++; if (win) mine.swapWin++; stat.swapN++; if (win) stat.swapWin++; }
+    else      { mine.keepN++; if (win) mine.keepWin++; stat.keepN++; if (win) stat.keepWin++; }
+    pick = d; phase = "done";
+    $("say").textContent = win
+      ? `${d + 1}번 — 자동차! ${swap ? "바꿔서" : "안 바꿔서"} 이겼습니다.`
+      : `${d + 1}번 — 염소였습니다. ${swap ? "바꿨는데" : "안 바꿨는데"} 졌네요.`;
+    $("hint").textContent = "‘새 판 시작’ 을 눌러 한 번 더 해 보세요.";
+    renderDoors();
+    paint();
+  }
+}
+
+$("reset").addEventListener("click", newRound);
+$("run100").addEventListener("click", () => simulate(100));
+$("run1000").addEventListener("click", () => simulate(1000));
+$("clear").addEventListener("click", () => {
+  for (const k in stat) stat[k] = 0;
+  for (const k in mine) mine[k] = 0;
+  paint();
+});
+
+newRound();
+paint();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

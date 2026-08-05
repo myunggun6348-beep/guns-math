@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>삼수선의 정리 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>삼수선의 정리</h1>
+  <span class="caption">기하 · 공간도형 — 화면을 드래그하면 시점이 돌아갑니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="ph">P 의 높이 (PO) = <span id="phText">2.0</span></label>
+      <input type="range" id="ph" min="0.4" max="3.5" value="2" step="0.05" />
+    </div>
+
+    <div class="group">
+      <label for="oh">O 와 직선 l 의 거리 (OH) = <span id="ohText">1.8</span></label>
+      <input type="range" id="oh" min="0.4" max="3" value="1.8" step="0.05" />
+    </div>
+
+    <div class="group">
+      <label for="ox">H 의 위치 = <span id="oxText">0.0</span></label>
+      <input type="range" id="ox" min="-2" max="2" value="0" step="0.05" />
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="face" checked /> 삼각형 PHO 색칠</label>
+      <label class="check"><input type="checkbox" id="spin" /> 자동 회전</label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">PO (평면과 수직)</span><span class="val" id="vPO">2.00</span></div>
+        <div><span class="key">OH (l 과 수직)</span><span class="val" id="vOH">1.80</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>PH</span><span class="val" id="vPH">2.69</span></div>
+        <div><span class="key">PH 와 l 이 이루는 각</span><span class="val" id="vAng">90.0°</span></div>
+        <div><span class="key">이면각 ∠PHO</span><span class="val" id="vDih">48.0°</span></div>
+        <div class="rule"><strong>PO ⊥ α, OH ⊥ l ⟹ PH ⊥ l</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        평면 α 위에 직선 l 이 있고, 평면 밖의 점 P 에서 α 에 내린 수선의 발이 O 입니다.
+        O 에서 l 에 수선을 내려 발을 H 라 하면 — <b>PH 도 l 과 수직</b>이 됩니다.<br /><br />
+        어느 각을 슬라이더로 바꿔도 위의 <em>PH 와 l 이 이루는 각</em>은 90° 에서 꿈쩍하지 않습니다.
+        직접 돌려 보며 확인시켜 주세요.<br /><br />
+        그래서 두 평면이 이루는 각(이면각)은 <b>∠PHO</b> 입니다. 학생들이 가장 많이 틀리는 지점이니,
+        시점을 돌려 가며 “이 각이 왜 이면각인가”를 눈으로 잡아 주는 게 좋습니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "../assets/vendor/three/three.module.js",
+    "three/addons/controls/OrbitControls.js": "../assets/vendor/three/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const $ = id => document.getElementById(id);
+const host = $("host");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf4f4f3);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+camera.position.set(4.2, 3.4, 6.4);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+host.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.9, 0.4);
+controls.enableDamping = true;
+
+// 폰에서 위아래로 쓸어내리면 페이지가 스크롤되고, 좌우로 끌면 시점이 돌아갑니다.
+// (OrbitControls 가 기본으로 넣는 touchAction:none 을 덮어씁니다)
+renderer.domElement.style.touchAction = "pan-y";
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const dl = new THREE.DirectionalLight(0xffffff, 0.5);
+dl.position.set(5, 8, 4);
+scene.add(dl);
+
+// 평면 α + 직선 l (x축)
+scene.add(new THREE.GridHelper(8, 16, 0x9d9d9a, 0xdcdcd9));
+scene.add(new THREE.Mesh(
+  new THREE.PlaneGeometry(8, 8).rotateX(-Math.PI / 2),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 })
+));
+scene.add(new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-3.4, 0.002, 0), new THREE.Vector3(3.4, 0.002, 0)
+  ]),
+  new THREE.LineBasicMaterial({ color: 0x000000 })
+));
+
+const mkLine = (color, width, opacity = 1) => {
+  const l = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity })
+  );
+  scene.add(l);
+  return l;
+};
+const segPO = mkLine(0x201f5e, 2);
+const segOH = mkLine(0x000000, 2);
+
+// PH 는 이 자료의 주인공이라 선 대신 가는 원기둥으로 그린다 (선 굵기는 브라우저가 무시함)
+const segPH = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.035, 0.035, 1, 12),
+  new THREE.MeshLambertMaterial({ color: 0xc3e02f })
+);
+scene.add(segPH);
+function tube(mesh, a, b) {
+  const dir = b.clone().sub(a);
+  mesh.position.copy(a).addScaledVector(dir, 0.5);
+  mesh.scale.set(1, dir.length(), 1);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+}
+
+// 점 이름표 (P, O, H)
+function label(text) {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const g = c.getContext("2d");
+  g.font = "600 84px Pretendard Variable, sans-serif";
+  g.fillStyle = "#000";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText(text, 64, 68);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(c), transparent: true, depthTest: false
+  }));
+  s.scale.set(0.42, 0.42, 1);
+  scene.add(s);
+  return s;
+}
+const tags = ["P", "O", "H"].map(label);
+const marks  = new THREE.LineSegments(
+  new THREE.BufferGeometry(),
+  new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.7 })
+);
+scene.add(marks);
+
+const face = new THREE.Mesh(
+  new THREE.BufferGeometry(),
+  new THREE.MeshBasicMaterial({ color: 0xd9f26e, transparent: true, opacity: 0.32, side: THREE.DoubleSide })
+);
+scene.add(face);
+
+const dots = [0, 1, 2].map(() => {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(0.07, 16, 12),
+    new THREE.MeshBasicMaterial({ color: 0x000000 })
+  );
+  scene.add(m);
+  return m;
+});
+
+// 두 변이 직각임을 나타내는 작은 사각형
+function rightAngle(corner, d1, d2, s = 0.22) {
+  const a = corner.clone().addScaledVector(d1, s);
+  const b = a.clone().addScaledVector(d2, s);
+  const c = corner.clone().addScaledVector(d2, s);
+  return [a, b, b, c];
+}
+
+const setLine = (obj, a, b) => {
+  obj.geometry.dispose();
+  obj.geometry = new THREE.BufferGeometry().setFromPoints([a, b]);
+};
+
+function update() {
+  const h = +$("ph").value, d = +$("oh").value, x = +$("ox").value;
+
+  const H = new THREE.Vector3(x, 0, 0);       // l 위의 점
+  const O = new THREE.Vector3(x, 0, d);       // 평면 위, l 에서 거리 d
+  const P = new THREE.Vector3(x, h, d);       // 평면 밖, O 바로 위
+
+  setLine(segPO, P, O);
+  setLine(segOH, O, H);
+  tube(segPH, P, H);
+
+  dots[0].position.copy(P);
+  dots[1].position.copy(O);
+  dots[2].position.copy(H);
+
+  tags[0].position.copy(P).add(new THREE.Vector3(0, 0.3, 0));
+  tags[1].position.copy(O).add(new THREE.Vector3(0.28, 0.18, 0.1));
+  tags[2].position.copy(H).add(new THREE.Vector3(0.1, 0.28, -0.24));
+
+  face.geometry.dispose();
+  face.geometry = new THREE.BufferGeometry().setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute([P.x, P.y, P.z, O.x, O.y, O.z, H.x, H.y, H.z], 3)
+  );
+  face.visible = $("face").checked;
+
+  // 직각 표시 : O 에서 (PO ⊥ OH), H 에서 (PH ⊥ l)
+  const up = new THREE.Vector3(0, 1, 0);
+  const toH = H.clone().sub(O).normalize();
+  const alongL = new THREE.Vector3(1, 0, 0);
+  const inPlane = P.clone().sub(H).normalize();
+  marks.geometry.dispose();
+  marks.geometry = new THREE.BufferGeometry().setFromPoints([
+    ...rightAngle(O, up, toH),
+    ...rightAngle(H, alongL, inPlane),
+    ...rightAngle(H, alongL.clone().negate(), inPlane)
+  ]);
+
+  const ph = Math.hypot(h, d);
+  $("phText").textContent = h.toFixed(1);
+  $("ohText").textContent = d.toFixed(1);
+  $("oxText").textContent = x.toFixed(1);
+  $("vPO").textContent = h.toFixed(2);
+  $("vOH").textContent = d.toFixed(2);
+  $("vPH").textContent = ph.toFixed(2);
+
+  // PH 와 l(=x축) 이 이루는 각 — 항상 90°
+  const v = P.clone().sub(H).normalize();
+  $("vAng").textContent = (Math.acos(Math.abs(v.dot(alongL))) * 180 / Math.PI).toFixed(1) + "°";
+  $("vDih").textContent = (Math.atan2(h, d) * 180 / Math.PI).toFixed(1) + "°";
+}
+
+for (const id of ["ph", "oh", "ox"]) $(id).addEventListener("input", update);
+$("face").addEventListener("change", update);
+
+function resize() {
+  const w = host.clientWidth, hh = host.clientHeight;
+  renderer.setSize(w, hh);
+  camera.aspect = w / hh;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+
+update();
+resize();
+
+renderer.setAnimationLoop(() => {
+  if ($("spin").checked) {
+    const r = 7.2, t = performance.now() * 0.00022;
+    camera.position.set(Math.cos(t) * r, 3.4, Math.sin(t) * r);
+    camera.lookAt(controls.target);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

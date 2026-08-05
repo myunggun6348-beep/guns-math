@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>y = a sin(b(x − c)) + d · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>y = a sin(b(x − c)) + d</h1>
+  <span class="caption">대수 · 삼각함수 — 계수 하나씩 움직여 보기</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="base">기본 함수</label>
+      <select id="base">
+        <option value="sin">sin</option>
+        <option value="cos">cos</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="a">a (진폭) = <span id="aText">1.0</span></label>
+      <input type="range" id="a" min="-3" max="3" value="1" step="0.1" />
+    </div>
+    <div class="group">
+      <label for="b">b (주기) = <span id="bText">1.0</span></label>
+      <input type="range" id="b" min="0.25" max="4" value="1" step="0.05" />
+    </div>
+    <div class="group">
+      <label for="c">c (좌우 이동) = <span id="cText">0.00</span></label>
+      <input type="range" id="c" min="-3.14" max="3.14" value="0" step="0.02" />
+    </div>
+    <div class="group">
+      <label for="d">d (위아래 이동) = <span id="dText">0.0</span></label>
+      <input type="range" id="d" min="-2" max="2" value="0" step="0.1" />
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">식</span><span class="val" id="eq">y = sin x</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>진폭 |a|</span><span class="val" id="amp">1.00</span></div>
+        <div><span class="key">주기 2π/|b|</span><span class="val" id="per">6.283</span></div>
+        <div><span class="key">최댓값 · 최솟값</span><span class="val" id="mm">1.00 · −1.00</span></div>
+        <div class="rule"><strong>b 가 커지면 주기는 짧아진다</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        <b>a</b> 는 세로로 늘이고(진폭), <b>d</b> 는 위아래로 옮깁니다. 여기까지는 직관과 맞습니다.<br /><br />
+        문제는 <b>b</b> 입니다. b 를 2배로 하면 그래프는 <em>가로로 절반</em>이 되고 주기도 절반이 됩니다.
+        “커지면 늘어난다”는 직관과 반대라서 시험에서 가장 많이 틀립니다. 직접 밀어 보게 하세요.<br /><br />
+        <b>c</b> 는 오른쪽으로 c 만큼 미는 값입니다. 식에 <em>−c</em> 로 들어가는데 그래프는 +방향으로
+        간다는 점을 연한 회색 기준 곡선과 비교해서 확인시켜 주세요.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#c3e02f";
+let W = 0, H = 0;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+const fmt = v => (Math.abs(v) < 5e-3 ? 0 : v).toFixed(1).replace("-", "−");
+
+function draw() {
+  const base = $("base").value;
+  const a = +$("a").value, b = +$("b").value, c = +$("c").value, d = +$("d").value;
+  const g = base === "sin" ? Math.sin : Math.cos;
+  const f = x => a * g(b * (x - c)) + d;
+
+  const XR = 4 * Math.PI;             // 가로 −4π ~ 4π
+  const YR = 5;
+  const X = x => W / 2 + (x / (2 * XR)) * W;
+  const Y = y => H / 2 - (y / (2 * YR)) * H;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 모눈 (π/2 간격)
+  ctx.strokeStyle = "rgba(0,0,0,0.07)"; ctx.lineWidth = 1;
+  for (let k = -8; k <= 8; k++) {
+    const x = (k * Math.PI) / 2;
+    ctx.beginPath(); ctx.moveTo(X(x), 0); ctx.lineTo(X(x), H); ctx.stroke();
+  }
+  for (let y = -4; y <= 4; y++) {
+    ctx.beginPath(); ctx.moveTo(0, Y(y)); ctx.lineTo(W, Y(y)); ctx.stroke();
+  }
+
+  // 축
+  ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  ctx.beginPath(); ctx.moveTo(0, Y(0)); ctx.lineTo(W, Y(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(X(0), 0); ctx.lineTo(X(0), H); ctx.stroke();
+
+  // π 눈금
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.font = "400 13px JetBrains Mono, monospace";
+  for (const k of [-3, -2, -1, 1, 2, 3]) {
+    ctx.fillText((k === 1 ? "π" : k === -1 ? "−π" : k + "π"), X(k * Math.PI) - 10, Y(0) + 22);
+  }
+
+  // 최댓값·최솟값·중심선
+  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  ctx.setLineDash([5, 5]);
+  for (const v of [d + Math.abs(a), d - Math.abs(a), d]) {
+    ctx.beginPath(); ctx.moveTo(0, Y(v)); ctx.lineTo(W, Y(v)); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  const curve = (fun, color, width) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width;
+    ctx.beginPath();
+    for (let px = 0; px <= W; px += 1.5) {
+      const x = ((px - W / 2) / W) * 2 * XR, y = fun(x);
+      px === 0 ? ctx.moveTo(X(x), Y(y)) : ctx.lineTo(X(x), Y(y));
+    }
+    ctx.stroke();
+  };
+
+  curve(g, "rgba(0,0,0,0.2)", 2);       // 기준이 되는 y = sin x
+  curve(f, "#000", 2.8);
+
+  // 주기 한 칸을 라임으로 표시
+  const T = (2 * Math.PI) / Math.abs(b);
+  ctx.strokeStyle = LIME; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(X(c), Y(d) + 26); ctx.lineTo(X(c + T), Y(d) + 26); ctx.stroke();
+  ctx.fillStyle = "#000";
+  ctx.font = "500 15px Pretendard Variable, sans-serif";
+  ctx.fillText("주기 " + T.toFixed(2), X(c) + 8, Y(d) + 48);
+
+  const num = v => (Math.round(v * 100) / 100).toString().replace("-", "−");
+  let eq = "y = ";
+  if (Math.abs(a + 1) < 1e-9) eq += "−";
+  else if (Math.abs(a - 1) > 1e-9) eq += num(a);
+  eq += base + "(";
+  if (Math.abs(b - 1) > 1e-9) eq += num(b);
+  eq += Math.abs(c) < 5e-3 ? "x" : `x ${c > 0 ? "−" : "+"} ${Math.abs(c).toFixed(2)}`;
+  eq += ")";
+  if (Math.abs(d) > 5e-3) eq += ` ${d > 0 ? "+" : "−"} ${Math.abs(d).toFixed(1)}`;
+
+  $("aText").textContent = fmt(a);
+  $("bText").textContent = b.toFixed(2);
+  $("cText").textContent = c.toFixed(2);
+  $("dText").textContent = fmt(d);
+  $("eq").textContent = eq;
+  $("amp").textContent = Math.abs(a).toFixed(2);
+  $("per").textContent = T.toFixed(3);
+  $("mm").textContent = `${(d + Math.abs(a)).toFixed(2)} · ${(d - Math.abs(a)).toFixed(2)}`.replace(/-/g, "−");
+}
+
+for (const id of ["base", "a", "b", "c", "d"]) $(id).addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

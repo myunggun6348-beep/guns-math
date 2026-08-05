@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<!-- 카톡·문자 미리보기 이미지(assets/og.png)를 만들기 위한 원본입니다.
+     화면에 쓰이지는 않습니다. 다시 만들려면 README 의 "미리보기 이미지" 참고. -->
+<link rel="stylesheet" href="vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="vendor/fonts/jetbrains-mono.css" />
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    width:1200px;height:630px;display:flex;flex-direction:column;justify-content:space-between;
+    padding:64px 72px;background:#f8f1e3;color:#000;
+    font-family:"Pretendard Variable",Pretendard,sans-serif;
+    letter-spacing:-.02em;word-break:keep-all;
+  }
+  .top{display:flex;align-items:center;gap:10px;font-size:26px;font-weight:600}
+  .top svg{width:30px;height:30px}
+  .mid{display:flex;align-items:center;justify-content:space-between;gap:48px}
+  h1{margin:0;font-size:104px;font-weight:340;line-height:1}
+  p{margin:20px 0 0;font-size:31px;font-weight:380;line-height:1.5;max-width:15em}
+  .bot{display:flex;gap:10px;flex-wrap:wrap}
+  .chip{padding:9px 20px;border-radius:50px;background:#fff;font-size:22px;font-weight:500}
+  figure{margin:0;flex:none}
+</style>
+</head>
+<body>
+  <div class="top">
+    <svg viewBox="0 0 32 32"><path d="M4 25h24l-8 5H4z" fill="#d9f26e"/><path d="M4 25 16 3l12 22z" fill="#000"/></svg>
+    GUN’s MATH
+  </div>
+
+  <div class="mid">
+    <div>
+      <h1>직접 보는<br />수학</h1>
+      <p>말로는 잘 안 되던 것들을<br />화면에 옮겨 두었습니다.</p>
+    </div>
+    <figure>
+      <svg width="380" height="300" viewBox="0 0 380 300">
+        <g fill="none" stroke="#000">
+          <line x1="14" y1="150" x2="366" y2="150" stroke-opacity=".3"/>
+          <line x1="110" y1="42" x2="110" y2="258" stroke-opacity=".3"/>
+          <line x1="196" y1="42" x2="196" y2="258" stroke-opacity=".3"/>
+          <path d="M110,150 L188,150 A78,78 0 0,0 149,83 Z" fill="#d9f26e" stroke="none"/>
+          <circle cx="110" cy="150" r="78" stroke-width="2"/>
+          <line x1="110" y1="150" x2="149" y2="83" stroke-width="2"/>
+          <path d="M196 150 C 218 82 240 82 262 150 C 284 218 306 218 328 150" stroke-width="2.6"/>
+          <line x1="149" y1="83" x2="262" y2="83" stroke-opacity=".45" stroke-dasharray="7 6"/>
+        </g>
+        <circle cx="149" cy="83" r="7"/>
+        <circle cx="262" cy="83" r="7"/>
+      </svg>
+    </figure>
+  </div>
+
+  <div class="bot">
+    <span class="chip">공통수학</span><span class="chip">대수</span><span class="chip">미적분Ⅰ·Ⅱ</span>
+    <span class="chip">확률과 통계</span><span class="chip">기하</span><span class="chip">자료 17개</span>
+  </div>
+</body>
+</html>

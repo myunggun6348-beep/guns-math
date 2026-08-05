@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>회전체의 부피 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>회전체의 부피</h1>
+  <span class="caption">미적분Ⅱ · 적분법 — 원판을 쌓아 부피를 만듭니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="fn">회전시킬 곡선</label>
+      <select id="fn">
+        <option value="lin">y = x/2 · [0, 4] (원뿔)</option>
+        <option value="sqrt">y = √x · [0, 4]</option>
+        <option value="sin">y = sin x · [0, π]</option>
+        <option value="half">y = √(4 − x²) · [−2, 2] (구)</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="n">원판 개수 n = <span id="nText">10</span></label>
+      <input type="range" id="n" min="1" max="60" value="10" step="1" />
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="solid" checked /> 매끄러운 회전체 같이 보기</label>
+      <label class="check"><input type="checkbox" id="spin" checked /> 자동 회전</label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">두께 Δx</span><span class="val" id="dx">0.40</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>원판 부피의 합</span><span class="val" id="sum">0.00</span></div>
+        <div><span class="key"><span class="swatch shape"></span>정적분의 값</span><span class="val" id="exact">0.00</span></div>
+        <div><span class="key">오차</span><span class="val" id="err">0.00</span></div>
+        <div class="rule"><strong>V = ∫ π{f(x)}² dx</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        회전체를 x축에 수직으로 얇게 자르면 단면은 <b>반지름 f(x) 인 원</b>입니다.
+        그 넓이가 π{f(x)}², 두께가 Δx 이니 원판 하나의 부피는 π{f(x)}²Δx.<br /><br />
+        이걸 다 더한 것이 부피이고, 얇게 쪼갤수록 참값에 가까워집니다.
+        적분 기호 안의 <em>π{f(x)}²</em> 이 원판 한 장의 넓이라는 것만 잡아 주면 공식을 외울 일이 없습니다.<br /><br />
+        n 을 1로 놓고 시작해서 늘려 보세요. 구분구적법과 완전히 같은 이야기가 3차원에서 반복됩니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "../assets/vendor/three/three.module.js",
+    "three/addons/controls/OrbitControls.js": "../assets/vendor/three/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const FN = {
+  sqrt: { f: Math.sqrt,                      a: 0,  b: 4,       V: 8 * Math.PI },
+  lin:  { f: x => x / 2,                     a: 0,  b: 4,       V: (Math.PI * 16) / 3 },
+  sin:  { f: Math.sin,                       a: 0,  b: Math.PI, V: (Math.PI * Math.PI) / 2 },
+  half: { f: x => Math.sqrt(Math.max(0, 4 - x * x)), a: -2, b: 2, V: (32 / 3) * Math.PI }
+};
+
+const $ = id => document.getElementById(id);
+const host = $("host");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf4f4f3);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+camera.position.set(3.4, 3.0, 6.2);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+host.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+// 폰에서 위아래로 쓸어내리면 페이지가 스크롤되고, 좌우로 끌면 시점이 돌아갑니다.
+// (OrbitControls 가 기본으로 넣는 touchAction:none 을 덮어씁니다)
+renderer.domElement.style.touchAction = "pan-y";
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const dl = new THREE.DirectionalLight(0xffffff, 0.6);
+dl.position.set(4, 7, 5);
+scene.add(dl);
+
+const group = new THREE.Group();
+scene.add(group);
+
+const matDisk  = new THREE.MeshLambertMaterial({ color: 0xd9f26e, transparent: true, opacity: 0.85 });
+const matSolid = new THREE.MeshLambertMaterial({
+  color: 0x201f5e, transparent: true, opacity: 0.22, side: THREE.DoubleSide
+});
+const matCurve = new THREE.LineBasicMaterial({ color: 0x000000 });
+
+function rebuild() {
+  const fn = FN[$("fn").value];
+  const n = +$("n").value;
+  const { f, a, b } = fn;
+  const dx = (b - a) / n;
+  const mid = (a + b) / 2;
+
+  group.clear();
+
+  // x축
+  group.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(a - mid - 0.4, 0, 0), new THREE.Vector3(b - mid + 0.4, 0, 0)
+    ]),
+    new THREE.LineDashedMaterial({ color: 0x000000, dashSize: 0.12, gapSize: 0.1 })
+  ).computeLineDistances());
+
+  // 매끄러운 회전체 (Lathe 는 y축 둘레로 돌므로 눕혀 준다)
+  if ($("solid").checked) {
+    const pts = [];
+    for (let i = 0; i <= 80; i++) {
+      const x = a + ((b - a) * i) / 80;
+      pts.push(new THREE.Vector2(Math.max(f(x), 1e-4), x - mid));
+    }
+    const lathe = new THREE.Mesh(new THREE.LatheGeometry(pts, 64), matSolid);
+    lathe.rotation.z = Math.PI / 2;
+    group.add(lathe);
+  }
+
+  // 원판 n 개 (가운데 값을 반지름으로)
+  let sum = 0;
+  for (let k = 0; k < n; k++) {
+    const xm = a + (k + 0.5) * dx;
+    const r = f(xm);
+    sum += Math.PI * r * r * dx;
+    if (r < 1e-4) continue;
+    const cyl = new THREE.Mesh(
+      new THREE.CylinderGeometry(r, r, dx * 0.94, 40, 1, false),
+      matDisk
+    );
+    cyl.rotation.z = Math.PI / 2;
+    cyl.position.x = xm - mid;
+    group.add(cyl);
+  }
+
+  // 회전시키는 곡선 자체
+  const cpts = [];
+  for (let i = 0; i <= 120; i++) {
+    const x = a + ((b - a) * i) / 120;
+    cpts.push(new THREE.Vector3(x - mid, f(x), 0));
+  }
+  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(cpts), matCurve));
+
+  $("nText").textContent = n;
+  $("dx").textContent = dx.toFixed(3);
+  $("sum").textContent = sum.toFixed(3);
+  $("exact").textContent = fn.V.toFixed(3);
+  $("err").textContent = Math.abs(sum - fn.V).toFixed(3);
+}
+
+for (const id of ["fn", "n"]) $(id).addEventListener("input", rebuild);
+$("solid").addEventListener("change", rebuild);
+
+function resize() {
+  const w = host.clientWidth, h = host.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+
+rebuild();
+resize();
+
+renderer.setAnimationLoop(() => {
+  if ($("spin").checked) group.rotation.x += 0.006;
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

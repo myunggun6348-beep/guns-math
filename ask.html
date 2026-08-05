@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>질문 · GUN’s MATH</title>
+<meta name="description" content="학생이 질문을 남기면 선생님이 직접 답합니다. 이름은 안 적어도 되고, 문제 사진 한 장만 보내도 됩니다." />
+
+<!-- 카카오톡·문자로 이 페이지 링크를 직접 공유할 때 보이는 미리보기 -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="질문 · GUN’s MATH" />
+<meta property="og:description" content="학생이 질문을 남기면 선생님이 직접 답합니다. 이름은 안 적어도 되고, 문제 사진 한 장만 보내도 됩니다." />
+<meta property="og:locale" content="ko_KR" />
+<meta property="og:image" content="assets/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="GUN’s MATH — 단위원과 사인 곡선 그림" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+
+<link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+<!-- ===================== 상단 내비 ===================== -->
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M4 25h24l-8 5H4z" fill="#d9f26e" />
+        <path d="M4 25 16 3l12 22z" fill="#000000" />
+      </svg>
+      GUN’s MATH
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="map.html">개념 지도</a>
+      <a href="index.html#notice">공지</a>
+      <a href="ask.html" aria-current="page">질문</a>
+      <a href="library.html" class="mobile-only">직접 보는 수학</a>
+    </div>
+    <div class="nav-actions">
+      <a class="btn btn-primary" href="library.html">직접 보는 수학</a>
+    </div>
+    <div class="nav-toggle-wrap">
+      <input type="checkbox" class="nav-toggle-input" id="navToggle" />
+      <label class="nav-toggle" for="navToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></label>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== 질문 (학생 → 선생님) ===================== -->
+<section class="section" id="ask" style="padding-top: var(--xxl);">
+  <div class="wrap">
+    <div class="block block-navy">
+      <span class="eyebrow">Q &amp; A</span>
+      <h1 class="display-lg">선생님한테 직접 물어보기</h1>
+      <p class="subhead" style="margin-top: 24px; max-width: 27em;">
+        학생이 질문을 남기면 이 페이지를 만든 제가 직접 답합니다.
+        수업 시간에 손 들기 애매했던 것, 문제 풀다 막힌 것 아무거나 좋습니다.
+        이름은 안 적어도 되고, 문제 사진 한 장만 보내도 됩니다.
+      </p>
+      <div class="cta-row">
+        <!-- ✏️ 구글 폼을 만들어 아래 href 를 폼 주소로 바꿔 주세요 -->
+        <a class="btn btn-secondary" href="ask.html">질문 남기기 →</a>
+      </div>
+
+      <h2 class="caption" style="margin: 40px 0 0;">받은 질문과 답</h2>
+      <!-- ✏️ 답변은 아래 script 의 QNA 배열에 한 줄씩 추가하면 됩니다 -->
+      <div class="rows" id="qna"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 푸터 ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-wordmark">GUN’s MATH</p>
+        <p class="body-sm" style="margin-top: 12px; max-width: 24em;">
+          고등학교에서 수학을 가르칩니다. 수업에서 직접 써 보고 다듬은 것만 올려 둡니다.
+        </p>
+      </div>
+      <div>
+        <h3 class="caption en">Menu</h3>
+        <ul>
+          <li><a href="library.html">직접 보는 수학</a></li>
+          <li><a href="map.html">개념 지도</a></li>
+          <li><a href="ask.html">질문</a></li>
+          <li><a href="index.html#notice">공지</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="caption en">Contact</h3>
+        <ul>
+          <!-- ✏️ 메일 주소 또는 구글 폼 주소 -->
+          <li><a href="ask.html">연락처를 여기에 넣으세요</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base body-sm">
+      수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.
+    </div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   질문 · 답 — 여기에 한 항목씩 추가하면 화면에 올라갑니다.
+   최신 것이 위로 오도록 맨 앞에 넣어 주세요.
+   ========================================================= */
+const QNA = [
+  { date: "2026-07-30", tag: "기하 · 공간도형",
+    q: "정사영 넓이 문제에서 cos θ 를 어디에 곱하는지 자꾸 헷갈려요.",
+    a: "교선과 나란한 방향은 길이가 그대로고, 교선과 수직인 방향만 cos θ 배로 줄어듭니다. 자료실의 정사영 자료에서 각을 0°와 90°로 놓고 보면 한 번에 정리됩니다." },
+
+  { date: "2026-07-22", tag: "미적분Ⅰ · 미분",
+    q: "순간변화율이랑 평균변화율이 뭐가 다른 거예요?",
+    a: "평균변화율은 두 점을 잇는 직선의 기울기, 순간변화율은 그 두 점이 붙었을 때의 기울기입니다. 자료실의 ‘미분계수는 접선의 기울기’에서 h 를 0으로 보내 보면 할선이 접선에 붙는 게 보입니다." }
+];
+
+document.getElementById("qna").innerHTML = QNA.map(it => `
+  <article>
+    <span class="caption">${it.date} · ${it.tag}</span>
+    <h3 class="card-title"><span class="qa-mark">Q</span>${it.q}</h3>
+    <p class="body-sm"><span class="qa-mark">A</span>${it.a}</p>
+  </article>`).join("");
+</script>
+
+</body>
+</html>

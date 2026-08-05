@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>lim (sin x)/x = 1 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>lim (sin x)/x = 1</h1>
+  <span class="caption">미적분Ⅱ · 미분법 — 넓이 세 개를 끼워 넣어 증명합니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="x">x (라디안) = <span id="xText">0.900</span></label>
+      <input type="range" id="x" min="0.02" max="1.4" value="0.9" step="0.005" />
+      <label class="check" style="margin-top: 12px;">
+        <input type="checkbox" id="run" /> x 를 0 으로 보내기
+      </label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key"><span class="swatch shape"></span>삼각형 OAP = sin x / 2</span><span class="val" id="t1">0.392</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>부채꼴 OAP = x / 2</span><span class="val" id="t2">0.450</span></div>
+        <div><span class="key">삼각형 OAT = tan x / 2</span><span class="val" id="t3">0.627</span></div>
+        <div><span class="key">sin x / x</span><span class="val" id="ratio">0.8704</span></div>
+        <div><span class="key">cos x</span><span class="val" id="cos">0.6216</span></div>
+        <div class="rule"><strong>cos x &lt; sin x / x &lt; 1</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        넓이가 <b>삼각형 &lt; 부채꼴 &lt; 큰 삼각형</b> 순서라는 건 그림만 봐도 분명합니다.
+        식으로 쓰면 sin x / 2 &lt; x / 2 &lt; tan x / 2.<br /><br />
+        각 변을 sin x / 2 로 나누고 뒤집으면 <b>cos x &lt; sin x / x &lt; 1</b> 이 됩니다.
+        x → 0 일 때 왼쪽 cos x 가 1 로 가니, 가운데도 1 로 갈 수밖에 없습니다.
+        이것이 <em>샌드위치 정리</em>입니다.<br /><br />
+        x 를 0 으로 보내면서 오른쪽 sin x / x 값이 1 에 다가가는 것을 같이 보세요.
+        각을 <b>라디안</b>으로 재야 부채꼴 넓이가 x/2 가 된다는 점도 짚어 주시면 좋습니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#d9f26e", NAVY = "#201f5e";
+let W = 0, H = 0;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function draw() {
+  const x = +$("x").value;
+
+  // ---- 왼쪽 : 단위원 그림 ----
+  const R = Math.min(H * 0.46, W * 0.24);
+  const cx = W * 0.30, cy = H * 0.70;
+  const P = { x: cx + R * Math.cos(x), y: cy - R * Math.sin(x) };
+  const T = { x: cx + R, y: cy - R * Math.tan(x) };
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 부채꼴 (라임)
+  ctx.fillStyle = LIME;
+  ctx.beginPath(); ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, R, 0, -x, true);
+  ctx.closePath(); ctx.fill();
+
+  // 큰 삼각형 OAT (테두리만)
+  ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy); ctx.lineTo(cx + R, cy); ctx.lineTo(T.x, T.y);
+  ctx.closePath(); ctx.stroke();
+
+  // 삼각형 OAP (네이비)
+  ctx.fillStyle = "rgba(32,31,94,0.55)";
+  ctx.beginPath();
+  ctx.moveTo(cx, cy); ctx.lineTo(cx + R, cy); ctx.lineTo(P.x, P.y);
+  ctx.closePath(); ctx.fill();
+
+  // 단위원 · 축
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx - R - 20, cy); ctx.lineTo(cx + R + 60, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy + 30); ctx.lineTo(cx, cy - R - 30); ctx.stroke();
+
+  ctx.fillStyle = "#000";
+  ctx.font = "500 15px Pretendard Variable, sans-serif";
+  ctx.fillText("O", cx - 18, cy + 18);
+  ctx.fillText("A", cx + R + 6, cy + 20);
+  ctx.fillText("P", P.x + 8, P.y - 8);
+  ctx.fillText("T", T.x + 8, T.y + 4);
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.font = "400 14px JetBrains Mono, monospace";
+  ctx.fillText("x = " + x.toFixed(3), cx + 16, cy - 12);
+
+  // ---- 오른쪽 : y = sin x / x 그래프 ----
+  const gL = W * 0.60, gR = W - 60, gy0 = H * 0.62, gh = H * 0.34;
+  const XR = 1.5;
+  const GX = v => gL + (v / XR) * (gR - gL);
+  const GY = v => gy0 - (v - 0.5) * gh * 2;      // 0.5 ~ 1.05 정도가 보이게
+
+  ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(gL - 20, GY(0.5)); ctx.lineTo(gR + 10, GY(0.5)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(GX(0), GY(0.45)); ctx.lineTo(GX(0), GY(1.12)); ctx.stroke();
+
+  // y = 1 안내선
+  ctx.strokeStyle = "rgba(32,31,94,0.5)"; ctx.lineWidth = 1.6;
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath(); ctx.moveTo(gL - 10, GY(1)); ctx.lineTo(gR + 10, GY(1)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = NAVY;
+  ctx.font = "400 14px JetBrains Mono, monospace";
+  ctx.fillText("y = 1", gR - 44, GY(1) - 10);
+
+  // 곡선
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  for (let i = 1; i <= 300; i++) {
+    const v = (XR * i) / 300;
+    const y = Math.sin(v) / v;
+    i === 1 ? ctx.moveTo(GX(v), GY(y)) : ctx.lineTo(GX(v), GY(y));
+  }
+  ctx.stroke();
+
+  // x = 0 에서는 값이 정의되지 않는다 (빈 동그라미)
+  ctx.fillStyle = "#f4f4f3";
+  ctx.beginPath(); ctx.arc(GX(0), GY(1), 5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6; ctx.stroke();
+
+  const ratio = Math.sin(x) / x;
+  ctx.fillStyle = NAVY;
+  ctx.beginPath(); ctx.arc(GX(x), GY(ratio), 6, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1.4; ctx.stroke();
+
+  ctx.fillStyle = "#000";
+  ctx.font = "500 16px Pretendard Variable, sans-serif";
+  ctx.fillText("y = sin x / x", gL, GY(1.12) - 6);
+
+  $("xText").textContent = x.toFixed(3);
+  $("t1").textContent = (Math.sin(x) / 2).toFixed(4);
+  $("t2").textContent = (x / 2).toFixed(4);
+  $("t3").textContent = (Math.tan(x) / 2).toFixed(4);
+  $("ratio").textContent = ratio.toFixed(5);
+  $("cos").textContent = Math.cos(x).toFixed(5);
+}
+
+$("x").addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+
+(function loop() {
+  if ($("run").checked) {
+    const el = $("x");
+    let v = +el.value * 0.985;
+    if (v < 0.021) v = 1.4;
+    el.value = v;
+    draw();
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

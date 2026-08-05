@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>사인법칙과 외접원 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>사인법칙과 외접원</h1>
+  <span class="caption">대수 · 삼각함수 — 꼭짓점을 옮겨도 a / sin A 는 그대로입니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="R">외접원의 반지름 R = <span id="RText">2.0</span></label>
+      <input type="range" id="R" min="1" max="3.4" value="2" step="0.05" />
+    </div>
+    <div class="group">
+      <label for="pA">꼭짓점 A 의 위치 = <span id="aText">110°</span></label>
+      <input type="range" id="pA" min="100" max="180" value="110" step="1" />
+    </div>
+    <div class="group">
+      <label for="pB">꼭짓점 B 의 위치 = <span id="bText">200°</span></label>
+      <input type="range" id="pB" min="190" max="300" value="200" step="1" />
+    </div>
+    <div class="group">
+      <label for="pC">꼭짓점 C 의 위치 = <span id="cText">340°</span></label>
+      <input type="range" id="pC" min="310" max="440" value="340" step="1" />
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key"><span class="swatch shadow"></span>a / sin A</span><span class="val" id="ra">4.00</span></div>
+        <div><span class="key">b / sin B</span><span class="val" id="rb">4.00</span></div>
+        <div><span class="key">c / sin C</span><span class="val" id="rc">4.00</span></div>
+        <div><span class="key"><span class="swatch shape"></span>2R</span><span class="val" id="r2">4.00</span></div>
+        <div><span class="key">세 각의 합</span><span class="val" id="sum">180.0°</span></div>
+        <div class="rule"><strong>a/sinA = b/sinB = c/sinC = 2R</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        세 꼭짓점을 원 위에서 아무렇게나 옮겨 보세요. 세 비의 값이 <b>항상 똑같고, 그 값이 2R</b> 입니다.<br /><br />
+        특히 <b>A 만 움직여 보세요.</b> 변 a(= BC)는 그대로인데 A 도 그대로입니다 — 같은 호에 대한
+        원주각이 일정하기 때문입니다. 사인법칙이 왜 성립하는지가 여기서 나옵니다.<br /><br />
+        R 을 키우면 세 비가 함께 커집니다. “삼각형의 모양이 같아도 크기가 커지면 외접원도 커진다”를
+        수치로 확인할 수 있습니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#c3e02f", NAVY = "#201f5e";
+let W = 0, H = 0, S = 60;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  S = Math.min(H, W) / 9;
+}
+const sx = x => W / 2 + x * S;
+const sy = y => H / 2 - y * S;
+
+function draw() {
+  const R = +$("R").value;
+  const degs = [+$("pA").value, +$("pB").value, +$("pC").value];
+  const P = degs.map(d => {
+    const t = (d * Math.PI) / 180;
+    return { x: R * Math.cos(t), y: R * Math.sin(t) };
+  });
+  const [A, B, C] = P;
+
+  const dist = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+  const a = dist(B, C), b = dist(C, A), c = dist(A, B);
+
+  // 코사인법칙으로 각 구하기
+  const ang = (o, p, q) => {
+    const u = { x: p.x - o.x, y: p.y - o.y }, v = { x: q.x - o.x, y: q.y - o.y };
+    return Math.acos((u.x * v.x + u.y * v.y) / (Math.hypot(u.x, u.y) * Math.hypot(v.x, v.y)));
+  };
+  const A1 = ang(A, B, C), B1 = ang(B, C, A), C1 = ang(C, A, B);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 외접원
+  ctx.strokeStyle = NAVY; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(sx(0), sy(0), R * S, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = NAVY;
+  ctx.beginPath(); ctx.arc(sx(0), sy(0), 4, 0, Math.PI * 2); ctx.fill();
+
+  // 반지름 표시
+  ctx.strokeStyle = "rgba(32,31,94,0.45)"; ctx.lineWidth = 1.5;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(sx(0), sy(0)); ctx.lineTo(sx(B.x), sy(B.y)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 삼각형
+  ctx.fillStyle = "rgba(217,242,110,0.45)";
+  ctx.beginPath();
+  ctx.moveTo(sx(A.x), sy(A.y)); ctx.lineTo(sx(B.x), sy(B.y)); ctx.lineTo(sx(C.x), sy(C.y));
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4; ctx.stroke();
+
+  // 변 a 만 라임으로 강조 (A 를 움직여도 변하지 않는 변)
+  ctx.strokeStyle = LIME; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(sx(B.x), sy(B.y)); ctx.lineTo(sx(C.x), sy(C.y)); ctx.stroke();
+
+  // 꼭짓점 이름
+  const names = ["A", "B", "C"];
+  ctx.font = "600 18px Pretendard Variable, sans-serif";
+  P.forEach((p, i) => {
+    ctx.fillStyle = "#000";
+    ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillText(names[i], sx(p.x) + (p.x >= 0 ? 12 : -26), sy(p.y) + (p.y >= 0 ? -12 : 22));
+  });
+
+  // 변 이름
+  ctx.font = "500 15px Pretendard Variable, sans-serif";
+  ctx.fillStyle = "#000";
+  ctx.fillText("a", (sx(B.x) + sx(C.x)) / 2 + 8, (sy(B.y) + sy(C.y)) / 2 + 4);
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillText("b", (sx(C.x) + sx(A.x)) / 2 + 8, (sy(C.y) + sy(A.y)) / 2 + 4);
+  ctx.fillText("c", (sx(A.x) + sx(B.x)) / 2 + 8, (sy(A.y) + sy(B.y)) / 2 + 4);
+
+  const deg = r => (r * 180) / Math.PI;
+  $("RText").textContent = R.toFixed(2);
+  $("aText").textContent = degs[0] + "°";
+  $("bText").textContent = degs[1] + "°";
+  $("cText").textContent = degs[2] + "°";
+  $("ra").textContent = (a / Math.sin(A1)).toFixed(3);
+  $("rb").textContent = (b / Math.sin(B1)).toFixed(3);
+  $("rc").textContent = (c / Math.sin(C1)).toFixed(3);
+  $("r2").textContent = (2 * R).toFixed(3);
+  $("sum").textContent = (deg(A1) + deg(B1) + deg(C1)).toFixed(1) + "°";
+}
+
+for (const id of ["R", "pA", "pB", "pC"]) $(id).addEventListener("input", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

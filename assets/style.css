@@ -1,0 +1,1054 @@
+/* =========================================================
+   눈으로 보는 고등수학 — 디자인 시스템
+   모노크롬 골격(검정/흰색) + 오버사이즈 파스텔 컬러블록.
+   색을 바꾸려면 아래 :root 값만 고치면 사이트 전체가 함께 바뀝니다.
+   ========================================================= */
+
+:root {
+  /* --- 브랜드 / 시스템 --- */
+  --primary: #000000;
+  --on-primary: #ffffff;
+  --canvas: #ffffff;
+  --inverse-canvas: #000000;
+  --ink: #000000;
+  --inverse-ink: #ffffff;
+  --accent-magenta: #f5399b;
+
+  /* --- 표면 --- */
+  --surface-soft: #f4f4f3;
+  --hairline: #e4e4e2;
+  --hairline-soft: #f0f0ee;
+
+  /* --- 컬러블록 --- */
+  --block-lime:  #d9f26e;
+  --block-lilac: #cfc7f8;
+  --block-cream: #f8f1e3;
+  --block-mint:  #c6eddc;
+  --block-pink:  #f9cfe0;
+  --block-coral: #fcbba6;
+  --block-navy:  #201f5e;
+
+  /* --- 과목 색 (2022 개정 교육과정) ---
+     자료 카드의 썸네일 배경과 목차 점에 같은 색을 써서,
+     17개를 훑을 때 과목이 색으로 먼저 구분되게 한다. */
+  --sub-common: #f3ead6;
+  --sub-algebra: #cfe9dd;
+  --sub-calc1: #d8d2f5;
+  --sub-calc2: #f7d5e2;
+  --sub-stat: #fbd2c0;
+  --sub-geo: #e2f09a;
+
+  /* --- 간격 --- */
+  --hair: 1px;
+  --xxs: 4px;
+  --xs: 8px;
+  --sm: 12px;
+  --md: 16px;
+  --lg: 24px;
+  --xl: 32px;
+  --xxl: 48px;
+  --section: 96px;
+
+  /* --- 모서리 --- */
+  --r-xs: 2px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 50px;
+  --r-full: 9999px;
+
+  /* --- 서체 --- */
+  --sans: "Pretendard Variable", Pretendard, Inter, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --wrap: 1280px;
+  --gutter: var(--xxl);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 18px;
+  /* 한글은 얇은 두께에서 급격히 흐려진다. 큰 제목만 얇게 쓰고 본문은 380. */
+  font-weight: 380;
+  /* 받침이 있는 한글은 글자 높이가 커서 1.45 로는 줄이 붙어 보인다 */
+  line-height: 1.6;
+  letter-spacing: -0.0144em;
+  font-feature-settings: "kern" 1;
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: inherit; }
+img, svg { max-width: 100%; }
+
+/* 키보드로 다닐 때 지금 어디에 있는지 보이게.
+   :focus-visible 이라 마우스 클릭에는 링이 안 생깁니다. */
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: var(--r-xs);
+}
+/* 검은 면 위에서는 검은 링이 안 보인다 */
+.block-navy :focus-visible,
+.btn-primary:focus-visible {
+  outline-color: var(--block-lime);
+}
+
+.wrap {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* =========================================================
+   타이포그래피 — 크기가 아니라 웨이트가 위계를 만든다
+   ========================================================= */
+.display-xl {
+  font-size: clamp(44px, 7vw, 86px);
+  font-weight: 340;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.display-lg {
+  font-size: clamp(32px, 4.6vw, 64px);
+  font-weight: 340;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.headline {
+  font-size: 26px;
+  font-weight: 540;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.subhead {
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 340;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.card-title {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.012em;
+  margin: 0;
+}
+.body-lg { font-size: 20px; font-weight: 380; line-height: 1.6; letter-spacing: -0.007em; }
+.body-sm { font-size: 16px; font-weight: 390; line-height: 1.6; letter-spacing: -0.009em; }
+
+/* 섹션 라벨 — 제목 옆에 붙는 표지일 뿐이므로 조용해야 한다.
+   18px 순검정은 제목만큼 진해서 시선을 뺏었다. */
+.eyebrow {
+  display: block;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+  margin-bottom: var(--lg);
+}
+.block-navy .eyebrow { color: rgba(255, 255, 255, 0.5); }
+
+/* 캡션 — 기본은 한글용 산세리프.
+   모노스페이스 폰트에는 한글 글리프가 없어서, 한글에 쓰면 글자마다 다른
+   폰트로 떨어지고 자간까지 벌어져 흐릿해진다. 영문·숫자 전용 라벨에만
+   .caption.en 으로 모노를 쓴다. */
+.caption {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  color: rgba(0, 0, 0, 0.58);
+}
+.caption.en {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.0;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+/* 어두운 색면 위에서는 캡션도 밝은 쪽으로 */
+.block-navy .caption { color: rgba(255, 255, 255, 0.62); }
+
+/* =========================================================
+   버튼 — 모든 CTA는 알약, 아이콘 버튼은 원
+   ========================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--xs);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 480;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  border: none;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: transform 0.16s ease;
+}
+.btn:hover { transform: scale(1.03); }
+.btn:active { transform: scale(0.99); }
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 10px 20px;
+}
+.btn-secondary {
+  background: var(--canvas);
+  color: var(--ink);
+  padding: 8px 18px 10px;
+  /* 흰 캔버스 위에서도 알약 모양이 보이도록 헤어라인 한 줄 */
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+/* 컬러블록 안에서는 흰 면만으로 충분히 구분된다 */
+.block .btn-secondary { box-shadow: none; }
+.btn-inverse {
+  background: var(--canvas);
+  color: var(--ink);
+  padding: 10px 20px;
+}
+
+/* =========================================================
+   상단 내비 / 마퀴 스트립
+   ========================================================= */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--canvas);
+  height: 56px;
+}
+.nav .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  gap: var(--lg);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--xs);
+  font-size: 18px;
+  font-weight: 540;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.brand svg { width: 22px; height: 22px; flex: none; }
+.nav-links {
+  display: flex;
+  gap: var(--lg);
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 460;
+}
+.nav-links a {
+  text-decoration: none;
+  padding: var(--xs) var(--sm);
+  border-radius: var(--r-full);
+}
+.nav-actions { display: flex; align-items: center; gap: var(--xs); }
+.nav-actions .btn { font-size: 16px; padding: 6px 16px; }
+/* 지금 있는 페이지 — 눌러도 제자리인 버튼/링크라는 것을 보여준다 */
+.nav-actions .btn[aria-current="page"] {
+  background: var(--surface-soft);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  cursor: default;
+}
+.nav-actions .btn[aria-current="page"]:hover { transform: none; }
+.nav-links a[aria-current="page"] {
+  background: var(--surface-soft);
+  font-weight: 600;
+}
+/* 폰 메뉴 안에만 보이는 항목 — "직접 보는 수학" 을 여기에도 넣어 두면
+   맨 위 줄에는 브랜드 + 햄버거만 남아 좁은 화면에서 안 깨진다 */
+.nav-links .mobile-only { display: none; }
+
+/* 폰 메뉴 — 자바스크립트 없이 체크박스로 여닫는다.
+   (모든 페이지에 그대로 복사해 쓸 수 있게, 자바스크립트 의존 없이 만들었다) */
+.nav-toggle-wrap { position: relative; display: none; }
+.nav-toggle-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+/* 손가락으로 누르는 영역은 44px — 애플·구글 권장 최소치.
+   막대 3개(20px)는 그대로 두고 누를 자리만 넓힌다. 오른쪽 여백이
+   6px 늘어나므로 음수 마진으로 아이콘 위치를 제자리에 돌려 놓는다. */
+.nav-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  margin-right: -6px;
+}
+.nav-toggle span { display: block; width: 20px; height: 2px; background: var(--ink); border-radius: 2px; }
+.nav-toggle-input:focus-visible ~ .nav-toggle {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* 마지막 업데이트 — footer-base 안에 작게, 오른쪽으로 (library.html) */
+.footer-base-split .caption { font-variant-numeric: tabular-nums; }
+.footer-base-split .caption span { font-weight: 500; color: var(--ink); }
+
+/* =========================================================
+   섹션 리듬 — 컬러블록 사이는 언제나 흰 캔버스로 돌아온다
+   ========================================================= */
+/* 상단 바가 sticky 라, 앵커로 뛰면 섹션 머리가 그 밑에 깔린다
+   (.grid-head 에 걸어 둔 것과 같은 이유) */
+.section { padding: var(--section) 0; scroll-margin-top: 72px; }
+
+/* 섹션 머리 — 왼쪽 라벨 / 오른쪽 제목의 편집 그리드.
+   빈 왼쪽 칸이 여백을 '비어 있음'이 아니라 '자리'로 읽히게 한다. */
+.section-head {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--xxl);
+  margin-bottom: var(--xxl);
+  padding-top: var(--lg);
+  border-top: 1px solid var(--hairline);
+}
+.section-head > div { max-width: 34em; }
+.section-head p { margin: var(--md) 0 0; }
+
+/* --- 히어로 : 크림 색면 + 수학 그림 --- */
+.hero {
+  background: var(--block-cream);
+  padding: var(--xxl) 0 var(--section);
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--xxl);
+  align-items: center;
+}
+/* 그림의 고유 폭(520px)이 칸을 밀어내 가로 스크롤이 생기는 것을 막는다 */
+.hero-grid > * { min-width: 0; }
+.hero .display-xl { max-width: 15em; }
+.hero-figure { margin: 0; }
+.hero-figure svg { display: block; width: 100%; height: auto; }
+.hero-figure figcaption.caption.en {
+  margin-top: var(--sm);
+  text-align: right;
+  text-transform: none;   /* 수식은 대문자로 바꾸지 않는다 */
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+/* 히어로 소개 — 본문보다 크게, 줄바꿈을 직접 잡아 세 줄로 읽히게 */
+.hero-intro {
+  font-size: clamp(20px, 2.1vw, 27px);
+  font-weight: 370;
+  line-height: 1.45;
+  letter-spacing: -0.014em;
+  margin: var(--lg) 0 var(--xl);
+  max-width: 24em;
+}
+.cta-row { display: flex; gap: var(--sm); flex-wrap: wrap; }
+
+/* --- 컬러블록 --- */
+.block {
+  border-radius: var(--r-lg);
+  padding: var(--xxl);
+  background: var(--surface-soft);
+}
+.block-lime  { background: var(--block-lime); }
+.block-lilac { background: var(--block-lilac); }
+.block-cream { background: var(--block-cream); }
+.block-mint  { background: var(--block-mint); }
+.block-pink  { background: var(--block-pink); }
+.block-coral { background: var(--block-coral); }
+.block-navy  { background: var(--block-navy); color: var(--inverse-ink); }
+.block-navy .btn-secondary { background: var(--canvas); color: var(--ink); }
+
+.block-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--xxl);
+  align-items: center;
+}
+.block-split .col-text { max-width: 26em; }
+.block .subhead + .body-lg { margin-top: var(--lg); }
+.block .cta-row { margin-top: var(--xl); }
+
+/* 질문 · 공지 목록 — 헤어라인으로만 나뉘는 글 줄.
+   날짜를 왼쪽 칸으로 빼서 구분선이 블록 폭을 다 쓰게 한다.
+   (예전엔 목록 전체를 46em 으로 묶어서, 넓은 화면이면 구분선이
+    블록 한복판에서 끊기고 오른쪽 300px 이 텅 비어 보였다.
+    글줄 자체는 46em 을 넘기면 안 되므로 오른쪽 칸에만 걸어 둔다) */
+.rows {
+  margin-top: var(--xl);
+  border-top: 1px solid rgba(0, 0, 0, 0.16);
+}
+.rows > article {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 46em);
+  column-gap: var(--xxl);
+  row-gap: 0;
+  padding: var(--lg) 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.16);
+}
+/* 날짜는 왼쪽 칸에서 제목·본문 두 줄에 걸친다 */
+.rows > article > .caption { grid-column: 1; grid-row: 1 / span 2; }
+.rows > article > h3       { grid-column: 2; grid-row: 1; }
+.rows > article > p        { grid-column: 2; grid-row: 2; }
+/* 배지가 붙는 줄은 flex 로 — 두 번째 줄이 배지 밑으로 파고들지 않게 */
+.rows h3 { margin: 0 0 var(--xs); }
+.rows h3:has(.qa-mark),
+.rows p:has(.qa-mark) { display: flex; gap: var(--sm); }
+.rows p { margin: 0; }
+/* 학생이 묻고(Q) 선생님이 답한다(A) 는 게 한눈에 보이도록 —
+   흐린 글자로는 구분이 안 돼서 동그란 배지로 만든다 */
+.qa-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, 0.16);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  vertical-align: 2px;
+}
+.block-navy .rows,
+.block-navy .rows > article { border-color: rgba(255, 255, 255, 0.24); }
+
+/* =========================================================
+   특징 3칸
+   ========================================================= */
+.cols-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--xl);
+}
+.feature .caption { display: block; margin-bottom: var(--md); }
+.feature h3 { margin: 0 0 var(--xs); }
+.feature p { margin: 0; }
+
+/* 번호가 붙는 단계 (컬러블록 안) */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--xl); }
+.step .caption { display: block; margin-bottom: var(--md); opacity: 1; }
+.step h3 { margin: 0 0 var(--xs); }
+.step p { margin: 0; }
+
+/* =========================================================
+   자료실
+   ========================================================= */
+/* 과목 칩 + 검색을 한 줄로. 따로 두면 사이가 텅 비어 보인다. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--md) var(--lg);
+  flex-wrap: wrap;
+  margin-bottom: var(--xl);
+  padding-bottom: var(--lg);
+  border-bottom: 1px solid var(--hairline);
+}
+.search { margin-left: auto; }
+.search input {
+  width: 260px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 420;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--canvas);
+  color: var(--ink);
+}
+/* 0.45 는 대비 3.4 로 기준(4.5) 미달이었다 */
+.search input::placeholder { color: var(--ink); opacity: 0.62; }
+.search input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary);
+  border-color: var(--primary);
+}
+/* 위에서 outline 을 지웠으므로 키보드 링은 따로 살려 둔다 */
+.search input:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+/* 과목 바로가기 — 자료실이 세로로 길기 때문에 목차가 필요하다 */
+.subject-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--xs);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.subject-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--xs);
+  padding: 7px 14px 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-soft);
+  font-size: 15px;
+  font-weight: 480;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.16s ease;
+}
+.subject-nav a:hover { background: var(--hairline); }
+.subject-nav .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--r-full);
+  flex: none;
+}
+/* '공통수학2' 처럼 과목 이름으로 읽히지 않도록 선으로 떼어 놓는다 */
+.subject-nav .n {
+  margin-left: 2px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(0, 0, 0, 0.18);
+  font-variant-numeric: tabular-nums;
+  font-weight: 420;
+  opacity: 0.55;
+}
+
+/* 맨 위로 — 자료실은 폰에서 8,000px 에 가깝다. 아래쪽 과목을 보다가
+   다른 과목으로 옮기려면 과목 칩이 있는 맨 위까지 되돌아가야 했다.
+   (칩 줄을 고정하려면 .toolbar 를 sticky 로 만들어야 하는데,
+    폰에서는 칩 + 검색이 219px 이라 화면을 너무 많이 가린다) */
+.to-top {
+  display: none;
+  position: fixed;
+  right: var(--gutter);
+  bottom: calc(var(--lg) + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-full);
+  background: var(--ink);
+  color: var(--canvas);
+  font-size: 20px;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  /* 맨 위에서는 안 보인다 — 거기선 쓸모가 없는데 카드만 가린다.
+     (자료실 목록 자체가 이미 script 로 그려지므로 의존이 늘지 않는다) */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+.to-top.show { opacity: 1; visibility: visible; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--lg);
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  padding: var(--lg);
+  text-decoration: none;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+/* 과목 소제목 — 자료실을 교육과정 목차처럼 읽히게 한다 */
+.grid-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  margin-top: var(--xl);
+  padding-top: var(--md);
+  border-top: 1px solid var(--hairline);
+  scroll-margin-top: 72px;
+}
+.grid-head:first-child { margin-top: 0; }
+.grid-head .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--r-full);
+  flex: none;
+}
+/* 과목 이름이 h2, 카드 제목이 h3 — 제목 단계가 h1 다음으로 이어진다 */
+.grid-head h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* 썸네일 — 과목 색을 깐 칩 안에 넣어 카드끼리 구분되게 한다 */
+.card .thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88px;
+  margin-bottom: var(--md);
+  border-radius: var(--r-sm);
+  background: var(--surface-soft);
+}
+.card .thumb svg { display: block; height: 56px; width: auto; }
+.card.soon .thumb { opacity: 0.5; }
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sm);
+  margin-bottom: var(--xs);
+}
+.card h3 {
+  margin: 0 0 var(--xs);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.35;
+}
+.card p { margin: 0 0 var(--md); flex: 1; }
+/* 수업에서 언제 꺼내 쓰는지 — 카드에 남는 유일한 설명이자 자료를 고르는 기준.
+   (자료 설명 desc 는 화면에 안 나오지만 검색에는 그대로 걸립니다) */
+/* 라벨을 같은 줄에 두면 첫 줄 폭을 뺏겨 '…연결시킬 / 때' 처럼
+   마지막 한 글자만 떨어진다. 라벨은 위로 올리고 문장에 폭을 다 준다. */
+.card .use {
+  flex: 1;
+  margin: 0 0 var(--md);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: rgba(0, 0, 0, 0.72);
+}
+.card .use b {
+  display: block;
+  margin-bottom: 1px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: rgba(0, 0, 0, 0.45);
+}
+.card .go { font-size: 16px; font-weight: 540; }
+.tag-3d {
+  flex: none;
+  padding: 3px 8px 4px;
+  border-radius: var(--r-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+}
+.card.soon {
+  background: var(--canvas);
+  border: 1px dashed var(--hairline);
+  cursor: default;
+}
+.card.soon:hover { transform: none; box-shadow: none; border-color: var(--hairline); }
+.card.soon h3 { font-weight: 400; }
+
+.empty {
+  grid-column: 1 / -1;
+  padding: var(--xxl) 0;
+  text-align: center;
+}
+
+/* =========================================================
+   개념 지도 (map.html)
+
+   개념 상자는 flex 로 배치하고, 잇는 선만 script 가 SVG 로 얹는다.
+   좌표를 손으로 박아 두면 폰에서 반드시 깨지기 때문에, 배치는 CSS 에
+   맡기고 script 는 '그려진 자리를 재서 선을 긋는' 일만 한다.
+   ========================================================= */
+.cmap { position: relative; }
+/* 선은 상자 뒤로 — 상자를 가리지 않게 */
+.cmap-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.cmap-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-opacity: 0.22;
+  transition: stroke-opacity 0.16s ease, stroke-width 0.16s ease;
+}
+/* 하나를 고르면 그 개념에 붙은 선만 남기고 나머지는 흐려진다 */
+.cmap.has-selection .cmap-line { stroke-opacity: 0.08; }
+.cmap.has-selection .cmap-line.on { stroke-opacity: 0.85; stroke-width: 2.4; }
+
+.cmap-layer {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: var(--lg);
+  align-items: start;
+  padding: var(--lg) 0;
+}
+.cmap-layer + .cmap-layer { border-top: 1px solid var(--hairline-soft); }
+/* 층 이름은 h2 — 개념을 고르기 전에도 제목 단계(h1→h2)가 이어지게 */
+.cmap-layer-label { margin: 0; padding-top: 12px; font-weight: 500; }
+.cmap-row { display: flex; flex-wrap: wrap; gap: var(--sm); }
+
+.cmap-node {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--xs);
+  padding: 11px 16px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--canvas);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+.cmap-node:hover { border-color: var(--primary); transform: translateY(-1px); }
+.cmap-node.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--inverse-ink);
+}
+.cmap-node .dot { width: 9px; height: 9px; border-radius: var(--r-full); flex: none; }
+/* 볼 수 있는 자료가 몇 개 붙어 있는지 */
+.cmap-node-n {
+  margin-left: 2px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(0, 0, 0, 0.18);
+  font-size: 14px;
+  font-weight: 420;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.55;
+}
+.cmap-node.on .cmap-node-n { border-left-color: rgba(255, 255, 255, 0.3); opacity: 0.7; }
+
+/* --- 고른 개념의 자세한 내용 --- */
+.cmap-panel {
+  margin-top: var(--xl);
+  padding: var(--xl);
+  border-radius: var(--r-lg);
+  background: var(--surface-soft);
+}
+.cmap-hint { margin: 0; opacity: 0.75; }
+.cmap-panel-head h2 { margin: var(--xs) 0 var(--sm); }
+.cmap-panel-head p { margin: 0; max-width: 44em; }
+.cmap-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--lg);
+  margin-top: var(--xl);
+  padding-top: var(--lg);
+  border-top: 1px solid var(--hairline);
+}
+.cmap-panel-grid h3 { margin: 0 0 var(--sm); }
+.cmap-chips { display: flex; flex-wrap: wrap; gap: var(--xs); }
+.cmap-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--xs);
+  padding: 7px 13px 8px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 480;
+  color: var(--ink);
+  cursor: pointer;
+}
+.cmap-chip:hover { box-shadow: inset 0 0 0 1px var(--primary); }
+.cmap-chip .dot { width: 8px; height: 8px; border-radius: var(--r-full); flex: none; }
+.cmap-links { display: flex; flex-direction: column; gap: var(--xs); align-items: flex-start; }
+.cmap-links a { font-size: 16px; font-weight: 500; text-decoration: none; }
+.cmap-links a:hover { text-decoration: underline; }
+.cmap-none { font-size: 15px; opacity: 0.55; }
+
+/* =========================================================
+   푸터
+   ========================================================= */
+/* 푸터는 '끝났다'는 표시지 두 번째 홈페이지가 아니다.
+   예전엔 홈 전체 높이(1874px)의 31%(577px)를 푸터가 차지했고,
+   그중 192px 이 위·아래 여백 96px 두 개로 그냥 비어 있었다. */
+.footer {
+  padding: var(--xxl) 0 var(--xl);
+  border-top: 1px solid var(--hairline-soft);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr;
+  gap: var(--xl);
+}
+/* 상단 바에 이미 있는 이름이므로 크게 반복할 이유가 없다 (40px → 26px) */
+.footer-wordmark {
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 0;
+}
+/* 푸터 칸 제목은 h3 — 어느 페이지에서든 제목 단계가 안 건너뛰게 */
+.footer h3 { margin: 0 0 var(--md); font-weight: 400; }
+.footer ul { list-style: none; margin: 0; padding: 0; }
+.footer li { margin-bottom: var(--xs); }
+.footer a { font-size: 16px; font-weight: 420; text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+.footer-base {
+  margin-top: var(--xl);
+  padding-top: var(--lg);
+  border-top: 1px solid var(--hairline-soft);
+}
+/* library.html 처럼 맨 끝에 업데이트 날짜를 오른쪽으로 붙일 때 */
+.footer-base-split {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--xs) var(--lg);
+}
+
+/* =========================================================
+   데모 페이지 (demos/*.html)
+   ========================================================= */
+.demo-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--md);
+  flex-wrap: wrap;
+  height: 56px;
+  padding: 0 var(--gutter);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+}
+.demo-bar a.back {
+  font-size: 16px;
+  font-weight: 480;
+  text-decoration: none;
+  padding: var(--xs) var(--sm) var(--xs) 0;
+}
+.demo-bar h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+
+/* 수업용 링크 복사 (assets/state.js 가 만들어 넣습니다) */
+.copy-link {
+  margin-left: auto;
+  flex: none;
+  padding: 7px 15px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+.copy-link:hover { background: var(--surface-soft); }
+
+.stage {
+  display: grid;
+  /* minmax(0, …) — 안쪽 내용의 최소 폭이 칸을 밀어내지 못하게 */
+  grid-template-columns: minmax(0, 1fr) 340px;
+  height: calc(100vh - 57px);
+}
+.canvas-host { position: relative; min-width: 0; background: var(--surface-soft); min-height: 320px; }
+.canvas-host canvas { display: block; }
+
+.panel {
+  background: var(--canvas);
+  border-left: 1px solid var(--hairline);
+  padding: var(--lg) var(--lg) var(--xxl);
+  overflow-y: auto;
+}
+.panel .group { margin-bottom: var(--xl); }
+.panel .caption { display: block; margin-bottom: var(--sm); }
+.panel label { display: block; font-size: 16px; font-weight: 500; margin-bottom: var(--sm); }
+.panel input[type="range"] { width: 100%; accent-color: var(--primary); }
+.panel select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 420;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--canvas);
+  color: var(--ink);
+}
+.panel .check {
+  display: flex;
+  align-items: center;
+  gap: var(--xs);
+  font-size: 16px;
+  font-weight: 420;
+  margin-bottom: var(--xs);
+}
+.panel input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
+
+.readout {
+  background: var(--surface-soft);
+  border-radius: var(--r-md);
+  padding: var(--md);
+}
+.readout div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;          /* 좁은 화면에서 값이 아래로 내려가게 */
+  gap: 0 var(--sm);
+  padding: 3px 0;
+  font-size: 16px;
+}
+.readout .val { font-weight: 540; font-variant-numeric: tabular-nums; }
+.readout .rule {
+  margin-top: var(--sm);
+  padding-top: var(--sm);
+  border-top: 1px solid var(--hairline);
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 480;
+}
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-xs);
+  margin-right: var(--xs);
+  vertical-align: 1px;
+}
+.swatch.shape { background: var(--block-navy); }
+.swatch.shadow { background: var(--block-lime); }
+.note { font-size: 16px; font-weight: 390; line-height: 1.6; }
+
+/* =========================================================
+   반응형
+   ========================================================= */
+@media (max-width: 960px) {
+  :root { --gutter: var(--xl); --section: 72px; }
+
+  /* 공지·질문 링크는 햄버거 메뉴 안으로 (예전엔 여기서 display:none 으로
+     완전히 숨겨서, 페이지가 나뉜 뒤로는 폰에서 갈 방법이 없었다) */
+  .nav-toggle-wrap { display: block; }
+  /* "직접 보는 수학" 버튼까지 좁은 화면에 다 넣으면 줄바꿈이 생긴다 —
+     이 버튼도 메뉴 안으로 옮기고, 위 줄에는 브랜드 + 햄버거만 남긴다 */
+  .nav-actions { display: none; }
+  .nav-links .mobile-only { display: block; }
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 0;
+    padding: var(--sm) var(--gutter) var(--md);
+    background: var(--canvas);
+    border-bottom: 1px solid var(--hairline);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+  .nav-links a { padding: 13px var(--sm); font-size: 17px; border-radius: var(--r-sm); }
+  .nav:has(.nav-toggle-input:checked) .nav-links { display: flex; }
+
+  /* 폰에서는 날짜를 제목 위로 — 두 칸을 넣을 폭이 없다 */
+  .rows > article { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
+  .rows > article > .caption,
+  .rows > article > h3,
+  .rows > article > p { grid-column: 1; grid-row: auto; }
+  .rows h3 { margin: var(--xs) 0; }
+
+  .to-top { display: flex; }
+
+  /* 개념 지도 — 층 이름을 상자 위로 올린다 (옆에 둘 폭이 없다) */
+  .cmap-layer { grid-template-columns: 1fr; gap: var(--sm); padding: var(--md) 0; }
+  .cmap-layer-label { padding-top: 0; }
+  .cmap-panel-grid { grid-template-columns: 1fr 1fr; }
+
+  .block-split { grid-template-columns: 1fr; gap: var(--xl); }
+  .cols-3 { grid-template-columns: 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .hero-grid { grid-template-columns: 1fr; gap: var(--xl); }
+  .section-head { grid-template-columns: 1fr; gap: var(--sm); }
+}
+
+@media (max-width: 768px) {
+  /* 컬러블록은 화면 끝까지 꽉 차는 포스터가 된다 */
+  .block {
+    border-radius: 0;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: var(--xxl) var(--gutter);
+  }
+  .stage { grid-template-columns: minmax(0, 1fr); height: auto; }
+
+  /* 폰에서는 그림을 위에 붙여 두고 아래에서 슬라이더를 만진다.
+     58vh 이면 첫 화면에 조작부가 거의 안 보였다 (슬라이더 4개 중 1개). */
+  .canvas-host {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 44vh;
+    min-height: 220px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .panel { border-left: none; padding-top: var(--md); }
+
+  /* 좁은 화면에서는 데모 제목 줄이 두 줄이 되어도 잘리지 않게.
+     다만 100px 은 667px 화면에서 너무 크다 — 설명 줄을 한 단계 줄인다. */
+  .demo-bar { height: auto; min-height: 56px; gap: var(--xs); padding: var(--xs) var(--gutter) var(--sm); }
+  .demo-bar h1 { font-size: 18px; }
+  /* 설명 줄을 맨 뒤로 보내 '복사' 버튼이 제목과 같은 줄에 남게 한다.
+     (안 그러면 버튼이 세 번째 줄로 밀려 상단 바가 145px 까지 커진다) */
+  .demo-bar .caption { order: 3; flex-basis: 100%; font-size: 12px; line-height: 1.3; }
+  .copy-link { order: 2; padding: 5px 12px 6px; font-size: 14px; }
+}
+
+@media (max-width: 560px) {
+  :root { --gutter: var(--lg); }
+  .cols-3, .footer-grid { grid-template-columns: 1fr; }
+  .search { margin-left: 0; width: 100%; }
+  .search input { width: 100%; }
+  .cta-row .btn { width: 100%; justify-content: center; }
+  .cmap-panel { padding: var(--lg); }
+  .cmap-panel-grid { grid-template-columns: 1fr; }
+  .nav-actions .btn-secondary { display: none; }
+  .grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}

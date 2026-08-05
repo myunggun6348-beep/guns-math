@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>정규분포와 신뢰구간 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>정규분포와 신뢰구간</h1>
+  <span class="caption">확률과 통계 · 통계 — 95%가 무슨 뜻인지 직접 세어 봅니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="mode">보기</label>
+      <select id="mode">
+        <option value="curve">① 정규분포 곡선과 넓이</option>
+        <option value="ci">② 신뢰구간 100개 그려 보기</option>
+      </select>
+    </div>
+
+    <div id="curveOnly">
+      <div class="group">
+        <label for="mu">평균 m = <span id="muText">0.0</span></label>
+        <input type="range" id="mu" min="-3" max="3" value="0" step="0.1" />
+      </div>
+      <div class="group">
+        <label for="sd">표준편차 σ = <span id="sdText">1.0</span></label>
+        <input type="range" id="sd" min="0.4" max="2.5" value="1" step="0.05" />
+      </div>
+      <div class="group">
+        <label for="k">색칠할 범위 m ± <span id="kText">1.00</span>σ</label>
+        <input type="range" id="k" min="0.1" max="3" value="1" step="0.01" />
+      </div>
+    </div>
+
+    <div id="ciOnly" style="display: none;">
+      <div class="group">
+        <label for="n">표본 크기 n = <span id="nText">25</span></label>
+        <input type="range" id="n" min="4" max="100" value="25" step="1" />
+      </div>
+      <div class="group">
+        <label for="lvl">신뢰도</label>
+        <select id="lvl">
+          <option value="1.96">95%</option>
+          <option value="1.645">90%</option>
+          <option value="2.576">99%</option>
+        </select>
+      </div>
+      <div class="group">
+        <button class="btn btn-primary" id="again" style="width: 100%; justify-content: center;">다시 100번 뽑기</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout" id="roCurve">
+        <div><span class="key"><span class="swatch shadow"></span>색칠된 넓이</span><span class="val" id="area">0.6827</span></div>
+        <div><span class="key">m ± 1σ</span><span class="val">0.6827</span></div>
+        <div><span class="key">m ± 2σ</span><span class="val">0.9545</span></div>
+        <div><span class="key">m ± 3σ</span><span class="val">0.9973</span></div>
+        <div class="rule"><strong>넓이 = 확률</strong></div>
+      </div>
+      <div class="readout" id="roCI" style="display: none;">
+        <div><span class="key">모평균 m</span><span class="val">0 (정답)</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>m 을 품은 구간</span><span class="val" id="hit">— / 100</span></div>
+        <div><span class="key">빗나간 구간</span><span class="val" id="miss">—</span></div>
+        <div><span class="key">구간의 폭</span><span class="val" id="width">—</span></div>
+        <div class="rule"><strong id="ciRule">100개 중 약 95개</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note" id="note">
+        정규분포에서 <b>확률은 곡선 아래의 넓이</b>입니다. σ 를 바꿔 보면 곡선의 폭은 달라져도
+        m ± 1σ 안의 넓이는 <em>언제나 0.6827</em> 로 같습니다. 표준화를 하는 이유가 여기 있습니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#d9f26e", NAVY = "#201f5e";
+let W = 0, H = 0;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+// 표준정규분포의 누적확률 (오차 1e-7 정도의 근사식)
+function Phi(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+  let p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 +
+          t * (-1.821255978 + t * 1.330274429))));
+  return z > 0 ? 1 - p : p;
+}
+// 표준정규분포를 따르는 난수 (Box–Muller)
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+/* ---------- ① 정규분포 곡선 ---------- */
+function drawCurve() {
+  const mu = +$("mu").value, sd = +$("sd").value, k = +$("k").value;
+  const pad = { l: 60, r: 60, t: 60, b: 70 };
+  const xL = -7, xR = 7;
+  const X = x => pad.l + ((x - xL) / (xR - xL)) * (W - pad.l - pad.r);
+  // σ = 0.7 일 때 화면을 꽉 채우도록 잡는다. σ 가 작으면 위로 넘치지만
+  // “σ 가 작을수록 뾰족해진다” 는 게 보여야 하므로 배율은 고정한다.
+  const peak = 1 / (0.7 * Math.sqrt(2 * Math.PI));
+  const Y = y => H - pad.b - (y / peak) * (H - pad.t - pad.b);
+  const f = x => Math.exp(-((x - mu) ** 2) / (2 * sd * sd)) / (sd * Math.sqrt(2 * Math.PI));
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 16, W, H - 16); ctx.clip();
+
+  // 색칠 구간
+  const lo = mu - k * sd, hi = mu + k * sd;
+  ctx.fillStyle = LIME;
+  ctx.beginPath();
+  ctx.moveTo(X(lo), Y(0));
+  for (let x = lo; x <= hi; x += (hi - lo) / 200) ctx.lineTo(X(x), Y(f(x)));
+  ctx.lineTo(X(hi), Y(0));
+  ctx.closePath(); ctx.fill();
+
+  // 축
+  ctx.strokeStyle = "rgba(0,0,0,0.45)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l - 20, Y(0)); ctx.lineTo(W - pad.r + 20, Y(0)); ctx.stroke();
+
+  // 곡선
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  for (let i = 0; i <= 400; i++) {
+    const x = xL + ((xR - xL) * i) / 400;
+    i === 0 ? ctx.moveTo(X(x), Y(f(x))) : ctx.lineTo(X(x), Y(f(x)));
+  }
+  ctx.stroke();
+
+  // m, m±kσ 표시
+  ctx.strokeStyle = NAVY; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(X(mu), Y(0)); ctx.lineTo(X(mu), Y(f(mu))); ctx.stroke();
+  ctx.fillStyle = "#000";
+  ctx.font = "400 14px JetBrains Mono, monospace";
+  ctx.fillText("m", X(mu) - 6, Y(0) + 24);
+  for (const [v, lab] of [[lo, "m−kσ"], [hi, "m+kσ"]]) {
+    ctx.strokeStyle = "rgba(0,0,0,0.4)";
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(v), Y(0)); ctx.lineTo(X(v), Y(f(v))); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillText(lab, X(v) - 22, Y(0) + 44);
+  }
+
+  ctx.restore();
+
+  $("muText").textContent = mu.toFixed(1);
+  $("sdText").textContent = sd.toFixed(2);
+  $("kText").textContent = k.toFixed(2);
+  $("area").textContent = (Phi(k) - Phi(-k)).toFixed(4);
+}
+
+/* ---------- ② 신뢰구간 100개 ---------- */
+let samples = [];
+function resample() {
+  const n = +$("n").value;
+  samples = [];
+  for (let i = 0; i < 100; i++) {
+    let s = 0;
+    for (let j = 0; j < n; j++) s += randn();     // 모평균 0, 모표준편차 1
+    samples.push(s / n);
+  }
+}
+
+function drawCI() {
+  const n = +$("n").value, z = +$("lvl").value;
+  const half = z / Math.sqrt(n);
+  const pad = { l: 70, r: 40, t: 40, b: 50 };
+  const xL = -1.6, xR = 1.6;
+  const X = x => pad.l + ((x - xL) / (xR - xL)) * (W - pad.l - pad.r);
+  const rowH = (H - pad.t - pad.b) / 100;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 모평균 0 을 나타내는 세로선
+  ctx.strokeStyle = NAVY; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(X(0), pad.t - 14); ctx.lineTo(X(0), H - pad.b + 10); ctx.stroke();
+  ctx.fillStyle = NAVY;
+  ctx.font = "500 15px Pretendard Variable, sans-serif";
+  ctx.fillText("모평균 m = 0", X(0) + 10, pad.t - 18);
+
+  let hit = 0;
+  samples.forEach((xbar, i) => {
+    const lo = xbar - half, hi = xbar + half;
+    const ok = lo <= 0 && 0 <= hi;
+    if (ok) hit++;
+    const y = pad.t + rowH * (i + 0.5);
+    ctx.strokeStyle = ok ? "rgba(0,0,0,0.35)" : "#e0004d";
+    ctx.lineWidth = ok ? 1.6 : 2.4;
+    ctx.beginPath(); ctx.moveTo(X(lo), y); ctx.lineTo(X(hi), y); ctx.stroke();
+    ctx.fillStyle = ok ? "#000" : "#e0004d";
+    ctx.beginPath(); ctx.arc(X(xbar), y, 1.8, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // 눈금
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.font = "400 13px JetBrains Mono, monospace";
+  for (const v of [-1, -0.5, 0.5, 1]) ctx.fillText(v.toString(), X(v) - 10, H - pad.b + 28);
+
+  $("nText").textContent = n;
+  $("hit").textContent = hit + " / 100";
+  $("miss").textContent = (100 - hit) + " 개";
+  $("width").textContent = (2 * half).toFixed(3);
+  $("ciRule").textContent = `신뢰도 ${(100 * (2 * Phi(z) - 1)).toFixed(0)}% → 100개 중 약 ${Math.round(100 * (2 * Phi(z) - 1))}개`;
+}
+
+function draw() {
+  const mode = $("mode").value;
+  const isCI = mode === "ci";
+  $("curveOnly").style.display = isCI ? "none" : "";
+  $("ciOnly").style.display = isCI ? "" : "none";
+  $("roCurve").style.display = isCI ? "none" : "";
+  $("roCI").style.display = isCI ? "" : "none";
+  $("note").innerHTML = isCI
+    ? '가로 막대 하나가 <b>표본 하나로 만든 신뢰구간</b>입니다. 어떤 구간은 모평균(세로선)을 품고, 어떤 구간은 빗나갑니다.<br /><br />' +
+      '95% 신뢰구간이란 “모평균이 이 구간 안에 있을 확률이 95%”가 아니라, <b>이런 식으로 구간을 만들면 100번 중 약 95번은 모평균을 품는다</b>는 뜻입니다. 다시 뽑기를 여러 번 눌러 보세요.<br /><br />' +
+      'n 을 키우면 구간이 좁아지지만 <em>맞히는 비율은 그대로</em>입니다.'
+    : '정규분포에서 <b>확률은 곡선 아래의 넓이</b>입니다. σ 를 바꿔 보면 곡선의 폭은 달라져도 m ± 1σ 안의 넓이는 <em>언제나 0.6827</em> 로 같습니다. 표준화를 하는 이유가 여기 있습니다.';
+  isCI ? drawCI() : drawCurve();
+}
+
+for (const id of ["mode", "mu", "sd", "k", "lvl"]) $(id).addEventListener("input", draw);
+$("n").addEventListener("input", () => { resample(); draw(); });
+$("again").addEventListener("click", () => { resample(); draw(); });
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+resample();
+draw();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>개념 지도 · GUN’s MATH</title>
+<meta name="description" content="고1부터 고3까지 수학 개념이 어디서 왔고 어디로 이어지는지 한 장으로. 개념을 누르면 필요한 것과 이어지는 것, 그리고 직접 볼 수 있는 자료가 나옵니다." />
+
+<!-- 카카오톡·문자로 이 페이지 링크를 직접 공유할 때 보이는 미리보기 -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="개념 지도 · GUN’s MATH" />
+<meta property="og:description" content="고1부터 고3까지 수학 개념이 어디서 왔고 어디로 이어지는지 한 장으로. 개념을 누르면 관련 자료로 바로 갑니다." />
+<meta property="og:locale" content="ko_KR" />
+<meta property="og:image" content="assets/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="GUN’s MATH — 단위원과 사인 곡선 그림" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+
+<link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+<!-- ===================== 상단 내비 ===================== -->
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M4 25h24l-8 5H4z" fill="#d9f26e" />
+        <path d="M4 25 16 3l12 22z" fill="#000000" />
+      </svg>
+      GUN’s MATH
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="map.html" aria-current="page">개념 지도</a>
+      <a href="index.html#notice">공지</a>
+      <a href="ask.html">질문</a>
+      <a href="library.html" class="mobile-only">직접 보는 수학</a>
+    </div>
+    <div class="nav-actions">
+      <a class="btn btn-primary" href="library.html">직접 보는 수학</a>
+    </div>
+    <div class="nav-toggle-wrap">
+      <input type="checkbox" class="nav-toggle-input" id="navToggle" />
+      <label class="nav-toggle" for="navToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></label>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== 개념 지도 ===================== -->
+<section class="section" id="map" style="padding-top: var(--xxl);">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Map</span>
+      <div>
+        <h1 class="display-lg">개념 지도</h1>
+        <p class="body-lg">
+          지금 배우는 것이 어디서 왔고 어디로 이어지는지 한 장에 담았습니다.
+          개념을 누르면 먼저 알아야 할 것, 뒤에 이어지는 것, 그리고 직접 볼 수 있는
+          자료가 아래에 나옵니다.
+        </p>
+      </div>
+    </div>
+
+    <!-- 지도 — 개념 상자는 CSS 로 배치하고, 잇는 선만 script 가 그립니다 -->
+    <div class="cmap" id="cmap">
+      <svg class="cmap-lines" id="cmapLines" aria-hidden="true"></svg>
+      <!-- 층은 script 가 만들어 넣습니다 -->
+    </div>
+
+    <!-- 누른 개념의 자세한 내용 -->
+    <div class="cmap-panel" id="cmapPanel" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ===================== 푸터 ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-wordmark">GUN’s MATH</p>
+        <p class="body-sm" style="margin-top: 12px; max-width: 24em;">
+          고등학교에서 수학을 가르칩니다. 수업에서 직접 써 보고 다듬은 것만 올려 둡니다.
+        </p>
+      </div>
+      <div>
+        <h3 class="caption en">Menu</h3>
+        <ul>
+          <li><a href="library.html">직접 보는 수학</a></li>
+          <li><a href="map.html">개념 지도</a></li>
+          <li><a href="ask.html">질문</a></li>
+          <li><a href="index.html#notice">공지</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="caption en">Contact</h3>
+        <ul>
+          <!-- ✏️ 메일 주소 또는 구글 폼 주소 -->
+          <li><a href="ask.html">연락처를 여기에 넣으세요</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base body-sm">
+      수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.
+    </div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   개념 지도
+
+   층(LAYERS)은 배우는 순서, 화살표(EDGES)는 "이게 있어야 저게 된다".
+   상자 위치는 CSS(flex)가 정하고, script 는 그려진 위치를 재서
+   선만 얹습니다 — 그래서 화면 폭이 바뀌어도 저절로 다시 배치됩니다.
+
+   자료를 새로 만들면 해당 개념의 demos 배열에 한 줄 추가하면 됩니다.
+   ========================================================= */
+
+const SUBJECT_COLOR = {
+  "공통수학":    "var(--sub-common)",
+  "대수":        "var(--sub-algebra)",
+  "미적분Ⅰ":     "var(--sub-calc1)",
+  "미적분Ⅱ":     "var(--sub-calc2)",
+  "확률과 통계": "var(--sub-stat)",
+  "기하":        "var(--sub-geo)",
+};
+
+const NODES = {
+  /* ---------- 고1 · 공통수학1 ---------- */
+  poly:   { name: "다항식", subject: "공통수학", year: "고1",
+            about: "식을 더하고 곱하고 나누는 규칙. 뒤에 나오는 거의 모든 계산이 여기서 출발합니다.",
+            demos: [] },
+  eq:     { name: "방정식과 부등식", subject: "공통수학", year: "고1",
+            about: "판별식으로 해의 개수를 가르고, 이차부등식의 해를 그래프로 읽습니다.",
+            demos: [{ t: "a, b, c 를 움직이면", h: "demos/quadratic.html" }] },
+  count:  { name: "경우의 수", subject: "공통수학", year: "고1",
+            about: "순열과 조합으로 가짓수를 셉니다. 확률의 분모와 분자를 만드는 도구입니다.",
+            demos: [] },
+
+  /* ---------- 고1 · 공통수학2 ---------- */
+  func:   { name: "함수와 그래프", subject: "공통수학", year: "고1",
+            about: "함수·역함수·유리함수·무리함수. '그래프로 본다'는 습관이 여기서 생깁니다.",
+            demos: [] },
+  geomeq: { name: "도형의 방정식", subject: "공통수학", year: "고1",
+            about: "점·직선·원을 좌표와 식으로 다룹니다. 도형 문제가 계산 문제로 바뀝니다.",
+            demos: [{ t: "원과 직선의 위치관계", h: "demos/circle-line.html" }] },
+
+  /* ---------- 고2 ---------- */
+  explog: { name: "지수함수와 로그함수", subject: "대수", year: "고2",
+            about: "곱셈을 덧셈으로 바꾸는 도구. 아주 큰 수와 아주 작은 수를 다룹니다.",
+            demos: [] },
+  trig:   { name: "삼각함수", subject: "대수", year: "고2",
+            about: "단위원 위의 점에서 나온 함수. 각과 길이를 잇는 다리입니다.",
+            demos: [{ t: "단위원과 삼각함수 그래프", h: "demos/unit-circle.html" },
+                    { t: "y = a sin(b(x − c)) + d", h: "demos/trig-transform.html" },
+                    { t: "사인법칙과 외접원", h: "demos/law-of-sines.html" }] },
+  seq:    { name: "수열", subject: "대수", year: "고2",
+            about: "자연수에 값을 대응시킨 함수. 규칙을 찾고 합을 구합니다.",
+            demos: [] },
+  limit:  { name: "함수의 극한과 연속", subject: "미적분Ⅰ", year: "고2",
+            about: "'가까이 가면 어떻게 되는가'. 미분과 적분이 서 있는 바닥입니다.",
+            demos: [] },
+  prob:   { name: "확률", subject: "확률과 통계", year: "고2",
+            about: "센 가짓수를 비율로 바꿉니다. 직관이 자주 틀리는 곳이기도 합니다.",
+            demos: [{ t: "몬티 홀 문제", h: "demos/monty-hall.html" }] },
+
+  /* ---------- 고2 후반 ---------- */
+  diff:   { name: "미분", subject: "미적분Ⅰ", year: "고2",
+            about: "순간의 변화율. 그래프에서는 접선의 기울기로 보입니다.",
+            demos: [{ t: "미분계수는 접선의 기울기", h: "demos/derivative.html" },
+                    { t: "f 와 f′ 를 나란히", h: "demos/derivative-sign.html" }] },
+  integ:  { name: "적분", subject: "미적분Ⅰ", year: "고2",
+            about: "잘게 나눠 더하면 넓이가 됩니다. 미분을 거꾸로 돌린 것이기도 합니다.",
+            demos: [{ t: "구분구적법과 정적분", h: "demos/riemann.html" }] },
+  stat:   { name: "통계", subject: "확률과 통계", year: "고2",
+            about: "표본 몇 개로 전체를 추정합니다. 정규분포가 중심에 있습니다.",
+            demos: [{ t: "정규분포와 신뢰구간", h: "demos/normal-distribution.html" }] },
+
+  /* ---------- 고3 ---------- */
+  seqlim:   { name: "수열의 극한", subject: "미적분Ⅱ", year: "고3",
+              about: "무한히 더하면 어디로 가는가. 유한한 값이 나오는 게 신기한 지점입니다.",
+              demos: [{ t: "무한등비급수", h: "demos/geometric-series.html" }] },
+  difflaw:  { name: "미분법", subject: "미적분Ⅱ", year: "고3",
+              about: "삼각·지수·로그함수까지 미분합니다. 합성함수와 매개변수도 여기서.",
+              demos: [{ t: "lim (sin x)/x = 1", h: "demos/sinx-over-x.html" }] },
+  integlaw: { name: "적분법", subject: "미적분Ⅱ", year: "고3",
+              about: "치환적분·부분적분으로 넓이를 넘어 부피까지 구합니다.",
+              demos: [{ t: "회전체의 부피", h: "demos/solid-of-revolution.html" }] },
+  conic:    { name: "이차곡선", subject: "기하", year: "고3",
+              about: "포물선·타원·쌍곡선. 따로 외울 것 같지만 원뿔 하나에서 다 나옵니다.",
+              demos: [{ t: "원뿔을 자르면", h: "demos/conic-sections.html" }] },
+  vec:      { name: "평면벡터", subject: "기하", year: "고3",
+              about: "크기와 방향을 함께 가진 양. 내적으로 각과 수직을 계산합니다.",
+              demos: [{ t: "벡터의 내적", h: "demos/dot-product.html" }] },
+  space:    { name: "공간도형과 공간좌표", subject: "기하", year: "고3",
+              about: "3차원에서의 수직·정사영. 평면도만 봐서는 안 보이는 것들입니다.",
+              demos: [{ t: "정사영과 넓이", h: "demos/projection.html" },
+                      { t: "삼수선의 정리", h: "demos/three-perpendiculars.html" }] },
+};
+
+// 배우는 순서대로 쌓은 층
+const LAYERS = [
+  { label: "고1 · 공통수학1", ids: ["poly", "eq", "count"] },
+  { label: "고1 · 공통수학2", ids: ["func", "geomeq"] },
+  { label: "고2 · 대수 / 미적분Ⅰ / 확률과 통계", ids: ["explog", "trig", "seq", "limit", "prob"] },
+  { label: "고2 · 미적분Ⅰ / 확률과 통계", ids: ["diff", "integ", "stat"] },
+  { label: "고3 · 미적분Ⅱ / 기하", ids: ["seqlim", "difflaw", "integlaw", "conic", "vec", "space"] },
+];
+
+// [먼저, 나중] — "먼저가 있어야 나중이 된다"
+const EDGES = [
+  ["poly", "eq"], ["poly", "func"],
+  ["eq", "geomeq"],
+  ["func", "explog"], ["func", "trig"], ["func", "seq"], ["func", "limit"],
+  ["geomeq", "conic"], ["geomeq", "vec"],
+  ["count", "prob"], ["prob", "stat"],
+  ["limit", "diff"], ["diff", "integ"],
+  ["seq", "seqlim"], ["limit", "seqlim"],
+  ["trig", "difflaw"], ["explog", "difflaw"], ["diff", "difflaw"],
+  ["integ", "integlaw"], ["difflaw", "integlaw"],
+  ["trig", "space"], ["vec", "space"],
+];
+
+/* ---------- 지도 그리기 ---------- */
+const cmap = document.getElementById("cmap");
+const lines = document.getElementById("cmapLines");
+const panel = document.getElementById("cmapPanel");
+const NS = "http://www.w3.org/2000/svg";
+
+const before = id => EDGES.filter(e => e[1] === id).map(e => e[0]);
+const after  = id => EDGES.filter(e => e[0] === id).map(e => e[1]);
+
+for (const layer of LAYERS) {
+  const row = document.createElement("div");
+  row.className = "cmap-layer";
+  row.innerHTML =
+    `<h2 class="cmap-layer-label caption">${layer.label}</h2>` +
+    `<div class="cmap-row">` +
+    layer.ids.map(id => {
+      const n = NODES[id];
+      return `<button type="button" class="cmap-node" data-id="${id}">
+        <span class="dot" style="background:${SUBJECT_COLOR[n.subject]}"></span>
+        <span class="cmap-node-name">${n.name}</span>
+        ${n.demos.length ? `<span class="cmap-node-n">${n.demos.length}</span>` : ""}
+      </button>`;
+    }).join("") +
+    `</div>`;
+  cmap.appendChild(row);
+}
+
+const nodeEl = id => cmap.querySelector(`.cmap-node[data-id="${id}"]`);
+
+/* 상자가 실제로 놓인 자리를 재서 잇는 선을 그립니다.
+   화면 폭이 바뀌면 상자가 다시 배치되므로 그때마다 다시 그립니다. */
+function drawLines() {
+  const box = cmap.getBoundingClientRect();
+  lines.setAttribute("width", box.width);
+  lines.setAttribute("height", box.height);
+  lines.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
+  lines.innerHTML = "";
+
+  for (const [from, to] of EDGES) {
+    const a = nodeEl(from).getBoundingClientRect();
+    const b = nodeEl(to).getBoundingClientRect();
+    let d;
+
+    if (Math.abs(a.top - b.top) < 4) {
+      /* 같은 줄에 나란히 있는 두 개념 (예: 평면벡터 → 공간도형).
+         위아래로 이으면 선이 거꾸로 올라가므로, 옆으로 잇고 아래로 부풀린다. */
+      const x1 = a.right - box.left, y1 = a.top - box.top + a.height / 2;
+      const x2 = b.left - box.left,  y2 = b.top - box.top + b.height / 2;
+      const sag = 18;
+      d = `M${x1},${y1} C${x1 + 16},${y1 + sag} ${x2 - 16},${y2 + sag} ${x2},${y2}`;
+    } else {
+      const x1 = a.left - box.left + a.width / 2, y1 = a.bottom - box.top;
+      const x2 = b.left - box.left + b.width / 2, y2 = b.top - box.top;
+      const dy = Math.max(18, (y2 - y1) / 2);
+      d = `M${x1},${y1} C${x1},${y1 + dy} ${x2},${y2 - dy} ${x2},${y2}`;
+    }
+
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", d);
+    p.setAttribute("class", "cmap-line");
+    p.dataset.from = from;
+    p.dataset.to = to;
+    lines.appendChild(p);
+  }
+  if (selected) markLines(selected);
+}
+
+/* ---------- 개념 하나를 골랐을 때 ---------- */
+let selected = null;
+
+function markLines(id) {
+  cmap.classList.add("has-selection");
+  for (const p of lines.querySelectorAll(".cmap-line")) {
+    const hit = p.dataset.from === id || p.dataset.to === id;
+    p.classList.toggle("on", hit);
+  }
+}
+
+// 앞쪽이 비었을 때와 뒤쪽이 비었을 때는 뜻이 다르므로 문구도 다르게
+function chips(ids, empty) {
+  if (!ids.length) return `<span class="cmap-none">${empty}</span>`;
+  return ids.map(i => `<button type="button" class="cmap-chip" data-goto="${i}">
+    <span class="dot" style="background:${SUBJECT_COLOR[NODES[i].subject]}"></span>${NODES[i].name}</button>`).join("");
+}
+
+function select(id, push) {
+  const n = NODES[id];
+  if (!n) return;
+  selected = id;
+
+  for (const el of cmap.querySelectorAll(".cmap-node")) {
+    el.classList.toggle("on", el.dataset.id === id);
+    el.setAttribute("aria-pressed", el.dataset.id === id ? "true" : "false");
+  }
+  markLines(id);
+
+  const pre = before(id), post = after(id);
+  panel.innerHTML = `
+    <div class="cmap-panel-head">
+      <span class="caption">${n.year} · ${n.subject}</span>
+      <h2 class="headline">${n.name}</h2>
+      <p class="body-sm">${n.about}</p>
+    </div>
+    <div class="cmap-panel-grid">
+      <div>
+        <h3 class="caption">먼저 알아야 하는 것</h3>
+        <div class="cmap-chips">${chips(pre, "없음 — 여기서 출발합니다")}</div>
+      </div>
+      <div>
+        <h3 class="caption">여기서 이어지는 것</h3>
+        <div class="cmap-chips">${chips(post, "고등학교 과정에서는 여기가 끝입니다")}</div>
+      </div>
+      <div>
+        <h3 class="caption">직접 보는 수학</h3>
+        <div class="cmap-links">${
+          n.demos.length
+            ? n.demos.map(d => `<a href="${d.h}">${d.t} →</a>`).join("")
+            : `<span class="cmap-none">이 개념은 아직 자료가 없습니다</span>`
+        }</div>
+      </div>
+    </div>`;
+
+  if (push) history.replaceState(null, "", "?n=" + id);
+}
+
+function clearPanel() {
+  panel.innerHTML = `<p class="cmap-hint body-sm">개념을 하나 눌러 보세요. 그 개념이
+    <b>어디서 왔고 어디로 이어지는지</b> 선이 밝아지고, 볼 수 있는 자료가 여기에 나옵니다.</p>`;
+}
+
+cmap.addEventListener("click", e => {
+  const btn = e.target.closest(".cmap-node");
+  if (btn) select(btn.dataset.id, true);
+});
+panel.addEventListener("click", e => {
+  const chip = e.target.closest(".cmap-chip");
+  if (chip) {
+    select(chip.dataset.goto, true);
+    nodeEl(chip.dataset.goto).scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+});
+
+clearPanel();
+drawLines();
+
+// 폭이 바뀌면 상자가 다시 배치되므로 선도 다시 그린다
+addEventListener("resize", drawLines);
+if (window.ResizeObserver) new ResizeObserver(drawLines).observe(cmap);
+// 글꼴이 늦게 불러와져 상자 크기가 바뀌는 경우까지
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawLines);
+
+// ?n=trig 처럼 개념을 지정해 링크를 보낼 수 있습니다
+{
+  const want = new URLSearchParams(location.search).get("n");
+  if (want && NODES[want]) select(want, false);
+}
+</script>
+
+</body>
+</html>

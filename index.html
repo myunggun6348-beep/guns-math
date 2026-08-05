@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GUN’s MATH | 고등학교 수학 자료실 · 질문 · 공지</title>
+<meta name="description" content="고1부터 고3까지, 수업에서 쓰려고 만든 수학 자료와 학생 질문·공지를 모아 둔 곳. 자료는 하나씩 늘려 갑니다." />
+
+<!-- 카카오톡·문자로 링크 공유할 때 보이는 미리보기.
+     og:image 는 상대경로도 대부분 읽히지만, 인터넷에 올린 뒤
+     og:url 을 실제 주소로 바꿔 주면 더 확실합니다. (예: https://아이디.github.io/math-visual/) -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="GUN’s MATH — 직접 보는 수학" />
+<meta property="og:description" content="말로는 잘 안 되던 것들을 화면에 옮겨 두었습니다. 자료 17개 · 질문 · 공지" />
+<meta property="og:locale" content="ko_KR" />
+<meta property="og:image" content="assets/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="GUN’s MATH — 단위원과 사인 곡선 그림" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+
+<link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+<!-- ===================== 상단 내비 ===================== -->
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M4 25h24l-8 5H4z" fill="#d9f26e" />
+        <path d="M4 25 16 3l12 22z" fill="#000000" />
+      </svg>
+      GUN’s MATH
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="map.html">개념 지도</a>
+      <a href="#notice">공지</a>
+      <a href="ask.html">질문</a>
+      <a href="library.html" class="mobile-only">직접 보는 수학</a>
+    </div>
+    <div class="nav-actions">
+      <a class="btn btn-primary" href="library.html">직접 보는 수학</a>
+    </div>
+    <div class="nav-toggle-wrap">
+      <input type="checkbox" class="nav-toggle-input" id="navToggle" />
+      <label class="nav-toggle" for="navToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></label>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== 히어로 (크림 색면 + 수학 그림) ===================== -->
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-text">
+      <span class="eyebrow">Math · Grade 1–3</span>
+      <h1 class="display-xl">GUN’s MATH</h1>
+      <p class="hero-intro">
+        고등학교에서 수학을 가르칩니다.<br />
+        말로는 잘 안 되던 것들을 화면에 옮겨 두고,<br />
+        물어볼 데가 없던 것들은 여기서 받습니다.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="library.html">직접 보는 수학</a>
+        <a class="btn btn-secondary" href="ask.html">질문 남기기</a>
+      </div>
+    </div>
+
+    <figure class="hero-figure">
+      <!-- viewBox 아래위를 그림에 바짝 맞춘다. 0 0 520 340 이면 위아래로
+           58px 씩 빈 채로 그려져, 캡션이 그림에서 떨어져 떠 보였다.
+           (그림 좌표는 그대로 — 세로축 58~282 만 보이게 잘라 낸 것) -->
+      <svg id="heroArt" viewBox="0 44 520 254" role="img"
+           aria-label="단위원 위의 점이 돌아가면서 오른쪽에 사인 곡선이 그려지는 그림"></svg>
+      <figcaption class="caption en">P(cos θ, sin θ) → y = sin θ</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================== 공지 ===================== -->
+<section class="section" id="notice">
+  <div class="wrap">
+    <div class="block block-lime">
+      <span class="eyebrow">Notice</span>
+      <h2 class="display-lg">공지</h2>
+      <p class="subhead" style="margin-top: 24px; max-width: 26em;">
+        시험 범위, 과제, 수업 안내는 여기에 올립니다.
+      </p>
+
+      <!-- ✏️ 공지는 아래 script 의 NOTICES 배열에 한 줄씩 추가하면 됩니다 -->
+      <div class="rows" id="notices"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 푸터 ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-wordmark">GUN’s MATH</p>
+        <p class="body-sm" style="margin-top: 12px; max-width: 24em;">
+          고등학교에서 수학을 가르칩니다. 수업에서 직접 써 보고 다듬은 것만 올려 둡니다.
+        </p>
+      </div>
+      <div>
+        <h3 class="caption en">Menu</h3>
+        <ul>
+          <li><a href="library.html">직접 보는 수학</a></li>
+          <li><a href="map.html">개념 지도</a></li>
+          <li><a href="ask.html">질문</a></li>
+          <li><a href="#notice">공지</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="caption en">Contact</h3>
+        <ul>
+          <!-- ✏️ 메일 주소 또는 구글 폼 주소 -->
+          <li><a href="ask.html">연락처를 여기에 넣으세요</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base body-sm">
+      수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.
+    </div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   1. 공지 — 여기에 한 항목씩 추가하면 화면에 올라갑니다.
+      최신 것이 위로 오도록 맨 앞에 넣어 주세요.
+      (자료 목록은 library.html, 질문·답은 ask.html 에 있습니다)
+   ========================================================= */
+const NOTICES = [
+  { date: "2026-08-02", tag: "자료",
+    title: "자료를 17개로 늘리고 2022 개정 교육과정에 맞췄습니다",
+    body: "공통수학1·2, 대수, 미적분Ⅰ·Ⅱ, 확률과 통계, 기하 — 과목별로 정리했습니다. 카드에 과목과 영역이 적혀 있으니 진도에 맞는 것을 찾아 쓰세요." },
+
+  { date: "2026-07-28", tag: "안내",
+    title: "질문은 여기로 보내세요",
+    body: "수업 시간에 묻기 애매한 것들을 편하게 남겨 주세요. 답은 이 페이지에 모아 둡니다." }
+];
+
+document.getElementById("notices").innerHTML = NOTICES.map(it => `
+  <article>
+    <span class="caption">${it.date} · ${it.tag}</span>
+    <h3 class="card-title">${it.title}</h3>
+    <p class="body-sm">${it.body}</p>
+  </article>`).join("");
+
+
+/* =========================================================
+   2. 히어로 그림 — 단위원 위의 점 P 가 돌면
+      오른쪽 사인 곡선 위의 점이 같이 따라갑니다.
+   ========================================================= */
+const NS = "http://www.w3.org/2000/svg";
+const art = document.getElementById("heroArt");
+
+const CX = 150, CY = 170, R = 92;   // 단위원
+const X0 = 268, XW = 232;           // 사인 곡선 한 주기가 그려지는 가로 구간
+
+function node(name, attrs) {
+  const n = document.createElementNS(NS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+const onCircle = th => [CX + R * Math.cos(th), CY - R * Math.sin(th)];
+const onCurve  = th => [X0 + (th / (2 * Math.PI)) * XW, CY - R * Math.sin(th)];
+
+// --- 한 번만 그리는 것들 (축 · 원 · 사인 곡선) ---
+(function base() {
+  const g = node("g", { fill: "none", stroke: "#000" });
+
+  g.appendChild(node("line", { x1: 34, y1: CY, x2: 508, y2: CY, "stroke-opacity": 0.35 }));
+  g.appendChild(node("line", { x1: CX, y1: 58, x2: CX, y2: 282, "stroke-opacity": 0.35 }));
+  g.appendChild(node("line", { x1: X0, y1: 58, x2: X0, y2: 282, "stroke-opacity": 0.35 }));
+  g.appendChild(node("circle", { cx: CX, cy: CY, r: R, "stroke-width": 1.6 }));
+
+  let d = "";
+  for (let i = 0; i <= 160; i++) {
+    const th = (i / 160) * Math.PI * 2;
+    const [x, y] = onCurve(th);
+    d += (i ? " L" : "M") + x.toFixed(1) + "," + y.toFixed(1);
+  }
+  g.appendChild(node("path", { d, "stroke-width": 2 }));
+  art.appendChild(g);
+})();
+
+// --- 각도에 따라 다시 그리는 것들 ---
+const sector = node("path", { fill: "#d9f26e", stroke: "none" });
+const radius = node("line", { stroke: "#000", "stroke-width": 1.6 });
+const link   = node("line", { stroke: "#000", "stroke-opacity": 0.4, "stroke-dasharray": "5 4" });
+const dotC   = node("circle", { r: 5, fill: "#000" });
+const dotG   = node("circle", { r: 5, fill: "#000" });
+const tag    = node("text", { "font-size": 15, "font-weight": 500, fill: "#000" });
+
+art.insertBefore(sector, art.firstChild);   // 부채꼴은 선 아래로
+art.append(radius, link, dotC, dotG, tag);
+
+function drawArt(th) {
+  const [px, py] = onCircle(th);
+  const [qx, qy] = onCurve(th);
+
+  sector.setAttribute("d",
+    `M${CX},${CY} L${CX + R},${CY} A${R},${R} 0 ${th > Math.PI ? 1 : 0} 0 ${px},${py} Z`);
+
+  radius.setAttribute("x1", CX); radius.setAttribute("y1", CY);
+  radius.setAttribute("x2", px); radius.setAttribute("y2", py);
+
+  link.setAttribute("x1", px); link.setAttribute("y1", py);
+  link.setAttribute("x2", qx); link.setAttribute("y2", qy);
+
+  dotC.setAttribute("cx", px); dotC.setAttribute("cy", py);
+  dotG.setAttribute("cx", qx); dotG.setAttribute("cy", qy);
+
+  const [tx, ty] = onCircle(th / 2);
+  tag.setAttribute("x", CX + (tx - CX) * 0.42);
+  tag.setAttribute("y", CY + (ty - CY) * 0.42 + 5);
+  tag.textContent = "θ";
+}
+
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  drawArt(Math.PI / 3);
+} else {
+  const t0 = performance.now();
+  (function loop(t) {
+    drawArt(((t - t0) / 15000 * Math.PI * 2) % (Math.PI * 2));
+    requestAnimationFrame(loop);
+  })(t0);
+}
+</script>
+
+</body>
+</html>

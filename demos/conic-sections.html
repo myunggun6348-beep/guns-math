@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>원뿔을 자르면 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>원뿔을 자르면</h1>
+  <span class="caption">기하 · 이차곡선 — 화면을 드래그하면 시점이 돌아갑니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="theta">자르는 각 θ = <span id="thetaText">30°</span></label>
+      <input type="range" id="theta" min="0" max="85" value="30" step="1" />
+    </div>
+
+    <div class="group">
+      <label for="height">평면의 높이 = <span id="heightText">0.90</span></label>
+      <input type="range" id="height" min="0.2" max="2.0" value="0.9" step="0.05" />
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="front" /> 단면을 정면에서 보기</label>
+      <label class="check"><input type="checkbox" id="spin" /> 자동 회전</label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">원뿔의 반각 α</span><span class="val">30°</span></div>
+        <div><span class="key">자르는 각 θ</span><span class="val" id="thetaVal">30°</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>단면</span><span class="val" id="kind">타원</span></div>
+        <div class="rule"><strong id="rule">θ &lt; 60° → 타원</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        원뿔의 옆면은 축과 30°를 이룹니다. 그래서 <em>모선</em>은 바닥과 60°를 이룹니다.<br /><br />
+        θ = 0° 이면 원, θ 를 키우면 타원이 점점 길어지고,
+        θ = 60° 에서 평면이 모선과 나란해지는 순간 타원이 닫히지 못하고 <em>포물선</em>이 됩니다.
+        θ 를 더 키우면 평면이 위아래 두 원뿔을 모두 잘라 <em>쌍곡선</em>이 됩니다.<br /><br />
+        네 곡선이 서로 다른 식에서 나온 게 아니라, 같은 원뿔을 각도만 바꿔 자른 결과라는 것이 핵심입니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "../assets/vendor/three/three.module.js",
+    "three/addons/controls/OrbitControls.js": "../assets/vendor/three/OrbitControls.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const host = document.getElementById("host");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf4f4f3);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+camera.position.set(4.6, 2.6, 6.6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+host.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+// 폰에서 위아래로 쓸어내리면 페이지가 스크롤되고, 좌우로 끌면 시점이 돌아갑니다.
+// (OrbitControls 가 기본으로 넣는 touchAction:none 을 덮어씁니다)
+renderer.domElement.style.touchAction = "pan-y";
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const dir = new THREE.DirectionalLight(0xffffff, 0.5);
+dir.position.set(5, 8, 4);
+scene.add(dir);
+
+// ---- 원뿔 : 축은 y축, 반각 α = 30° ----
+const ALPHA = Math.PI / 6;          // 축과 옆면이 이루는 각
+const K = Math.tan(ALPHA);          // x² + z² = K² y²
+const HH = 2.3;                     // 위·아래 원뿔의 높이
+const RR = K * HH;
+
+const matCone = new THREE.MeshLambertMaterial({
+  color: 0x201f5e, transparent: true, opacity: 0.16, side: THREE.DoubleSide
+});
+const coneGeo = new THREE.ConeGeometry(RR, HH, 64, 1, true);
+
+const coneUp = new THREE.Mesh(coneGeo, matCone);
+coneUp.rotation.x = Math.PI;        // 꼭짓점이 아래(원점)를 향하도록
+coneUp.position.y = HH / 2;
+
+const coneDn = new THREE.Mesh(coneGeo, matCone);
+coneDn.position.y = -HH / 2;
+
+scene.add(coneUp, coneDn);
+
+// 모선 몇 개를 실선으로 (원뿔의 결이 보이도록)
+{
+  const pts = [];
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2;
+    const x = Math.cos(a) * RR, z = Math.sin(a) * RR;
+    pts.push(new THREE.Vector3(-x, -HH, -z), new THREE.Vector3(x, HH, z));
+  }
+  scene.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color: 0x201f5e, transparent: true, opacity: 0.22 })
+  ));
+}
+
+// 축
+scene.add(new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, -HH - 0.3, 0), new THREE.Vector3(0, HH + 0.3, 0)
+  ]),
+  new THREE.LineDashedMaterial({ color: 0x000000, dashSize: 0.12, gapSize: 0.1 })
+).computeLineDistances());
+
+// ---- 자르는 평면 (원판) ----
+const PR = 2.9;
+const plane = new THREE.Mesh(
+  new THREE.CircleGeometry(PR, 72),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.42, side: THREE.DoubleSide })
+);
+const planeEdge = new THREE.LineLoop(
+  new THREE.BufferGeometry().setFromPoints(
+    Array.from({ length: 72 }, (_, i) => {
+      const a = (i / 72) * Math.PI * 2;
+      return new THREE.Vector3(Math.cos(a) * PR, Math.sin(a) * PR, 0);
+    })
+  ),
+  new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 })
+);
+scene.add(plane, planeEdge);
+
+// ---- 잘린 자리에 생기는 단면 (면 + 테두리) ----
+const face = new THREE.Mesh(
+  new THREE.BufferGeometry(),
+  new THREE.MeshBasicMaterial({ color: 0xd9f26e, side: THREE.DoubleSide })
+);
+const curve = new THREE.LineSegments(
+  new THREE.BufferGeometry(),
+  new THREE.LineBasicMaterial({ color: 0x000000 })
+);
+scene.add(face, curve);
+
+// 평면 위의 점 (u, v) → 3차원 좌표
+//   e1 = (1, 0, 0),  e2 = (0, sinθ, cosθ),  원점 = (0, y0, 0)
+const onPlane = (u, v, th, y0) =>
+  new THREE.Vector3(u, y0 + v * Math.sin(th), v * Math.cos(th));
+
+// 원뿔 x² + z² = K² y² 에 평면을 대입하면
+//   u² = K²(y0 + v sinθ)² − v² cos²θ
+// 오른쪽이 0 이상인 v 에서만 곡선이 존재한다.
+// 곡선이 끊기지 않고 이어지는 구간(run)들을 [바깥쪽 점, 안쪽 점] 쌍으로 모은다
+function sectionRuns(th, y0) {
+  const s = Math.sin(th), c = Math.cos(th);
+  const N = 700, V = PR;
+  const runs = [];
+  let run = [];
+
+  for (let i = 0; i <= N; i++) {
+    const v = -V + (2 * V * i) / N;
+    const y = y0 + v * s;
+    const rhs = K * K * y * y - v * v * c * c;
+
+    // 원뿔 높이 밖 · 원판 밖으로 나간 부분은 그리지 않는다
+    if (rhs < 0 || Math.abs(y) > HH || rhs + v * v > PR * PR) {
+      if (run.length > 1) runs.push(run);
+      run = [];
+      continue;
+    }
+    const u = Math.sqrt(rhs);
+    run.push([onPlane(u, v, th, y0), onPlane(-u, v, th, y0)]);
+  }
+  if (run.length > 1) runs.push(run);
+  return runs;
+}
+
+// run 들을 면(삼각형)과 테두리(선분)로 바꾼다
+function buildSection(runs) {
+  const tri = [], seg = [];
+  for (const run of runs) {
+    for (let i = 0; i < run.length - 1; i++) {
+      const [a1, b1] = run[i], [a2, b2] = run[i + 1];
+      tri.push(a1.x, a1.y, a1.z, b1.x, b1.y, b1.z, a2.x, a2.y, a2.z);
+      tri.push(b1.x, b1.y, b1.z, b2.x, b2.y, b2.z, a2.x, a2.y, a2.z);
+      seg.push(a1, a2, b1, b2);
+    }
+    // 끝을 막지 않는다 — 잘려서 생긴 직선은 원뿔곡선이 아니기 때문
+  }
+  return { tri, seg };
+}
+
+const $ = id => document.getElementById(id);
+const THETA_C = 90 - 30;   // 평면이 모선과 나란해지는 각
+
+function update() {
+  const deg = +$("theta").value;
+  const y0 = +$("height").value;
+  const th = THREE.MathUtils.degToRad(deg);
+
+  plane.rotation.x = Math.PI / 2 - th;
+  plane.position.y = y0;
+  planeEdge.rotation.x = plane.rotation.x;
+  planeEdge.position.y = y0;
+
+  const { tri, seg } = buildSection(sectionRuns(th, y0));
+
+  face.geometry.dispose();
+  face.geometry = new THREE.BufferGeometry();
+  face.geometry.setAttribute("position", new THREE.Float32BufferAttribute(tri, 3));
+
+  curve.geometry.dispose();
+  curve.geometry = new THREE.BufferGeometry().setFromPoints(seg);
+
+  let kind, rule;
+  if (deg === 0)                     { kind = "원";     rule = "θ = 0° → 원"; }
+  else if (deg < THETA_C - 0.5)      { kind = "타원";   rule = "θ < 60° → 타원"; }
+  else if (deg <= THETA_C + 0.5)     { kind = "포물선"; rule = "θ = 60° → 포물선"; }
+  else                               { kind = "쌍곡선"; rule = "θ > 60° → 쌍곡선"; }
+
+  $("thetaText").textContent = deg + "°";
+  $("thetaVal").textContent = deg + "°";
+  $("heightText").textContent = y0.toFixed(2);
+  $("kind").textContent = kind;
+  $("rule").textContent = rule;
+
+  if ($("front").checked) lookAtSection(th, y0);
+}
+
+// 단면을 정면에서 보기 — 평면의 법선 방향으로 카메라를 옮긴다
+function lookAtSection(th, y0) {
+  const n = new THREE.Vector3(0, -Math.cos(th), Math.sin(th)).normalize();
+  const target = new THREE.Vector3(0, y0, 0);
+  controls.target.copy(target);
+  camera.position.copy(target).addScaledVector(n, -7.2);
+  camera.up.set(0, Math.sin(th), Math.cos(th));   // 평면 위 방향을 화면 위로
+  camera.lookAt(target);
+}
+
+for (const id of ["theta", "height"]) $(id).addEventListener("input", update);
+$("front").addEventListener("change", e => {
+  if (!e.target.checked) {
+    camera.up.set(0, 1, 0);
+    controls.target.set(0, 0, 0);
+    camera.position.set(4.6, 2.6, 6.6);
+  }
+  update();
+});
+
+function resize() {
+  const w = host.clientWidth, h = host.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+
+// 주소로 상태를 주고받는 일은 assets/state.js 가 전 자료에서 공통으로 합니다.
+// 예전에 안내하던 ?h= 링크도 그대로 열리도록 이름만 이어 줍니다.
+
+update();
+resize();
+
+renderer.setAnimationLoop(() => {
+  if ($("spin").checked && !$("front").checked) {
+    const r = 7.4, t = performance.now() * 0.00022;
+    camera.position.set(Math.cos(t) * r, 2.6, Math.sin(t) * r);
+    camera.lookAt(controls.target);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+
+
+<script>window.STATE_ALIAS = { h: "height" };</script>
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

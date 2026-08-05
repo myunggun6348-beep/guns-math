@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>원과 직선의 위치관계 · GUN’s MATH</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 자료실</a>
+  <h1>원과 직선의 위치관계</h1>
+  <span class="caption">공통수학2 · 도형의 방정식 — 거리로 보는 방법과 판별식으로 보는 방법</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="r">원의 반지름 r = <span id="rText">2.0</span></label>
+      <input type="range" id="r" min="0.5" max="4" value="2" step="0.05" />
+    </div>
+    <div class="group">
+      <label for="m">직선의 기울기 m = <span id="mText">0.60</span></label>
+      <input type="range" id="m" min="-3" max="3" value="0.6" step="0.02" />
+    </div>
+    <div class="group">
+      <label for="n">y절편 n = <span id="nText">1.50</span></label>
+      <input type="range" id="n" min="-6" max="6" value="1.5" step="0.05" />
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="showD" checked /> 중심에서 직선까지의 거리 보기</label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">직선</span><span class="val" id="eq">y = 0.6x + 1.5</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>거리 d</span><span class="val" id="vd">1.29</span></div>
+        <div><span class="key"><span class="swatch shape"></span>반지름 r</span><span class="val" id="vr">2.00</span></div>
+        <div><span class="key">판별식 D</span><span class="val" id="vD">0.00</span></div>
+        <div><span class="key">교점의 개수</span><span class="val" id="cnt">2</span></div>
+        <div class="rule"><strong id="rule">d &lt; r → 서로 다른 두 점에서 만난다</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        같은 사실을 두 방법으로 볼 수 있습니다. 하나는 <b>중심에서 직선까지의 거리 d 와 반지름 r 을 비교</b>하는 것,
+        다른 하나는 두 식을 연립해 나온 이차방정식의 <b>판별식 D 의 부호</b>를 보는 것입니다.<br /><br />
+        슬라이더를 움직여 보면 <em>d = r 이 되는 순간 D = 0 이 되고 접합니다.</em>
+        두 방법이 항상 같은 답을 준다는 걸 눈으로 확인시켜 주세요.<br /><br />
+        계산은 거리 공식 쪽이 훨씬 빠릅니다. 시험에서는 이쪽을 먼저 떠올리도록 연습시키는 게 좋습니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#c3e02f", NAVY = "#201f5e";
+let W = 0, H = 0, S = 40;
+const YR = 5.5;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  S = H / (2 * YR);
+}
+const sx = x => W / 2 + x * S;
+const sy = y => H / 2 - y * S;
+const fmt = v => (Math.abs(v) < 5e-3 ? 0 : v).toFixed(2).replace("-", "−");
+
+function draw() {
+  const r = +$("r").value, m = +$("m").value, n = +$("n").value;
+  const xL = -W / (2 * S), xR = W / (2 * S);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 모눈 · 축
+  ctx.strokeStyle = "rgba(0,0,0,0.07)"; ctx.lineWidth = 1;
+  for (let x = Math.ceil(xL); x <= xR; x++) {
+    ctx.beginPath(); ctx.moveTo(sx(x), 0); ctx.lineTo(sx(x), H); ctx.stroke();
+  }
+  for (let y = -Math.floor(YR); y <= YR; y++) {
+    ctx.beginPath(); ctx.moveTo(0, sy(y)); ctx.lineTo(W, sy(y)); ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  ctx.beginPath(); ctx.moveTo(0, sy(0)); ctx.lineTo(W, sy(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sx(0), 0); ctx.lineTo(sx(0), H); ctx.stroke();
+
+  // 원
+  ctx.strokeStyle = NAVY; ctx.lineWidth = 2.6;
+  ctx.beginPath(); ctx.arc(sx(0), sy(0), r * S, 0, Math.PI * 2); ctx.stroke();
+
+  // 직선
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.moveTo(sx(xL), sy(m * xL + n)); ctx.lineTo(sx(xR), sy(m * xR + n)); ctx.stroke();
+
+  // 중심에서 직선에 내린 수선 : mx − y + n = 0
+  const d = Math.abs(n) / Math.hypot(m, 1);
+  const foot = { x: (-m * n) / (m * m + 1), y: n / (m * m + 1) };
+  if ($("showD").checked) {
+    ctx.strokeStyle = LIME; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(sx(0), sy(0)); ctx.lineTo(sx(foot.x), sy(foot.y)); ctx.stroke();
+    ctx.fillStyle = "#000";
+    ctx.font = "500 15px Pretendard Variable, sans-serif";
+    ctx.fillText("d = " + d.toFixed(2), (sx(0) + sx(foot.x)) / 2 + 8, (sy(0) + sy(foot.y)) / 2 - 8);
+  }
+
+  // 교점 : (1+m²)x² + 2mnx + n² − r² = 0
+  const A = 1 + m * m, B = 2 * m * n, C = n * n - r * r;
+  const D = B * B - 4 * A * C;
+  let cnt = 0;
+  if (D > 1e-9) cnt = 2; else if (D > -1e-9) cnt = 1;
+  if (cnt) {
+    const xs = cnt === 2
+      ? [(-B - Math.sqrt(D)) / (2 * A), (-B + Math.sqrt(D)) / (2 * A)]
+      : [-B / (2 * A)];
+    for (const x of xs) {
+      ctx.fillStyle = LIME;
+      ctx.beginPath(); ctx.arc(sx(x), sy(m * x + n), 7, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6; ctx.stroke();
+    }
+  }
+
+  // 중심
+  ctx.fillStyle = NAVY;
+  ctx.beginPath(); ctx.arc(sx(0), sy(0), 4, 0, Math.PI * 2); ctx.fill();
+
+  $("rText").textContent = r.toFixed(2);
+  $("mText").textContent = m.toFixed(2);
+  $("nText").textContent = n.toFixed(2);
+  $("eq").textContent = `y = ${fmt(m)}x ${n >= 0 ? "+" : "−"} ${Math.abs(n).toFixed(2)}`;
+  $("vd").textContent = d.toFixed(3);
+  $("vr").textContent = r.toFixed(3);
+  $("vD").textContent = D.toFixed(3);
+  $("cnt").textContent = cnt + "개";
+  $("rule").textContent =
+    cnt === 2 ? "d < r · D > 0 → 두 점에서 만난다"
+    : cnt === 1 ? "d = r · D = 0 → 접한다"
+    : "d > r · D < 0 → 만나지 않는다";
+}
+
+for (const id of ["r", "m", "n"]) $(id).addEventListener("input", draw);
+$("showD").addEventListener("change", draw);
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+</script>
+
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>
