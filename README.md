@@ -191,16 +191,34 @@ Menu 3줄로 줄이면서 그 부담이 없어졌다 — 아래 "푸터" 참고)
 1. 폰이 PC와 **같은 와이파이**인지 (폰의 데이터를 끄고 다시 해 보면 확실하다)
 2. Windows 방화벽 창이 떴다면 '개인 네트워크'에 체크하고 [액세스 허용]
 3. 그래도 안 되면 공유기의 '단말 간 차단(AP isolation)' 설정 때문일 수 있다 —
-   이때는 아래 GitHub Pages 로 올리는 편이 빠르다
+   이때는 아래 Vercel 로 올리는 편이 빠르다
 
-## 인터넷에 공개하기 (GitHub Pages, 무료)
+## 인터넷에 올리기 (Vercel, 무료)
 
-1. github.com 가입 → New repository → 이름 예: `math-visual` → Public
-2. 이 폴더의 파일을 업로드 (웹에서 drag & drop 가능)
-3. 저장소 Settings → Pages → Source: `main` 브랜치 / `/ (root)` 선택 → Save
-4. 1~2분 뒤 `https://<아이디>.github.io/math-visual/` 주소가 생긴다. 이 링크를 학생에게 공유
+올리고 나면 PC 를 켜 둘 필요도, 같은 와이파이일 필요도 없어진다.
+학생은 링크만 누르면 되고, 폰에서도 그냥 열린다.
 
-수정할 때마다 파일만 다시 올리면 사이트가 자동으로 갱신된다.
+이 폴더는 이미 git 저장소이고 첫 커밋이 들어 있다 (`git log` 로 확인).
+
+1. **GitHub 에 저장소 만들고 올리기** — `gh repo create` 로 한 번에 된다.
+   **비공개(Private)로 둬도 Vercel 은 배포한다.** (GitHub Pages 무료 계정은
+   공개여야 하지만, Vercel 은 그 제약이 없다)
+2. **vercel.com** → GitHub 계정으로 로그인 → **Add New → Project** →
+   이 저장소 **Import** → 설정 건드릴 것 없이 **Deploy**
+   (빌드 도구를 안 쓰는 정적 사이트라 Vercel 이 알아서 알아본다)
+3. 1 분쯤 뒤 `https://….vercel.app` 주소가 나온다. 이걸 학생에게 준다
+
+### 그 다음부터는 웹에서만 작업하면 된다
+
+`github.com` 에서 파일을 열고 연필 아이콘으로 고친 뒤 **Commit changes** 를 누르면,
+Vercel 이 알아서 다시 배포한다. 폰에서 새로고침하면 바뀌어 있다.
+컴퓨터에 파일을 두고 명령어를 칠 필요가 없다.
+
+### 올린 뒤 한 번만 할 일
+
+네 페이지의 `og:image` 가 상대경로(`assets/og.png`)로 되어 있다. 카톡 미리보기가
+확실히 뜨게 하려면 실제 주소(`https://….vercel.app/assets/og.png`)로 바꿔 두면 좋다.
+`og:url` 도 같이 넣어 두면 더 확실하다.
 
 ## 새 자료 추가 순서
 
