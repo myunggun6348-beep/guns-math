@@ -927,7 +927,7 @@ img, svg { max-width: 100%; }
    싶게 이어져 보였다. 색이 바뀌면 줄 하나 없이도 여기가 끝인 게 보인다.
    그래서 border-top 을 지웠다 — 색 경계가 이미 그 일을 한다. */
 .footer {
-  padding: var(--xxl) 0 var(--xl);
+  padding: var(--xl) 0;
   background: var(--inverse-canvas);
   color: var(--inverse-ink);
 }
@@ -937,28 +937,31 @@ img, svg { max-width: 100%; }
    - :focus-visible 테두리 var(--primary) = 검정 (키보드로 다닐 때 길을 잃는다) */
 .footer .caption { color: rgba(255, 255, 255, 0.55); }
 .footer :focus-visible { outline-color: var(--inverse-ink); }
+/* 예전엔 3단(로고 / MENU / CONTACT)이었는데, CONTACT 칸에 항목이
+   하나뿐이라 오른쪽이 허전하게 비어 보였다. 링크를 전부 한 목록으로
+   묶어 2단으로 줄였다. */
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr 1fr;
+  grid-template-columns: 1.4fr 1fr;
   gap: var(--xl);
 }
-/* 상단 바에 이미 있는 이름이므로 크게 반복할 이유가 없다 (40px → 26px) */
+/* 상단 바에 이미 있는 이름이므로 크게 반복할 이유가 없다 (40px → 20px) */
 .footer-wordmark {
-  font-size: 26px;
-  font-weight: 400;
-  letter-spacing: -0.03em;
+  font-size: 20px;
+  font-weight: 480;
+  letter-spacing: -0.02em;
   line-height: 1.15;
   margin: 0;
 }
 /* 푸터 칸 제목은 h3 — 어느 페이지에서든 제목 단계가 안 건너뛰게 */
-.footer h3 { margin: 0 0 var(--md); font-weight: 400; }
+.footer h3 { margin: 0 0 var(--sm); font-weight: 400; }
 .footer ul { list-style: none; margin: 0; padding: 0; }
 .footer li { margin-bottom: var(--xs); }
-.footer a { font-size: 16px; font-weight: 420; text-decoration: none; }
+.footer a { font-size: 15px; font-weight: 420; text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
 .footer-base {
-  margin-top: var(--xl);
-  padding-top: var(--lg);
+  margin-top: var(--lg);
+  padding-top: var(--md);
   border-top: 1px solid rgba(255, 255, 255, 0.16);
   color: rgba(255, 255, 255, 0.62);
 }
@@ -1189,7 +1192,6 @@ img, svg { max-width: 100%; }
   .notice-strip ul { display: block; }
   .tablist { gap: var(--lg); }
   .tablist button { font-size: 17px; }
-  .footer { padding: var(--xl) 0 var(--xl); }
   .footer-grid { gap: var(--lg); }
 }
 
