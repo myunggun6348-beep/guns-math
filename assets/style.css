@@ -113,9 +113,9 @@ img, svg { max-width: 100%; }
    타이포그래피 — 크기가 아니라 웨이트가 위계를 만든다
    ========================================================= */
 .display-xl {
-  font-size: clamp(44px, 7vw, 86px);
+  font-size: clamp(34px, 5vw, 60px);
   font-weight: 340;
-  line-height: 1.0;
+  line-height: 1.05;
   letter-spacing: -0.02em;
   margin: 0;
 }
@@ -343,7 +343,7 @@ img, svg { max-width: 100%; }
 /* --- 히어로 : 크림 색면 + 수학 그림 --- */
 .hero {
   background: var(--block-cream);
-  padding: var(--xxl) 0 var(--section);
+  padding: var(--xxl) 0;
 }
 .hero-grid {
   display: grid;
@@ -365,14 +365,19 @@ img, svg { max-width: 100%; }
 }
 /* 히어로 소개 — 본문보다 크게, 줄바꿈을 직접 잡아 세 줄로 읽히게 */
 .hero-intro {
-  font-size: clamp(20px, 2.1vw, 27px);
+  font-size: clamp(16px, 1.4vw, 19px);
   font-weight: 370;
-  line-height: 1.45;
-  letter-spacing: -0.014em;
-  margin: var(--lg) 0 var(--xl);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  margin: var(--md) 0 var(--xl);
   max-width: 24em;
 }
 .cta-row { display: flex; gap: var(--sm); flex-wrap: wrap; }
+/* 히어로 단추는 본문 CTA(.btn)보다 한 단계 조용하게 —
+   제목·설명 글자를 줄인 만큼 단추만 그대로 크면 이 블록만 붕 뜬다 */
+.hero .btn { font-size: 16px; }
+.hero .btn-primary { padding: 9px 18px; }
+.hero .btn-secondary { padding: 7px 16px 9px; }
 
 /* --- 컬러블록 --- */
 .block {
