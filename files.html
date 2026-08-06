@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>자료실 · GUN’s MATH</title>
+<meta name="description" content="수업에서 나눠 준 학습지와 정리 프린트를 내려받는 곳입니다." />
+
+<!-- 카카오톡·문자로 이 페이지 링크를 직접 공유할 때 보이는 미리보기 -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://guns-math.vercel.app/files.html" />
+<meta property="og:title" content="자료실 · GUN’s MATH" />
+<meta property="og:description" content="수업에서 나눠 준 학습지와 정리 프린트를 내려받는 곳입니다." />
+<meta property="og:locale" content="ko_KR" />
+<meta property="og:image" content="https://guns-math.vercel.app/assets/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="GUN’s MATH — 단위원과 사인 곡선 그림" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 25h24l-8 5H4z' fill='%23d9f26e'/%3E%3Cpath d='M4 25 16 3l12 22z' fill='%23000000'/%3E%3C/svg%3E" />
+
+<link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+<!-- ===================== 상단 내비 ===================== -->
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M4 25h24l-8 5H4z" fill="#d9f26e" />
+        <path d="M4 25 16 3l12 22z" fill="#000000" />
+      </svg>
+      GUN’s MATH
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html#notice">공지</a>
+      <a href="library.html">직접 보는 수학</a>
+      <a href="map.html">개념 지도</a>
+      <a href="files.html" aria-current="page">자료실</a>
+      <a href="ask.html">질문</a>
+    </div>
+    <div class="nav-toggle-wrap">
+      <input type="checkbox" class="nav-toggle-input" id="navToggle" />
+      <label class="nav-toggle" for="navToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></label>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== 자료실 ===================== -->
+<section class="section" id="files" style="padding-top: var(--xxl);">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Files</span>
+      <div>
+        <h1 class="display-lg">자료실</h1>
+        <p class="body-lg">
+          수업에서 나눠 준 학습지와 정리 프린트입니다. 제목을 누르면 내려받습니다.
+          화면에서 직접 움직여 보는 것은 <a href="library.html">직접 보는 수학</a>에 있습니다.
+        </p>
+      </div>
+    </div>
+
+    <div id="fileList"></div>
+  </div>
+</section>
+
+<!-- ===================== 푸터 ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-line">
+      <a class="footer-wordmark" href="index.html">GUN’s MATH</a>
+      <ul>
+        <li><a href="index.html#notice">공지</a></li>
+        <li><a href="library.html">직접 보는 수학</a></li>
+        <li><a href="map.html">개념 지도</a></li>
+        <li><a href="files.html">자료실</a></li>
+        <li><a href="ask.html">질문</a></li>
+      </ul>
+    </div>
+    <p class="footer-base body-sm">수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.</p>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   ✏️ 파일을 올리는 법 — 두 단계입니다.
+
+   1) 이 폴더 안의 'files' 폴더에 PDF 를 넣습니다.
+      (GitHub 에서 files 폴더를 열고 Add file → Upload files)
+
+   2) 아래 FILES 에 한 줄 추가합니다. 맨 위가 가장 최근입니다.
+
+      date  : 올린 날짜 — "2026-08-06" 처럼
+      subject: 과목 — 비워 두면 과목 표시가 안 나옵니다
+      kind  : 학습지 / 정리 프린트 / 연습 문제 … 아무 말이나 됩니다
+      title : 목록에 보일 이름
+      href  : "files/파일이름.pdf"
+
+   맨 앞의 // 를 지우면 아래 예시가 그대로 살아납니다.
+   ========================================================= */
+const FILES = [
+  // { date: "2026-08-06", subject: "미적분Ⅰ", kind: "학습지",
+  //   title: "미분계수 연습 20제", href: "files/미분계수-연습.pdf" },
+];
+
+/* ---------- 여기부터는 손대지 않아도 됩니다 ---------- */
+{
+  const 자리 = document.getElementById("fileList");
+
+  if (!FILES.length) {
+    /* 빈 목록에 줄만 그어 두면 고장 난 것처럼 보인다.
+       (위 소개 문단이 '직접 보는 수학'을 이미 가리키므로 여기서는 반복하지 않는다) */
+    자리.innerHTML = `<p class="empty">아직 올린 파일이 없습니다.</p>`;
+  } else {
+    자리.className = "filelist";
+    자리.innerHTML = FILES.map(f => `
+      <a href="${f.href}" download>
+        <span class="caption filelist-date">${f.date}</span>
+        <span class="filelist-main">
+          <b>${f.title}</b>
+          <span class="caption">${[f.subject, f.kind].filter(Boolean).join(" · ")}</span>
+        </span>
+        <span class="filelist-go" aria-hidden="true">내려받기 ↓</span>
+      </a>`).join("");
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 /* =========================================================
-   자료 목록 (공용) — 네 페이지가 모두 함께 씁니다.
-   한 곳에서만 고치면 홈·자료실·푸터가 같이 바뀝니다.
+   자료 목록 (공용) — 홈의 찾기와 자료실(library.html)이 함께 씁니다.
+   한 곳에서만 고치면 둘 다 같이 바뀝니다.
 
    새 자료는 아래 DEMOS 에 한 항목만 추가하면 됩니다.
    같은 과목끼리 붙여 두세요 (자료실이 이 순서대로 묶어서 보여 줍니다).
@@ -246,40 +246,3 @@ const SUBJECTS = {
   "기하":        { color: "var(--sub-geo)",     id: "s-geo" }
 };
 const meta = name => SUBJECTS[name] || { color: "var(--surface-soft)", id: "" };
-
-
-/* =========================================================
-   푸터 한 줄 요약 — 네 페이지가 함께 씁니다.
-   "자료 17개 · 마지막 업데이트 2026-08-06"
-
-   숫자와 날짜는 손으로 적지 않습니다.
-   개수는 위 DEMOS 를 세고, 날짜는 이 파일이 고쳐진 날을 서버에 물어봅니다.
-   자료를 추가하면 이 파일이 바뀌므로 네 페이지의 날짜가 한꺼번에 따라옵니다.
-
-   푸터에 <span id="footerStat"></span> 이 있는 페이지에서만 동작하고,
-   없으면 아무 일도 하지 않습니다.
-   ========================================================= */
-{
-  const 자리 = document.getElementById("footerStat");
-  if (자리) {
-    const 개수 = DEMOS.filter(d => d.ready).length;
-    const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const 쓰기 = d => {
-      자리.textContent = `자료 ${개수}개 · 마지막 업데이트 ${ymd(isNaN(d) ? new Date() : d)}`;
-    };
-
-    /* 먼저 이 페이지가 고쳐진 날로 한 번 찍어 둡니다.
-       아래 fetch 가 실패해도 빈칸이 남지 않게 하려는 것입니다. */
-    const 이페이지 = new Date(document.lastModified);
-    쓰기(이페이지);
-
-    // 자료 파일이 더 나중에 고쳐졌으면 그쪽 날짜로 바꿔 답니다
-    fetch("assets/demos.js", { method: "HEAD" })
-      .then(r => {
-        const h = r.headers.get("last-modified");
-        const 자료 = h ? new Date(h) : NaN;
-        if (!isNaN(자료) && (isNaN(이페이지) || 자료 > 이페이지)) 쓰기(자료);
-      })
-      .catch(() => {});
-  }
-}

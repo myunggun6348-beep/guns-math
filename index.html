@@ -38,13 +38,11 @@
       GUN’s MATH
     </a>
     <div class="nav-links" id="navLinks">
-      <a href="map.html">개념 지도</a>
       <a href="#notice">공지</a>
+      <a href="library.html">직접 보는 수학</a>
+      <a href="map.html">개념 지도</a>
+      <a href="files.html">자료실</a>
       <a href="ask.html">질문</a>
-      <a href="library.html" class="mobile-only">직접 보는 수학</a>
-    </div>
-    <div class="nav-actions">
-      <a class="btn btn-primary" href="library.html">직접 보는 수학</a>
     </div>
     <div class="nav-toggle-wrap">
       <input type="checkbox" class="nav-toggle-input" id="navToggle" />
@@ -81,78 +79,59 @@
   </div>
 </section>
 
-<!-- ===================== 자료로 들어가는 문 세 개 ===================== -->
-<section class="section" id="start">
+<!-- ===================== 공지 한 줄 =====================
+     히어로 바로 아래. '오늘 알아야 할 것'이 있으면 그것부터 보이고,
+     없으면(NOTICES 가 비면) 줄 자체가 사라집니다.
+     ✏️ 공지는 아래 script 의 NOTICES 배열에 한 줄씩 추가하면 됩니다 -->
+<div class="wrap">
+  <details class="notice-strip" id="notice">
+    <summary>
+      <span class="label">공지</span>
+      <span class="head" id="noticeHead"></span>
+    </summary>
+    <ul id="noticeRest"></ul>
+  </details>
+</div>
+
+<!-- ===================== 찾기 =====================
+     학생이 실제로 하는 질문은 결국 "그거 어디 있어요" 다.
+     그 질문 하나를 홈 한가운데로 끌어올린 자리.
+     내용은 모두 assets/demos.js 에서 저절로 만들어집니다. -->
+<section class="section" id="find">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Materials</span>
-      <div>
-        <h2 class="display-lg">자료 둘러보기</h2>
+    <div class="find">
+      <h2 class="display-lg">뭘 찾고 있나요</h2>
+      <p class="body-sm find-note">개념 이름을 치면 자료가 바로 나옵니다.</p>
+
+      <div class="find-box">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
+        </svg>
+        <input type="search" id="findQ" autocomplete="off" aria-label="자료 검색"
+               aria-describedby="findCount" placeholder="예: 정사영, 삼각함수, 정규분포" />
       </div>
+
+      <p class="caption find-count" id="findCount" role="status" aria-live="polite"></p>
+      <div id="findOut"></div>
     </div>
-
-    <!-- 아래 내용은 모두 assets/demos.js 에서 저절로 만들어집니다 -->
-    <div class="tabs">
-      <div class="tablist" role="tablist" aria-label="자료 보는 방법">
-        <button type="button" role="tab" id="tab-new"     aria-controls="panel-new"     aria-selected="true">새로 올린 자료</button>
-        <button type="button" role="tab" id="tab-today"   aria-controls="panel-today"   aria-selected="false" tabindex="-1">오늘의 자료</button>
-        <button type="button" role="tab" id="tab-subject" aria-controls="panel-subject" aria-selected="false" tabindex="-1">과목별 자료</button>
-      </div>
-
-      <div class="tab-panel" role="tabpanel" id="panel-new" aria-labelledby="tab-new">
-        <p class="tab-note body-sm">가장 최근에 올라온 자료 세 개입니다.</p>
-        <div class="grid" id="newGrid"></div>
-      </div>
-
-      <div class="tab-panel" role="tabpanel" id="panel-today" aria-labelledby="tab-today" hidden>
-        <p class="tab-note body-sm" id="todayNote">날마다 바뀌는 자료입니다. 여기서 그대로 움직여 볼 수 있습니다.</p>
-        <div id="todayHost"></div>
-      </div>
-
-      <div class="tab-panel" role="tabpanel" id="panel-subject" aria-labelledby="tab-subject" hidden>
-        <p class="tab-note body-sm">배우는 과목을 누르면 자료실의 해당 자리로 이동합니다.</p>
-        <nav class="subject-nav" id="homeSubjects" aria-label="과목 바로가기"></nav>
-      </div>
-    </div>
-
-    <!-- ✏️ 공지는 아래 script 의 NOTICES 배열에 한 줄씩 추가하면 됩니다 -->
-    <details class="notice-strip" id="notice">
-      <summary>
-        <span class="label">공지</span>
-        <span class="head" id="noticeHead"></span>
-      </summary>
-      <ul id="noticeRest"></ul>
-    </details>
   </div>
 </section>
 
 <!-- ===================== 푸터 ===================== -->
 <footer class="footer">
   <div class="wrap">
-    <div class="footer-grid">
-      <div>
-        <p class="footer-wordmark">GUN’s MATH</p>
-        <p class="body-sm footer-desc">
-          고등학교에서 수학을 가르칩니다. 수업에서 직접 써 보고 다듬은 것만 올려 둡니다.
-        </p>
-        <!-- 자료 개수와 날짜는 assets/demos.js 가 저절로 채웁니다 (손대지 마세요) -->
-        <p class="caption footer-stat" id="footerStat"></p>
-      </div>
-      <div>
-        <h3 class="caption en">Menu</h3>
-        <ul>
-          <li><a href="library.html">직접 보는 수학</a></li>
-          <li><a href="map.html">개념 지도</a></li>
-          <li><a href="ask.html">질문</a></li>
-          <li><a href="#notice">공지</a></li>
-          <!-- ✏️ 메일 주소 또는 구글 폼 주소 -->
-          <li><a href="ask.html">연락처를 여기에 넣으세요</a></li>
-        </ul>
-      </div>
+    <div class="footer-line">
+      <a class="footer-wordmark" href="#top">GUN’s MATH</a>
+      <ul>
+        <li><a href="#notice">공지</a></li>
+        <li><a href="library.html">직접 보는 수학</a></li>
+        <li><a href="map.html">개념 지도</a></li>
+        <li><a href="files.html">자료실</a></li>
+        <li><a href="ask.html">질문</a></li>
+      </ul>
     </div>
-    <div class="footer-base body-sm">
-      수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.
-    </div>
+    <p class="footer-base body-sm">수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.</p>
   </div>
 </footer>
 
@@ -198,124 +177,75 @@ const NOTICES = [
 
 
 /* =========================================================
-   1-2. 홈 가운데 탭 — 셋 다 assets/demos.js 에서 만들어집니다.
+   1-2. 홈 가운데 — 찾기
+
+   자료 목록(assets/demos.js)을 그 자리에서 걸러 보여 줍니다.
+   새 자료를 올리면 여기서도 바로 찾아집니다 — 손댈 것이 없습니다.
+
+   비어 있을 때 과목을 보여 주는 이유: 빈 검색칸만 놓아 두면 무엇을
+   칠 수 있는지 몰라 아무도 안 친다. 과목이 보이면 최소한 누를 것은 있다.
    ========================================================= */
 {
+  const 칸  = document.getElementById("findQ");
+  const 결과 = document.getElementById("findOut");
+  const 세기 = document.getElementById("findCount");
   const 열림 = DEMOS.filter(d => d.ready);
 
-  /* --- 탭 1. 새로 올린 자료 ---
-     DEMOS 배열의 맨 끝 세 개. 자료실은 과목별로 알아서 묶으므로,
-     새 자료는 배열 맨 아래에 붙이기만 하면 여기 저절로 올라옵니다. */
-  document.getElementById("newGrid").innerHTML =
-    열림.slice(-3).reverse().map(d => {
-      const m = meta(groupOf(d));
-      return `<a class="card" href="${d.href}">
-        <div class="thumb" style="background:${m.color}">${d.fig}</div>
-        <div class="card-top">
-          <span class="caption">${d.subject} · ${d.unit}</span>
-          ${d.d3 ? '<span class="tag-3d">3D</span>' : ""}
-        </div>
-        <h3>${d.title}</h3>
-        <p class="use"><b>이럴 때</b><span>${d.use}</span></p>
-        <span class="go">열어 보기 →</span>
-      </a>`;
-    }).join("");
+  const 최대 = 6;   // 홈이 길어지지 않게. 넘치면 '자료실에서 전부 보기'로 보냅니다
 
-  /* --- 탭 3. 과목별 자료 --- */
-  const order = Object.keys(SUBJECTS).filter(n => 열림.some(d => groupOf(d) === n));
-  document.getElementById("homeSubjects").innerHTML = order.map(name => {
-    const m = meta(name);
-    const n = 열림.filter(d => groupOf(d) === name).length;
-    return `<a href="library.html#${m.id}"><span class="dot" style="background:${m.color}"></span>` +
-           `${name}<span class="n">${n}</span></a>`;
-  }).join("");
+  // 검색칸이 비었을 때 — 과목 여섯 개
+  function 과목들() {
+    const order = Object.keys(SUBJECTS).filter(n => 열림.some(d => groupOf(d) === n));
+    return `<nav class="subject-nav" aria-label="과목 바로가기">` + order.map(name => {
+      const m = meta(name);
+      const n = 열림.filter(d => groupOf(d) === name).length;
+      return `<a href="library.html#${m.id}"><span class="dot" style="background:${m.color}"></span>` +
+             `${name}<span class="n">${n}</span></a>`;
+    }).join("") + `</nav>`;
+  }
 
-  /* --- 탭 2. 오늘의 자료 ---
-     3D 자료는 뺍니다. 홈에서 three.js 까지 받아 오면 폰에서 느립니다.
-     날짜로 고르므로 같은 날 들어온 사람은 모두 같은 것을 봅니다. */
-  const 후보 = 열림.filter(d => !d.d3);
-  const 오늘 = new Date();
-  const 일련 = Math.floor(Date.UTC(오늘.getFullYear(), 오늘.getMonth(), 오늘.getDate()) / 86400000);
-  const 뽑힌 = 후보[일련 % 후보.length];
+  function 줄(d) {
+    const m = meta(groupOf(d));
+    return `<a class="find-hit" href="${d.href}">
+      <span class="find-fig" style="background:${m.color}">${d.fig}</span>
+      <span class="find-text">
+        <b>${d.title}</b>
+        <span class="caption">${d.subject} · ${d.unit}</span>
+      </span>
+      <span class="find-go" aria-hidden="true">→</span>
+    </a>`;
+  }
 
-  let 실었나 = false;
-  function 오늘자료싣기() {
-    if (실었나 || !뽑힌) return;
-    실었나 = true;
+  function 그리기() {
+    const 말 = 칸.value.trim().toLowerCase();
 
-    const host = document.getElementById("todayHost");
-    const 머리 = `
-      <div class="today-meta">
-        <h3>${뽑힌.title}</h3>
-        <span class="caption">${뽑힌.year} · ${뽑힌.subject} · ${뽑힌.unit}</span>
-      </div>`;
-
-    /* 폰에서는 홈 안에 싣지 않고 그림만 보여 줍니다.
-       자료 페이지는 그림 밑에 조절 막대가 줄줄이 붙는 구조라, 폰 너비에서는
-       속이 1,400px 이 넘습니다. 그걸 작은 창에 넣으면 창 안에서 또 스크롤이
-       생겨서 손가락이 어느 쪽을 미는지 알 수 없게 됩니다.
-       자료 페이지 자체는 화면 전체를 쓰도록 만들어 두었으니 그리로 보냅니다. */
-    if (innerWidth < 768) {
-      const m = meta(groupOf(뽑힌));
-      document.getElementById("todayNote").textContent =
-        "날마다 바뀌는 자료입니다. 눌러서 화면 가득 보세요.";
-      host.innerHTML = 머리 + `
-        <a class="card" href="${뽑힌.href}">
-          <div class="thumb" style="background:${m.color}">${뽑힌.fig}</div>
-          <p class="use"><b>이럴 때</b><span>${뽑힌.use}</span></p>
-          <span class="go">열어 보기 →</span>
-        </a>`;
+    if (!말) {
+      세기.textContent = "";
+      결과.innerHTML = 과목들();
       return;
     }
 
-    host.innerHTML = 머리 + `
-      <iframe class="today-frame" id="todayFrame" src="${뽑힌.href}"
-              title="${뽑힌.title} — 홈에서 바로 보기" loading="lazy"></iframe>
-      <p style="margin-top: 12px;"><a class="go" href="${뽑힌.href}">크게 열어 보기 →</a></p>`;
+    const 걸린것 = 열림.filter(d =>
+      (d.title + d.subject + d.unit + d.desc + d.use + d.keywords + d.year)
+        .toLowerCase().includes(말));
 
-    /* 자료 페이지 맨 위의 '← 자료실' 줄은 홈 안에서는 필요 없습니다.
-       같은 사이트라 안쪽 문서에 표시만 달아 주면 style.css 가 숨겨 줍니다.
-
-       높이는 style.css 에 정해 둔 값을 씁니다. 자료 페이지가
-       'height: calc(100vh - 57px)' 로 창을 꽉 채우게 만들어져 있어서,
-       내용을 재서 창을 맞추려 해 봐야 준 만큼만 늘어납니다(순환). */
-    document.getElementById("todayFrame").addEventListener("load", function () {
-      try { this.contentDocument.documentElement.classList.add("embedded"); } catch (e) {}
-    });
-  }
-
-  /* --- 탭 바꾸기 --- */
-  const tabs = [...document.querySelectorAll('[role="tab"]')];
-  function 고르기(id) {
-    for (const t of tabs) {
-      const 선택 = t.id === id;
-      t.setAttribute("aria-selected", 선택);
-      t.tabIndex = 선택 ? 0 : -1;
-      document.getElementById(t.getAttribute("aria-controls")).hidden = !선택;
+    if (!걸린것.length) {
+      세기.textContent = "찾는 자료가 없습니다";
+      결과.innerHTML =
+        `<p class="find-none">아직 그 자료는 없습니다. ` +
+        `<a href="ask.html">질문으로 남겨 주세요</a> — 보고 만들어 올리겠습니다.</p>`;
+      return;
     }
-    if (id === "tab-today") 오늘자료싣기();   // 누르기 전까지는 안 불러옵니다
+
+    세기.textContent = `${걸린것.length}개 찾았습니다`;
+    결과.innerHTML = 걸린것.slice(0, 최대).map(줄).join("") +
+      (걸린것.length > 최대
+        ? `<p class="find-more"><a class="go" href="library.html">자료실에서 전부 보기 →</a></p>`
+        : "");
   }
 
-  tabs.forEach((t, i) => {
-    t.addEventListener("click", () => {
-      고르기(t.id);
-      // 주소에 남겨 두면 그 탭을 그대로 링크로 보낼 수 있습니다
-      history.replaceState(null, "", "#" + t.id.replace("tab-", ""));
-    });
-    // 좌우 화살표로도 옮겨 다닐 수 있게 (탭의 기본 동작입니다)
-    t.addEventListener("keydown", e => {
-      const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-      if (!step) return;
-      e.preventDefault();
-      const 다음 = tabs[(i + step + tabs.length) % tabs.length];
-      고르기(다음.id);
-      다음.focus();
-    });
-  });
-
-  // 주소 뒤에 #today 처럼 붙여 오면 그 탭으로 열립니다
-  const 주소탭 = "tab-" + location.hash.slice(1);
-  if (tabs.some(t => t.id === 주소탭)) 고르기(주소탭);
+  칸.addEventListener("input", 그리기);
+  그리기();
 }
 
 
