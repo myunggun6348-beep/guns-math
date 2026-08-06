@@ -318,7 +318,7 @@ img, svg { max-width: 100%; }
 
 /* 마지막 업데이트 — footer-base 안에 작게, 오른쪽으로 (library.html) */
 .footer-base-split .caption { font-variant-numeric: tabular-nums; }
-.footer-base-split .caption span { font-weight: 500; color: var(--ink); }
+.footer-base-split .caption span { font-weight: 500; color: var(--inverse-ink); }
 
 /* =========================================================
    섹션 리듬 — 컬러블록 사이는 언제나 흰 캔버스로 돌아온다
@@ -555,7 +555,10 @@ img, svg { max-width: 100%; }
   font-size: 20px;
   line-height: 1;
   text-decoration: none;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  /* 흰 테두리 2px — 푸터가 검은 색면이 된 뒤로, 끝까지 내리면
+     검은 단추가 검은 바탕에 묻혀 안 보였다. 흰 바탕 위에서는
+     테두리가 배경과 같은 색이라 티가 안 난다. */
+  box-shadow: 0 0 0 2px var(--canvas), 0 6px 18px rgba(0, 0, 0, 0.22);
   /* 맨 위에서는 안 보인다 — 거기선 쓸모가 없는데 카드만 가린다.
      (자료실 목록 자체가 이미 script 로 그려지므로 의존이 늘지 않는다) */
   opacity: 0;
@@ -801,15 +804,130 @@ img, svg { max-width: 100%; }
 .cmap-none { font-size: 15px; opacity: 0.55; }
 
 /* =========================================================
+   홈 가운데 — 탭 세 개
+   (새로 올린 자료 / 오늘의 한 장면 / 과목별로)
+
+   예전에는 이 자리에 공지 목록이 통째로 있었다. 홈에 처음 온 학생에게
+   가장 먼저 보여야 할 것이 '시험 범위'는 아니라고 보고, 자료로 들어가는
+   문 세 개로 바꿨다. 셋 다 자료 목록(assets/demos.js)에서 저절로
+   만들어지므로, 자료를 추가하는 것 말고는 손댈 것이 없다.
+   ========================================================= */
+.tabs { margin-top: var(--xl); }
+.tablist {
+  display: flex;
+  gap: var(--xl);
+  border-bottom: 1px solid var(--hairline);
+  overflow-x: auto;              /* 폰에서 셋이 안 들어가면 옆으로 밀린다 */
+  scrollbar-width: none;
+}
+.tablist::-webkit-scrollbar { display: none; }
+.tablist button {
+  flex: none;
+  min-height: 48px;              /* 손가락 기준 */
+  padding: 0 0 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;           /* 밑줄이 회색 선 위에 겹치게 */
+  background: none;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 450;
+  color: rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+.tablist button:hover { color: var(--ink); }
+.tablist button[aria-selected="true"] {
+  color: var(--ink);
+  font-weight: 550;
+  border-bottom-color: var(--ink);
+}
+/* 탭을 바꿀 때 페이지 높이가 크게 튀지 않게 바닥을 깔아 둔다 */
+.tab-panel { padding-top: var(--xl); min-height: 320px; }
+.tab-panel[hidden] { display: none; }
+.tab-note { margin: 0 0 var(--lg); max-width: 40em; }
+
+/* '오늘의 한 장면' — 자료 하나를 홈에서 그대로 돌린다.
+   자료 페이지는 창 높이를 꽉 채우도록 만들어져 있으므로, 여기서 준 높이가
+   곧 그 자료의 '창'이 된다. 그림이 충분히 보이면서 홈을 다 잡아먹지는 않는
+   선으로 잡았다. 창이 낮은 노트북에서는 72vh 쪽이 걸린다. */
+.today-frame {
+  display: block;
+  width: 100%;
+  height: min(560px, 72vh);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--canvas);
+}
+.today-meta {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--xs) var(--md);
+  margin-bottom: var(--sm);
+}
+.today-meta h3 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.02em; }
+
+/* 공지 — 목록이 아니라 접히는 한 줄.
+   시험 범위는 여전히 올릴 수 있지만 홈을 차지하지는 않는다. */
+.notice-strip {
+  margin-top: var(--xxl);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  scroll-margin-top: 72px;   /* 다른 페이지의 '공지' 메뉴로 뛰어올 때 상단 바에 안 가리게 */
+}
+.notice-strip summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  min-height: 56px;
+  cursor: pointer;
+  list-style: none;
+}
+.notice-strip summary::-webkit-details-marker { display: none; }
+.notice-strip .label {
+  flex: none;
+  padding: 3px 10px 4px;
+  border-radius: var(--r-pill);
+  background: var(--block-lime);
+  font-size: 13px;
+  font-weight: 500;
+}
+.notice-strip .head { flex: 1 1 auto; min-width: 0; font-weight: 450; }
+.notice-strip .head b { font-weight: 450; }
+/* 남은 개수 + 펼침 표시. summary 가 flex 라 ::after 가 마지막 칸이 된다 */
+.notice-strip summary::after {
+  content: "＋";
+  flex: none;
+  font-size: 18px;
+  opacity: 0.5;
+}
+.notice-strip[open] summary::after { content: "－"; }
+.notice-strip ul { list-style: none; margin: 0; padding: 0 0 var(--lg); }
+.notice-strip li { padding: var(--sm) 0; border-top: 1px solid var(--hairline-soft); }
+
+/* =========================================================
    푸터
    ========================================================= */
 /* 푸터는 '끝났다'는 표시지 두 번째 홈페이지가 아니다.
    예전엔 홈 전체 높이(1874px)의 31%(577px)를 푸터가 차지했고,
-   그중 192px 이 위·아래 여백 96px 두 개로 그냥 비어 있었다. */
+   그중 192px 이 위·아래 여백 96px 두 개로 그냥 비어 있었다.
+
+   검은 색면으로 둔 이유: 흰 바탕에 실선 한 줄만으로는 '아직 본문인가'
+   싶게 이어져 보였다. 색이 바뀌면 줄 하나 없이도 여기가 끝인 게 보인다.
+   그래서 border-top 을 지웠다 — 색 경계가 이미 그 일을 한다. */
 .footer {
   padding: var(--xxl) 0 var(--xl);
-  border-top: 1px solid var(--hairline-soft);
+  background: var(--inverse-canvas);
+  color: var(--inverse-ink);
 }
+/* 어두운 바탕에서는 흰색 계열로 바꿔 줘야 하는 것들.
+   특히 아래 두 가지는 안 바꾸면 '검정 위 검정'이 되어 안 보인다:
+   - .caption 기본색 rgba(0,0,0,.58)
+   - :focus-visible 테두리 var(--primary) = 검정 (키보드로 다닐 때 길을 잃는다) */
+.footer .caption { color: rgba(255, 255, 255, 0.55); }
+.footer :focus-visible { outline-color: var(--inverse-ink); }
 .footer-grid {
   display: grid;
   grid-template-columns: 1.6fr 1fr 1fr;
@@ -832,7 +950,8 @@ img, svg { max-width: 100%; }
 .footer-base {
   margin-top: var(--xl);
   padding-top: var(--lg);
-  border-top: 1px solid var(--hairline-soft);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.62);
 }
 /* library.html 처럼 맨 끝에 업데이트 날짜를 오른쪽으로 붙일 때 */
 .footer-base-split {
@@ -845,6 +964,11 @@ img, svg { max-width: 100%; }
 /* =========================================================
    데모 페이지 (demos/*.html)
    ========================================================= */
+/* 홈의 '오늘의 한 장면' 안에 들어갔을 때. 홈이 이 표시를 달아 줍니다.
+   제목과 '← 자료실'은 홈 쪽에 이미 있으므로 두 번 보일 필요가 없습니다.
+   자료 페이지를 직접 열면 이 표시가 없으니 평소대로 보입니다. */
+.embedded .demo-bar { display: none; }
+
 .demo-bar {
   display: flex;
   align-items: center;
@@ -1046,6 +1170,18 @@ img, svg { max-width: 100%; }
   .cmap-panel-grid { grid-template-columns: 1fr; }
   .nav-actions .btn-secondary { display: none; }
   .grid { grid-template-columns: 1fr; }
+
+  /* 폰에서는 칸이 세로로 쌓여 푸터가 601px(화면 스크롤의 28%)까지 늘어났다.
+     메뉴 링크만 가로로 눕히면 175px 짜리 목록이 두 줄로 줄어든다.
+     (링크 사이 세로 간격은 손가락이 옆 링크를 잘못 누르지 않을 만큼은 남긴다) */
+  .footer ul { display: flex; flex-wrap: wrap; gap: var(--sm) var(--lg); }
+  .footer li { margin-bottom: 0; }
+  /* 푸터 메뉴만 가로로 눕히는 것이므로 공지 줄은 원래대로 세로 */
+  .notice-strip ul { display: block; }
+  .tablist { gap: var(--lg); }
+  .tablist button { font-size: 17px; }
+  .footer { padding: var(--xl) 0 var(--xl); }
+  .footer-grid { gap: var(--lg); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -55,13 +55,27 @@ http
       res.writeHead(403).end();
       return;
     }
-    fs.readFile(file, (err, data) => {
-      if (err) {
+    fs.stat(file, (e, st) => {
+      if (e || !st.isFile()) {
         res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("파일을 찾을 수 없습니다");
         return;
       }
-      res.writeHead(200, { "Content-Type": TYPES[path.extname(file).toLowerCase()] || "application/octet-stream" });
-      res.end(data);
+      fs.readFile(file, (err, data) => {
+        if (err) {
+          res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("파일을 찾을 수 없습니다");
+          return;
+        }
+        res.writeHead(200, {
+          "Content-Type": TYPES[path.extname(file).toLowerCase()] || "application/octet-stream",
+          // 자료실 아래쪽 '마지막 업데이트' 날짜가 이 값을 읽습니다.
+          // 인터넷에 올리면 서버가 알아서 붙여 주는 값이라, 여기서도 똑같이 맞춰 둡니다.
+          "Last-Modified": st.mtime.toUTCString(),
+          // 고친 내용이 새로고침에 바로 보이게 합니다.
+          // (이건 내 컴퓨터에서 만들 때 쓰는 서버라 이렇게 두는 편이 편합니다)
+          "Cache-Control": "no-store",
+        });
+        res.end(data);
+      });
     });
   })
   // 주소를 안 적으면 이 컴퓨터의 모든 연결(와이파이 포함)에서 받습니다 — 폰이 들어올 수 있는 이유

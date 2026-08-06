@@ -81,19 +81,48 @@
   </div>
 </section>
 
-<!-- ===================== 공지 ===================== -->
-<section class="section" id="notice">
+<!-- ===================== 자료로 들어가는 문 세 개 ===================== -->
+<section class="section" id="start">
   <div class="wrap">
-    <div class="block block-lime">
-      <span class="eyebrow">Notice</span>
-      <h2 class="display-lg">공지</h2>
-      <p class="subhead" style="margin-top: 24px; max-width: 26em;">
-        시험 범위, 과제, 수업 안내는 여기에 올립니다.
-      </p>
-
-      <!-- ✏️ 공지는 아래 script 의 NOTICES 배열에 한 줄씩 추가하면 됩니다 -->
-      <div class="rows" id="notices"></div>
+    <div class="section-head">
+      <span class="eyebrow">Start</span>
+      <div>
+        <h2 class="display-lg">어디부터 볼까</h2>
+      </div>
     </div>
+
+    <!-- 아래 내용은 모두 assets/demos.js 에서 저절로 만들어집니다 -->
+    <div class="tabs">
+      <div class="tablist" role="tablist" aria-label="자료 보는 방법">
+        <button type="button" role="tab" id="tab-new"     aria-controls="panel-new"     aria-selected="true">새로 올린 자료</button>
+        <button type="button" role="tab" id="tab-today"   aria-controls="panel-today"   aria-selected="false" tabindex="-1">오늘의 한 장면</button>
+        <button type="button" role="tab" id="tab-subject" aria-controls="panel-subject" aria-selected="false" tabindex="-1">과목별로</button>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-new" aria-labelledby="tab-new">
+        <p class="tab-note body-sm">가장 나중에 올린 세 개입니다.</p>
+        <div class="grid" id="newGrid"></div>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-today" aria-labelledby="tab-today" hidden>
+        <p class="tab-note body-sm" id="todayNote">자료 하나가 날마다 바뀌며 여기서 그대로 돌아갑니다. 만져 봐도 됩니다.</p>
+        <div id="todayHost"></div>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-subject" aria-labelledby="tab-subject" hidden>
+        <p class="tab-note body-sm">배우는 과목을 누르면 자료실의 그 자리로 갑니다.</p>
+        <nav class="subject-nav" id="homeSubjects" aria-label="과목 바로가기"></nav>
+      </div>
+    </div>
+
+    <!-- ✏️ 공지는 아래 script 의 NOTICES 배열에 한 줄씩 추가하면 됩니다 -->
+    <details class="notice-strip" id="notice">
+      <summary>
+        <span class="label">공지</span>
+        <span class="head" id="noticeHead"></span>
+      </summary>
+      <ul id="noticeRest"></ul>
+    </details>
   </div>
 </section>
 
@@ -130,6 +159,9 @@
   </div>
 </footer>
 
+<!-- 자료 목록은 자료실(library.html)과 함께 쓰므로 따로 빼 두었습니다 -->
+<script src="assets/demos.js"></script>
+
 <script>
 /* =========================================================
    1. 공지 — 여기에 한 항목씩 추가하면 화면에 올라갑니다.
@@ -146,12 +178,148 @@ const NOTICES = [
     body: "수업 시간에 묻기 애매한 것들을 편하게 남겨 주세요. 답은 이 페이지에 모아 둡니다." }
 ];
 
-document.getElementById("notices").innerHTML = NOTICES.map(it => `
-  <article>
-    <span class="caption">${it.date} · ${it.tag}</span>
-    <h3 class="card-title">${it.title}</h3>
-    <p class="body-sm">${it.body}</p>
-  </article>`).join("");
+/* 접히는 한 줄로 보여 줍니다 — 맨 위 한 개는 늘 보이고, 나머지는 ＋ 를 누르면 나옵니다.
+   공지가 하나도 없으면 줄 자체가 사라집니다 (빈 게시판이 남지 않게). */
+{
+  const strip = document.getElementById("notice");
+  if (!NOTICES.length) {
+    strip.remove();
+  } else {
+    const [first, ...rest] = NOTICES;
+    document.getElementById("noticeHead").innerHTML =
+      `<b>${first.title}</b> <span class="caption">${first.date}</span>`;
+    document.getElementById("noticeRest").innerHTML = NOTICES.map(it => `
+      <li>
+        <span class="caption">${it.date} · ${it.tag}</span>
+        <p class="body-sm" style="margin: 4px 0 0;"><b style="font-weight: 500;">${it.title}</b> — ${it.body}</p>
+      </li>`).join("");
+    if (!rest.length) strip.querySelector("summary").style.pointerEvents = "none";
+    // 다른 페이지의 '공지' 메뉴로 들어오면 펼친 채로 보여 줍니다
+    if (location.hash === "#notice") strip.open = true;
+  }
+}
+
+
+/* =========================================================
+   1-2. 홈 가운데 탭 — 셋 다 assets/demos.js 에서 만들어집니다.
+   ========================================================= */
+{
+  const 열림 = DEMOS.filter(d => d.ready);
+
+  /* --- 탭 1. 새로 올린 자료 ---
+     DEMOS 배열의 맨 끝 세 개. 자료실은 과목별로 알아서 묶으므로,
+     새 자료는 배열 맨 아래에 붙이기만 하면 여기 저절로 올라옵니다. */
+  document.getElementById("newGrid").innerHTML =
+    열림.slice(-3).reverse().map(d => {
+      const m = meta(groupOf(d));
+      return `<a class="card" href="${d.href}">
+        <div class="thumb" style="background:${m.color}">${d.fig}</div>
+        <div class="card-top">
+          <span class="caption">${d.subject} · ${d.unit}</span>
+          ${d.d3 ? '<span class="tag-3d">3D</span>' : ""}
+        </div>
+        <h3>${d.title}</h3>
+        <p class="use"><b>이럴 때</b><span>${d.use}</span></p>
+        <span class="go">열어 보기 →</span>
+      </a>`;
+    }).join("");
+
+  /* --- 탭 3. 과목별로 --- */
+  const order = Object.keys(SUBJECTS).filter(n => 열림.some(d => groupOf(d) === n));
+  document.getElementById("homeSubjects").innerHTML = order.map(name => {
+    const m = meta(name);
+    const n = 열림.filter(d => groupOf(d) === name).length;
+    return `<a href="library.html#${m.id}"><span class="dot" style="background:${m.color}"></span>` +
+           `${name}<span class="n">${n}</span></a>`;
+  }).join("");
+
+  /* --- 탭 2. 오늘의 한 장면 ---
+     3D 자료는 뺍니다. 홈에서 three.js 까지 받아 오면 폰에서 느립니다.
+     날짜로 고르므로 같은 날 들어온 사람은 모두 같은 것을 봅니다. */
+  const 후보 = 열림.filter(d => !d.d3);
+  const 오늘 = new Date();
+  const 일련 = Math.floor(Date.UTC(오늘.getFullYear(), 오늘.getMonth(), 오늘.getDate()) / 86400000);
+  const 뽑힌 = 후보[일련 % 후보.length];
+
+  let 실었나 = false;
+  function 오늘자료싣기() {
+    if (실었나 || !뽑힌) return;
+    실었나 = true;
+
+    const host = document.getElementById("todayHost");
+    const 머리 = `
+      <div class="today-meta">
+        <h3>${뽑힌.title}</h3>
+        <span class="caption">${뽑힌.year} · ${뽑힌.subject} · ${뽑힌.unit}</span>
+      </div>`;
+
+    /* 폰에서는 홈 안에 싣지 않고 그림만 보여 줍니다.
+       자료 페이지는 그림 밑에 조절 막대가 줄줄이 붙는 구조라, 폰 너비에서는
+       속이 1,400px 이 넘습니다. 그걸 작은 창에 넣으면 창 안에서 또 스크롤이
+       생겨서 손가락이 어느 쪽을 미는지 알 수 없게 됩니다.
+       자료 페이지 자체는 화면 전체를 쓰도록 만들어 두었으니 그리로 보냅니다. */
+    if (innerWidth < 768) {
+      const m = meta(groupOf(뽑힌));
+      document.getElementById("todayNote").textContent =
+        "자료 하나가 날마다 바뀝니다. 눌러서 화면 가득 보세요.";
+      host.innerHTML = 머리 + `
+        <a class="card" href="${뽑힌.href}">
+          <div class="thumb" style="background:${m.color}">${뽑힌.fig}</div>
+          <p class="use"><b>이럴 때</b><span>${뽑힌.use}</span></p>
+          <span class="go">열어 보기 →</span>
+        </a>`;
+      return;
+    }
+
+    host.innerHTML = 머리 + `
+      <iframe class="today-frame" id="todayFrame" src="${뽑힌.href}"
+              title="${뽑힌.title} — 홈에서 바로 보기" loading="lazy"></iframe>
+      <p style="margin-top: 12px;"><a class="go" href="${뽑힌.href}">크게 열어 보기 →</a></p>`;
+
+    /* 자료 페이지 맨 위의 '← 자료실' 줄은 홈 안에서는 필요 없습니다.
+       같은 사이트라 안쪽 문서에 표시만 달아 주면 style.css 가 숨겨 줍니다.
+
+       높이는 style.css 에 정해 둔 값을 씁니다. 자료 페이지가
+       'height: calc(100vh - 57px)' 로 창을 꽉 채우게 만들어져 있어서,
+       내용을 재서 창을 맞추려 해 봐야 준 만큼만 늘어납니다(순환). */
+    document.getElementById("todayFrame").addEventListener("load", function () {
+      try { this.contentDocument.documentElement.classList.add("embedded"); } catch (e) {}
+    });
+  }
+
+  /* --- 탭 바꾸기 --- */
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  function 고르기(id) {
+    for (const t of tabs) {
+      const 선택 = t.id === id;
+      t.setAttribute("aria-selected", 선택);
+      t.tabIndex = 선택 ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !선택;
+    }
+    if (id === "tab-today") 오늘자료싣기();   // 누르기 전까지는 안 불러옵니다
+  }
+
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => {
+      고르기(t.id);
+      // 주소에 남겨 두면 그 탭을 그대로 링크로 보낼 수 있습니다
+      history.replaceState(null, "", "#" + t.id.replace("tab-", ""));
+    });
+    // 좌우 화살표로도 옮겨 다닐 수 있게 (탭의 기본 동작입니다)
+    t.addEventListener("keydown", e => {
+      const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!step) return;
+      e.preventDefault();
+      const 다음 = tabs[(i + step + tabs.length) % tabs.length];
+      고르기(다음.id);
+      다음.focus();
+    });
+  });
+
+  // 주소 뒤에 #today 처럼 붙여 오면 그 탭으로 열립니다
+  const 주소탭 = "tab-" + location.hash.slice(1);
+  if (tabs.some(t => t.id === 주소탭)) 고르기(주소탭);
+}
 
 
 /* =========================================================
