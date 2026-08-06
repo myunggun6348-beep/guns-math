@@ -87,9 +87,11 @@
     <div class="footer-grid">
       <div>
         <p class="footer-wordmark">GUN’s MATH</p>
-        <p class="body-sm" style="margin-top: 12px; max-width: 24em;">
+        <p class="body-sm footer-desc">
           고등학교에서 수학을 가르칩니다. 수업에서 직접 써 보고 다듬은 것만 올려 둡니다.
         </p>
+        <!-- 자료 개수와 날짜는 assets/demos.js 가 저절로 채웁니다 (손대지 마세요) -->
+        <p class="caption footer-stat" id="footerStat"></p>
       </div>
       <div>
         <h3 class="caption en">Menu</h3>
@@ -103,9 +105,8 @@
         </ul>
       </div>
     </div>
-    <div class="footer-base body-sm footer-base-split">
-      <span>수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.</span>
-      <span class="caption">마지막 업데이트 · <span id="statDate">2026-08-01</span></span>
+    <div class="footer-base body-sm">
+      수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.
     </div>
   </div>
 </footer>
@@ -197,23 +198,8 @@ render();
   sync();
 }
 
-/* 마지막 업데이트 — 손으로 적지 않습니다. 파일이 고쳐진 날짜를 그대로 씁니다.
-   자료 목록이 assets/demos.js 로 빠졌으므로 이 페이지와 그 파일 중
-   더 나중에 고쳐진 쪽을 씁니다. (자료를 추가하면 demos.js 만 바뀝니다) */
-{
-  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const here = new Date(document.lastModified);
-  const show = d => { document.getElementById("statDate").textContent = ymd(isNaN(d) ? new Date() : d); };
-
-  show(here);
-  fetch("assets/demos.js", { method: "HEAD" })
-    .then(r => {
-      const h = r.headers.get("last-modified");
-      const data = h ? new Date(h) : NaN;
-      if (!isNaN(data) && (isNaN(here) || data > here)) show(data);
-    })
-    .catch(() => {});   // 날짜를 못 읽어도 위에서 이미 하나 찍어 두었습니다
-}
+/* 마지막 업데이트 날짜는 이제 푸터 요약 줄에 들어갑니다.
+   그 계산은 네 페이지가 함께 쓰도록 assets/demos.js 맨 아래에 있습니다. */
 </script>
 
 </body>

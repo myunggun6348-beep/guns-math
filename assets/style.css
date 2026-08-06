@@ -316,10 +316,6 @@ img, svg { max-width: 100%; }
   border-radius: var(--r-xs);
 }
 
-/* 마지막 업데이트 — footer-base 안에 작게, 오른쪽으로 (library.html) */
-.footer-base-split .caption { font-variant-numeric: tabular-nums; }
-.footer-base-split .caption span { font-weight: 500; color: var(--inverse-ink); }
-
 /* =========================================================
    섹션 리듬 — 컬러블록 사이는 언제나 흰 캔버스로 돌아온다
    ========================================================= */
@@ -939,12 +935,23 @@ img, svg { max-width: 100%; }
 .footer :focus-visible { outline-color: var(--inverse-ink); }
 /* 예전엔 3단(로고 / MENU / CONTACT)이었는데, CONTACT 칸에 항목이
    하나뿐이라 오른쪽이 허전하게 비어 보였다. 링크를 전부 한 목록으로
-   묶어 2단으로 줄였다. */
+   묶어 2단으로 줄였다.
+
+   그 다음엔 링크 다섯 개가 세로로 쌓이면서 오른쪽 칸만 다섯 줄이 되었고,
+   왼쪽은 두 줄에서 끝나 그 아래로 200px 넘게 빈자리가 생겼다. 칸 높이는
+   둘 중 긴 쪽을 따라가므로, 링크를 가로 한 줄로 눕히면 그 빈자리가 통째로
+   사라진다. 오른쪽 칸을 auto 로 둔 것은 링크 줄이 꺾이지 않을 만큼만
+   가져가고 나머지는 왼쪽에 주기 위해서다. */
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: var(--xl);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--md) var(--xl);
+  align-items: start;
 }
+.footer-desc { margin-top: var(--sm); max-width: 24em; }
+/* 자료 개수·날짜 (assets/demos.js 가 채운다). 비어 있으면 자리도 안 차지한다 */
+.footer-stat { margin: var(--sm) 0 0; font-variant-numeric: tabular-nums; }
+.footer-stat:empty { display: none; }
 /* 상단 바에 이미 있는 이름이므로 크게 반복할 이유가 없다 (40px → 20px) */
 .footer-wordmark {
   font-size: 20px;
@@ -955,8 +962,16 @@ img, svg { max-width: 100%; }
 }
 /* 푸터 칸 제목은 h3 — 어느 페이지에서든 제목 단계가 안 건너뛰게 */
 .footer h3 { margin: 0 0 var(--sm); font-weight: 400; }
-.footer ul { list-style: none; margin: 0; padding: 0; }
-.footer li { margin-bottom: var(--xs); }
+/* 가로 한 줄로. 폭이 모자라면 알아서 다음 줄로 넘어간다 */
+.footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm) var(--lg);
+}
+.footer li { margin-bottom: 0; }
 .footer a { font-size: 15px; font-weight: 420; text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
 .footer-base {
@@ -964,13 +979,6 @@ img, svg { max-width: 100%; }
   padding-top: var(--md);
   border-top: 1px solid rgba(255, 255, 255, 0.16);
   color: rgba(255, 255, 255, 0.62);
-}
-/* library.html 처럼 맨 끝에 업데이트 날짜를 오른쪽으로 붙일 때 */
-.footer-base-split {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--xs) var(--lg);
 }
 
 /* =========================================================
@@ -1136,7 +1144,9 @@ img, svg { max-width: 100%; }
 
   .block-split { grid-template-columns: 1fr; gap: var(--xl); }
   .cols-3 { grid-template-columns: 1fr 1fr; }
-  .footer-grid { grid-template-columns: 1fr 1fr; }
+  /* 좁아지면 링크 줄이 꺾여 오른쪽 칸이 다시 높아진다. 그럴 바엔
+     아래로 내려 한 줄을 통째로 쓰게 한다 */
+  .footer-grid { grid-template-columns: 1fr; }
   .hero-grid { grid-template-columns: 1fr; gap: var(--xl); }
   .section-head { grid-template-columns: 1fr; gap: var(--sm); }
 }
@@ -1183,12 +1193,8 @@ img, svg { max-width: 100%; }
   .nav-actions .btn-secondary { display: none; }
   .grid { grid-template-columns: 1fr; }
 
-  /* 폰에서는 칸이 세로로 쌓여 푸터가 601px(화면 스크롤의 28%)까지 늘어났다.
-     메뉴 링크만 가로로 눕히면 175px 짜리 목록이 두 줄로 줄어든다.
-     (링크 사이 세로 간격은 손가락이 옆 링크를 잘못 누르지 않을 만큼은 남긴다) */
-  .footer ul { display: flex; flex-wrap: wrap; gap: var(--sm) var(--lg); }
-  .footer li { margin-bottom: 0; }
-  /* 푸터 메뉴만 가로로 눕히는 것이므로 공지 줄은 원래대로 세로 */
+  /* 푸터 메뉴는 이제 어느 폭에서든 가로로 눕는다(위 .footer ul).
+     공지 줄은 그 규칙에 딸려 가면 안 되므로 원래대로 세로 */
   .notice-strip ul { display: block; }
   .tablist { gap: var(--lg); }
   .tablist button { font-size: 17px; }
