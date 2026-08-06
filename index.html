@@ -7,13 +7,13 @@
 <meta name="description" content="고1부터 고3까지, 수업에서 쓰려고 만든 수학 자료와 학생 질문·공지를 모아 둔 곳. 자료는 하나씩 늘려 갑니다." />
 
 <!-- 카카오톡·문자로 링크 공유할 때 보이는 미리보기.
-     og:image 는 상대경로도 대부분 읽히지만, 인터넷에 올린 뒤
-     og:url 을 실제 주소로 바꿔 주면 더 확실합니다. (예: https://아이디.github.io/math-visual/) -->
+     인터넷에 올린 뒤라 주소를 실제 주소(https://guns-math.vercel.app)로 적어 둡니다. -->
 <meta property="og:type" content="website" />
+<meta property="og:url" content="https://guns-math.vercel.app/" />
 <meta property="og:title" content="GUN’s MATH — 직접 보는 수학" />
 <meta property="og:description" content="말로는 잘 안 되던 것들을 화면에 옮겨 두었습니다. 자료 17개 · 질문 · 공지" />
 <meta property="og:locale" content="ko_KR" />
-<meta property="og:image" content="assets/og.png" />
+<meta property="og:image" content="https://guns-math.vercel.app/assets/og.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="GUN’s MATH — 단위원과 사인 곡선 그림" />
@@ -85,9 +85,9 @@
 <section class="section" id="start">
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow">Start</span>
+      <span class="eyebrow">Materials</span>
       <div>
-        <h2 class="display-lg">어디부터 볼까</h2>
+        <h2 class="display-lg">자료 둘러보기</h2>
       </div>
     </div>
 
@@ -95,22 +95,22 @@
     <div class="tabs">
       <div class="tablist" role="tablist" aria-label="자료 보는 방법">
         <button type="button" role="tab" id="tab-new"     aria-controls="panel-new"     aria-selected="true">새로 올린 자료</button>
-        <button type="button" role="tab" id="tab-today"   aria-controls="panel-today"   aria-selected="false" tabindex="-1">오늘의 한 장면</button>
-        <button type="button" role="tab" id="tab-subject" aria-controls="panel-subject" aria-selected="false" tabindex="-1">과목별로</button>
+        <button type="button" role="tab" id="tab-today"   aria-controls="panel-today"   aria-selected="false" tabindex="-1">오늘의 자료</button>
+        <button type="button" role="tab" id="tab-subject" aria-controls="panel-subject" aria-selected="false" tabindex="-1">과목별 자료</button>
       </div>
 
       <div class="tab-panel" role="tabpanel" id="panel-new" aria-labelledby="tab-new">
-        <p class="tab-note body-sm">가장 나중에 올린 세 개입니다.</p>
+        <p class="tab-note body-sm">가장 최근에 올라온 자료 세 개입니다.</p>
         <div class="grid" id="newGrid"></div>
       </div>
 
       <div class="tab-panel" role="tabpanel" id="panel-today" aria-labelledby="tab-today" hidden>
-        <p class="tab-note body-sm" id="todayNote">자료 하나가 날마다 바뀌며 여기서 그대로 돌아갑니다. 만져 봐도 됩니다.</p>
+        <p class="tab-note body-sm" id="todayNote">날마다 바뀌는 자료입니다. 여기서 그대로 움직여 볼 수 있습니다.</p>
         <div id="todayHost"></div>
       </div>
 
       <div class="tab-panel" role="tabpanel" id="panel-subject" aria-labelledby="tab-subject" hidden>
-        <p class="tab-note body-sm">배우는 과목을 누르면 자료실의 그 자리로 갑니다.</p>
+        <p class="tab-note body-sm">배우는 과목을 누르면 자료실의 해당 자리로 이동합니다.</p>
         <nav class="subject-nav" id="homeSubjects" aria-label="과목 바로가기"></nav>
       </div>
     </div>
@@ -224,7 +224,7 @@ const NOTICES = [
       </a>`;
     }).join("");
 
-  /* --- 탭 3. 과목별로 --- */
+  /* --- 탭 3. 과목별 자료 --- */
   const order = Object.keys(SUBJECTS).filter(n => 열림.some(d => groupOf(d) === n));
   document.getElementById("homeSubjects").innerHTML = order.map(name => {
     const m = meta(name);
@@ -233,7 +233,7 @@ const NOTICES = [
            `${name}<span class="n">${n}</span></a>`;
   }).join("");
 
-  /* --- 탭 2. 오늘의 한 장면 ---
+  /* --- 탭 2. 오늘의 자료 ---
      3D 자료는 뺍니다. 홈에서 three.js 까지 받아 오면 폰에서 느립니다.
      날짜로 고르므로 같은 날 들어온 사람은 모두 같은 것을 봅니다. */
   const 후보 = 열림.filter(d => !d.d3);
@@ -261,7 +261,7 @@ const NOTICES = [
     if (innerWidth < 768) {
       const m = meta(groupOf(뽑힌));
       document.getElementById("todayNote").textContent =
-        "자료 하나가 날마다 바뀝니다. 눌러서 화면 가득 보세요.";
+        "날마다 바뀌는 자료입니다. 눌러서 화면 가득 보세요.";
       host.innerHTML = 머리 + `
         <a class="card" href="${뽑힌.href}">
           <div class="thumb" style="background:${m.color}">${뽑힌.fig}</div>
