@@ -467,6 +467,29 @@ img, svg { max-width: 100%; }
 .block-navy .rows,
 .block-navy .rows > article { border-color: rgba(255, 255, 255, 0.24); }
 
+/* --- 질문 폼 (ask.html) — 구글 폼을 페이지 안에 심는 자리 ---
+   구글 폼은 남의 사이트(iframe)라 이쪽에서 색을 바꿀 수 없다. 늘 흰 바탕이다.
+   그대로 두면 남색 위에 흰 네모가 뚫린 것처럼 보이므로, 모서리를 둥글리고
+   흰 배경으로 감싸 '위에 올려 둔 종이'로 읽히게 한다.
+   어두운 화면에서도 이 카드만 흰색인데, 그건 어쩔 수 없는 것이자
+   '여기가 쓰는 곳'이라는 표시도 되므로 그대로 둔다. */
+.askform {
+  margin-top: var(--xl);
+  border-radius: var(--r-lg);
+  background: #ffffff;
+  overflow: hidden;   /* 둥근 모서리 밖으로 폼이 삐져나오지 않게 */
+}
+/* 높이는 ask.html 의 질문폼높이 가 정한다 — 남의 사이트라 내용을 재서
+   맞출 수가 없다. 안쪽에 또 스크롤이 생기지 않도록 넉넉히 잡아 둔다. */
+.askform iframe { display: block; width: 100%; border: 0; }
+.askform-none {
+  margin: var(--xl) 0 0;
+  padding: var(--lg);
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  border-radius: var(--r-md);
+  max-width: 30em;
+}
+
 /* =========================================================
    특징 3칸
    ========================================================= */
