@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- 어두운 화면 기억 — 여기서 바로(defer 없이) 불러야 화면이 밝게 그려졌다가
+     검게 바뀌는 깜빡임이 없습니다. 자세한 건 assets/theme.js 참고 -->
+<script src="assets/theme.js"></script>
 <title>수학을 보다 | 고등학교 수학 자료실 · 질문 · 공지</title>
 <meta name="description" content="고1부터 고3까지, 수업에서 쓰려고 만든 수학 자료와 학생 질문·공지를 모아 둔 곳. 자료는 하나씩 늘려 갑니다." />
 
@@ -31,12 +34,13 @@
 <header class="nav">
   <div class="wrap">
     <a class="brand" href="#top">
-      <!-- 돋보기 안에 곡선 — 이름('수학을 보다')이 하는 말을 그림으로 한 번 더 -->
+      <!-- 돋보기 안에 곡선 — 이름('수학을 보다')이 하는 말을 그림으로 한 번 더.
+           stroke 를 currentColor 로 둔 것은 어두운 화면에서 글자색을 따라가도록 -->
       <svg viewBox="0 0 32 32" aria-hidden="true">
         <circle cx="13.5" cy="13.5" r="9" fill="#d9f26e" />
-        <path d="M6 16q3.75-8 7.5-2.5t7.5-2.5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" />
-        <circle cx="13.5" cy="13.5" r="9" fill="none" stroke="#000" stroke-width="2.5" />
-        <path d="M20 20l7.5 7.5" stroke="#000" stroke-width="3" stroke-linecap="round" />
+        <path d="M6 16q3.75-8 7.5-2.5t7.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <circle cx="13.5" cy="13.5" r="9" fill="none" stroke="currentColor" stroke-width="2.5" />
+        <path d="M20 20l7.5 7.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
       </svg>
       수학을 보다
     </a>
@@ -47,9 +51,17 @@
       <a href="files.html">자료실</a>
       <a href="ask.html">질문</a>
     </div>
-    <div class="nav-toggle-wrap">
-      <input type="checkbox" class="nav-toggle-input" id="navToggle" />
-      <label class="nav-toggle" for="navToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></label>
+    <div class="nav-right">
+      <!-- ✏️ 이 사이트를 더 밝거나 어둡게 보고 싶어질 때 누르는 단추입니다.
+           지금 상태가 아니라 눌렀을 때 어떻게 바뀌는지를 보여줍니다. -->
+      <button type="button" id="themeToggle" class="theme-toggle" aria-pressed="false" aria-label="어두운 화면으로 보기">
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+      </button>
+      <div class="nav-toggle-wrap">
+        <input type="checkbox" class="nav-toggle-input" id="navToggle" />
+        <label class="nav-toggle" for="navToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></label>
+      </div>
     </div>
   </div>
 </header>
@@ -224,10 +236,13 @@ const NOTICES = [
   /* --- 결과 한 줄 ---
      그림칸에 들어갈 것: 자료는 제 그림, 개념·학습지는 아래 글리프.
      칸 크기를 똑같이 두는 것은 세 종류가 섞여도 줄이 안 흔들리게 하려는 것. */
+  /* 개념그림은 SUBJECT_COLOR(고정 파스텔) 칩 위에 놓이므로 stroke 를 고정 검정으로 둔다.
+     파일그림은 var(--surface-soft) 칩 위에 놓이는데 이건 어두운 화면에서 같이 어두워지므로
+     stroke 를 currentColor 로 둬서 글자색을 따라가게 한다. */
   const 개념그림 = `<svg viewBox="0 0 88 48" fill="none" stroke="#000" stroke-width="1.6">
       <circle cx="20" cy="16" r="5"/><circle cx="20" cy="34" r="5"/><circle cx="66" cy="25" r="5"/>
       <path d="M25 18l36 6M25 32l36-6"/></svg>`;
-  const 파일그림 = `<svg viewBox="0 0 88 48" fill="none" stroke="#000" stroke-width="1.6">
+  const 파일그림 = `<svg viewBox="0 0 88 48" fill="none" stroke="currentColor" stroke-width="1.6">
       <path d="M36 8h12l8 8v24H36z"/><path d="M48 8v8h8"/><path d="M40 26h12M40 32h12"/></svg>`;
 
   function 줄({ href, 색, 그림, 제목, 밑, 다운 }) {
@@ -342,8 +357,10 @@ const onCircle = th => [CX + R * Math.cos(th), CY - R * Math.sin(th)];
 const onCurve  = th => [X0 + (th / (2 * Math.PI)) * XW, CY - R * Math.sin(th)];
 
 // --- 한 번만 그리는 것들 (축 · 원 · 사인 곡선) ---
+// stroke/fill 을 currentColor 로 둔 것은 어두운 화면에서 글자색(흰색)을
+// 그대로 따라가게 하려는 것. 연두 부채꼴만 색이 고정이라 그대로 둔다.
 (function base() {
-  const g = node("g", { fill: "none", stroke: "#000" });
+  const g = node("g", { fill: "none", stroke: "currentColor" });
 
   g.appendChild(node("line", { x1: 34, y1: CY, x2: 508, y2: CY, "stroke-opacity": 0.35 }));
   g.appendChild(node("line", { x1: CX, y1: 58, x2: CX, y2: 282, "stroke-opacity": 0.35 }));
@@ -362,11 +379,11 @@ const onCurve  = th => [X0 + (th / (2 * Math.PI)) * XW, CY - R * Math.sin(th)];
 
 // --- 각도에 따라 다시 그리는 것들 ---
 const sector = node("path", { fill: "#d9f26e", stroke: "none" });
-const radius = node("line", { stroke: "#000", "stroke-width": 1.6 });
-const link   = node("line", { stroke: "#000", "stroke-opacity": 0.4, "stroke-dasharray": "5 4" });
-const dotC   = node("circle", { r: 5, fill: "#000" });
-const dotG   = node("circle", { r: 5, fill: "#000" });
-const tag    = node("text", { "font-size": 15, "font-weight": 500, fill: "#000" });
+const radius = node("line", { stroke: "currentColor", "stroke-width": 1.6 });
+const link   = node("line", { stroke: "currentColor", "stroke-opacity": 0.4, "stroke-dasharray": "5 4" });
+const dotC   = node("circle", { r: 5, fill: "currentColor" });
+const dotG   = node("circle", { r: 5, fill: "currentColor" });
+const tag    = node("text", { "font-size": 15, "font-weight": 500, fill: "currentColor" });
 
 art.insertBefore(sector, art.firstChild);   // 부채꼴은 선 아래로
 art.append(radius, link, dotC, dotG, tag);

@@ -67,6 +67,28 @@
   --gutter: var(--xxl);
 }
 
+/* =========================================================
+   어두운 화면 — 켜고 끄는 것이라 :root 를 직접 고치지 않는다.
+   html 에 이 class 가 붙은 동안만 색이 바뀐다. (assets/theme.js 가 붙이고 뗀다)
+
+   자료 페이지(demos/*.html)에는 이 class 가 절대 붙지 않는다.
+   그래프를 그리는 곳마다 색이 코드 안에 직접 박혀 있어서(예:
+   ctx.strokeStyle = "#000"), 배경만 검게 바꾸면 선이 안 보이게 된다.
+   그래서 다크 모드는 다섯 개 '쉘' 페이지(index/library/map/files/ask)의
+   상단바·히어로·본문 글·푸터에만 적용하고, 자료 자체는 늘 흰 바탕이다.
+
+   토스페이먼츠 개발자센터 기획안의 색(다크 네이비 + 블루 포인트)을
+   가져오되, 그 기획안의 구조(API 문서, 코드 탭, 개발자 도구 그리드 등)는
+   이 사이트와 안 맞아 가져오지 않았다 — 색만 옮겨 왔다. */
+html.theme-dark {
+  --primary: #3b82f6;
+  --canvas: #0a0b0e;
+  --ink: #ffffff;
+  --surface-soft: #15171c;
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-soft: rgba(255, 255, 255, 0.06);
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
@@ -383,8 +405,12 @@ img, svg { max-width: 100%; }
 .block-mint  { background: var(--block-mint); }
 .block-pink  { background: var(--block-pink); }
 .block-coral { background: var(--block-coral); }
+/* block-navy 는 화면이 밝든 어둡든 늘 짙은 남색이다 — 그래서 안의 글자·단추도
+   --ink/--canvas(화면을 따라가는 값)가 아니라 --inverse-ink 처럼 고정값을 쓴다.
+   .btn-secondary 도 var(--canvas) 대신 고정 흰색으로 바꿨다 — 안 그러면 어두운
+   화면에서 --canvas 가 남색과 비슷한 어두운 색이 되어 단추가 밋밋해 보였다. */
 .block-navy  { background: var(--block-navy); color: var(--inverse-ink); }
-.block-navy .btn-secondary { background: var(--canvas); color: var(--ink); }
+.block-navy .btn-secondary { background: #ffffff; color: #000000; }
 
 .block-split {
   display: grid;
@@ -812,10 +838,14 @@ img, svg { max-width: 100%; }
   transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 }
 .cmap-node:hover { border-color: var(--primary); transform: translateY(-1px); }
+/* color 는 --inverse-ink(항상 흰색 고정)가 아니라 --canvas 를 쓴다.
+   --inverse-ink 는 '늘 흰색'이라, 어두운 화면에서 --ink 가 흰색으로
+   뒤집히면 배경도 글자도 흰색이 되어 버린다. --canvas 는 그 화면의
+   '반대쪽' 색을 그대로 담고 있어서 밝은/어두운 화면 모두에서 맞는다. */
 .cmap-node.on {
   background: var(--ink);
   border-color: var(--ink);
-  color: var(--inverse-ink);
+  color: var(--canvas);
 }
 
 /* --- 고른 개념과 이어진 상자들 ---
@@ -830,7 +860,10 @@ img, svg { max-width: 100%; }
 .cmap.has-selection .cmap-node.pre,
 .cmap.has-selection .cmap-node.post { opacity: 1; }
 .cmap-node.pre  { box-shadow: inset 0 0 0 2px var(--ink); border-color: var(--ink); }
-.cmap-node.post { background: var(--block-lime); border-color: var(--block-lime); }
+/* 연두(block-lime)는 밝은/어두운 화면 모두에서 늘 밝은 색이므로,
+   글자색은 화면을 따라가는 --ink 가 아니라 고정된 어두운 색으로 못박는다.
+   --ink 그대로 뒀으면 어두운 화면에서 흰 글자가 연두 위에 놓여 안 보였다. */
+.cmap-node.post { background: var(--block-lime); border-color: var(--block-lime); color: rgba(0, 0, 0, 0.86); }
 .cmap-node.post .cmap-node-n { border-left-color: rgba(0, 0, 0, 0.25); }
 .cmap-node .dot { width: 9px; height: 9px; border-radius: var(--r-full); flex: none; }
 /* 볼 수 있는 자료가 몇 개 붙어 있는지 */
@@ -844,6 +877,9 @@ img, svg { max-width: 100%; }
   opacity: 0.55;
 }
 .cmap-node.on .cmap-node-n { border-left-color: rgba(255, 255, 255, 0.3); opacity: 0.7; }
+.theme-dark .cmap-node-n { border-left-color: rgba(255, 255, 255, 0.18); }
+/* .on 은 배경이 --ink(어두운 화면에서 흰색)라, 테두리도 그때는 어둡게 */
+.theme-dark .cmap-node.on .cmap-node-n { border-left-color: rgba(0, 0, 0, 0.25); }
 
 /* --- 고른 개념의 자세한 내용 --- */
 .cmap-panel {
@@ -864,12 +900,14 @@ img, svg { max-width: 100%; }
   border-top: 1px solid var(--hairline);
 }
 .cmap-panel-grid h3 { margin: 0 0 var(--sm); }
-/* '전부 보기'일 때 제목 옆에 붙는 "8개 · 배우는 순서" */
+/* '전부 보기'일 때 제목 옆에 붙는 "8개 · 배우는 순서".
+   연두 배경은 고정색이라 글자도 고정된 어두운 색으로 (위 .cmap-node.post 와 같은 이유) */
 .cmap-count {
   margin-left: var(--xs);
   padding: 1px 8px 2px;
   border-radius: var(--r-pill);
   background: var(--block-lime);
+  color: rgba(0, 0, 0, 0.86);
   font-weight: 500;
   text-transform: none;
   letter-spacing: 0;
@@ -1027,11 +1065,13 @@ img, svg { max-width: 100%; }
   list-style: none;
 }
 .notice-strip summary::-webkit-details-marker { display: none; }
+/* 연두 배경은 밝은/어두운 화면 모두에서 늘 밝으므로 글자도 고정된 어두운 색으로 */
 .notice-strip .label {
   flex: none;
   padding: 3px 10px 4px;
   border-radius: var(--r-pill);
   background: var(--block-lime);
+  color: rgba(0, 0, 0, 0.86);
   font-size: 13px;
   font-weight: 500;
 }
@@ -1326,3 +1366,69 @@ img, svg { max-width: 100%; }
   html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }
 }
+
+/* =========================================================
+   어두운 화면 — 나머지 오버라이드
+
+   :root 바로 아래 html.theme-dark 블록에서 --canvas·--ink 같은 변수를
+   이미 뒤집어 뒀다. 그 변수를 그대로 쓰는 대부분의 요소는 저절로
+   따라오지만, 아래 것들은 그렇지 않다 — 둘 중 하나다:
+
+   1) 화면 배경색과 상관없이 늘 정해진 색을 쓰는 곳
+      (rgba(0,0,0,.4) 처럼 '검정 몇 %'라고 직접 적어 둔 곳들.
+       --ink 가 흰색이 되어도 이 숫자들은 안 바뀐다.)
+   2) 히어로·검색 결과 아이콘처럼, 자바스크립트가 그리는 그림이라
+      CSS 변수가 아예 안 닿는 곳
+      (이런 곳은 style.css 가 아니라 각 .html 안에서
+       stroke="#000" 을 stroke="currentColor" 로 바꿔 두었다.
+       currentColor 는 이 CSS 블록이 아니라 --ink 를 그대로 따라간다)
+   ========================================================= */
+.theme-dark .eyebrow { color: rgba(255, 255, 255, 0.5); }
+.theme-dark .caption { color: rgba(255, 255, 255, 0.62); }
+.theme-dark .subject-nav .n { border-left-color: rgba(255, 255, 255, 0.18); }
+.theme-dark .card .use { color: rgba(255, 255, 255, 0.72); }
+.theme-dark .card .use b { color: rgba(255, 255, 255, 0.55); }
+.theme-dark .find-note { color: rgba(255, 255, 255, 0.58); }
+.theme-dark .find-box svg { color: rgba(255, 255, 255, 0.45); }
+.theme-dark .find-box input::placeholder { color: rgba(255, 255, 255, 0.4); }
+
+/* 히어로 — 크림 색면 대신 다크 네이비 + 왼쪽 위에서 오는 옅은 파란 광원.
+   글자·단추는 --ink/--primary 를 그대로 쓰므로 따로 안 건드려도 흰 글자·
+   파란 단추로 저절로 바뀐다. */
+.theme-dark .hero {
+  background:
+    radial-gradient(1100px 620px at 12% -15%, rgba(59, 130, 246, 0.18), transparent 60%),
+    linear-gradient(180deg, #10142a 0%, #0a0b0e 100%);
+}
+
+/* 푸터 — 예전엔 '검은 색면'이 흰 페이지 위에서 끝을 표시했지만,
+   페이지 전체가 이미 어두우면 그 색면이 배경과 거의 같은 색이 되어
+   더 이상 표시 역할을 못 한다. 대신 위쪽에 실선 하나로 경계를 긋는다. */
+.theme-dark .footer {
+  background: transparent;
+  border-top: 1px solid var(--hairline);
+}
+
+/* --- 켜고 끄는 단추 --- */
+.nav-right { display: flex; align-items: center; gap: var(--xs); }
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-full);
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--primary); }
+.theme-toggle svg { width: 18px; height: 18px; }
+/* 밝은 화면에서는 "누르면 어두워집니다"는 뜻으로 달 모양,
+   어두운 화면에서는 "누르면 밝아집니다"는 뜻으로 해 모양 — 지금 상태가
+   아니라 눌렀을 때 결과를 보여준다. */
+.theme-toggle .i-sun { display: none; }
+.theme-dark .theme-toggle .i-moon { display: none; }
+.theme-dark .theme-toggle .i-sun { display: block; }
