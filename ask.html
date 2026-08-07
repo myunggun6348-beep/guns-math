@@ -76,9 +76,13 @@
         이름은 안 적어도 되고, 문제 사진 한 장만 보내도 됩니다.
       </p>
       <div class="cta-row">
-        <!-- ✏️ 구글 폼을 만들어 아래 href 를 폼 주소로 바꿔 주세요 -->
-        <a class="btn btn-secondary" href="ask.html">질문 남기기 →</a>
+        <!-- ✏️ 구글 폼을 만들어 아래 href 를 폼 주소로 바꿔 주세요.
+             target="_blank" 로 미리 열어 둔 이유: 학생이 폼을 쓰다가
+             실수로 뒤로 가기를 누르면 이 사이트가 아니라 폼 내용이
+             사라지게 하려는 것. 폼 주소를 넣고 나면 그대로 두면 됩니다. -->
+        <a class="btn btn-secondary" href="ask.html" target="_blank" rel="noopener">질문 남기기 →</a>
       </div>
+      <p class="caption" style="margin-top: 10px;">누르면 새 창에서 구글 설문지가 열립니다.</p>
 
       <h2 class="caption" style="margin: 40px 0 0;">받은 질문과 답</h2>
       <!-- ✏️ 답변은 아래 script 의 QNA 배열에 한 줄씩 추가하면 됩니다 -->
