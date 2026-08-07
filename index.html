@@ -95,12 +95,17 @@
 <!-- ===================== 찾기 =====================
      학생이 실제로 하는 질문은 결국 "그거 어디 있어요" 다.
      그 질문 하나를 홈 한가운데로 끌어올린 자리.
-     내용은 모두 assets/demos.js 에서 저절로 만들어집니다. -->
+
+     세 곳을 한꺼번에 뒤집니다 — 어느 페이지에 있는지 학생이 미리
+     알아야 할 이유가 없기 때문입니다.
+       직접 보는 수학  ← assets/demos.js
+       개념 지도       ← assets/concepts.js
+       자료실          ← assets/files.js -->
 <section class="section" id="find">
   <div class="wrap">
     <div class="find">
       <h2 class="display-lg">뭘 찾고 있나요</h2>
-      <p class="body-sm find-note">개념 이름을 치면 자료가 바로 나옵니다.</p>
+      <p class="body-sm find-note">개념 이름을 치면 자료·개념·학습지를 한꺼번에 찾습니다.</p>
 
       <div class="find-box">
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
@@ -134,8 +139,10 @@
   </div>
 </footer>
 
-<!-- 자료 목록은 자료실(library.html)과 함께 쓰므로 따로 빼 두었습니다 -->
-<script src="assets/demos.js"></script>
+<!-- 아래 셋은 각각 다른 페이지와 함께 쓰는 목록입니다. 홈은 셋을 한꺼번에 찾습니다. -->
+<script src="assets/demos.js"></script>     <!-- 직접 보는 수학 (library.html) -->
+<script src="assets/concepts.js"></script>  <!-- 개념 지도 (map.html) -->
+<script src="assets/files.js"></script>     <!-- 자료실 (files.html) -->
 
 <script>
 /* =========================================================
@@ -178,8 +185,15 @@ const NOTICES = [
 /* =========================================================
    1-2. 홈 가운데 — 찾기
 
-   자료 목록(assets/demos.js)을 그 자리에서 걸러 보여 줍니다.
-   새 자료를 올리면 여기서도 바로 찾아집니다 — 손댈 것이 없습니다.
+   세 곳을 한꺼번에 뒤집니다. 학생은 자기가 찾는 것이 '자료'인지
+   '개념'인지 '학습지'인지 미리 알 수 없으므로, 나눠서 찾게 하면 안 됩니다.
+   대신 결과를 묶어서 어디로 가는 것인지 밝혀 둡니다.
+
+     직접 보는 수학  ← DEMOS    (assets/demos.js)
+     개념 지도       ← NODES    (assets/concepts.js)
+     자료실          ← FILES    (assets/files.js)
+
+   새 자료·개념·학습지를 추가하면 여기서도 바로 찾아집니다 — 손댈 것이 없습니다.
 
    비어 있을 때 과목을 보여 주는 이유: 빈 검색칸만 놓아 두면 무엇을
    칠 수 있는지 몰라 아무도 안 친다. 과목이 보이면 최소한 누를 것은 있다.
@@ -190,9 +204,13 @@ const NOTICES = [
   const 세기 = document.getElementById("findCount");
   const 열림 = DEMOS.filter(d => d.ready);
 
-  const 최대 = 6;   // 홈이 길어지지 않게. 넘치면 '자료실에서 전부 보기'로 보냅니다
+  /* 묶음마다 넷까지. 전체를 하나로 잘라 버리면 앞 묶음이 자리를 다 먹어
+     뒤 묶음(개념·학습지)이 아예 안 보이는 일이 생긴다. */
+  const 묶음최대 = 4;
 
-  // 검색칸이 비었을 때 — 과목 여섯 개
+  const 소문자 = (...조각) => 조각.filter(Boolean).join(" ").toLowerCase();
+
+  /* --- 검색칸이 비었을 때 — 과목 여섯 개 --- */
   function 과목들() {
     const order = Object.keys(SUBJECTS).filter(n => 열림.some(d => groupOf(d) === n));
     return `<nav class="subject-nav" aria-label="과목 바로가기">` + order.map(name => {
@@ -203,16 +221,35 @@ const NOTICES = [
     }).join("") + `</nav>`;
   }
 
-  function 줄(d) {
-    const m = meta(groupOf(d));
-    return `<a class="find-hit" href="${d.href}">
-      <span class="find-fig" style="background:${m.color}">${d.fig}</span>
+  /* --- 결과 한 줄 ---
+     그림칸에 들어갈 것: 자료는 제 그림, 개념·학습지는 아래 글리프.
+     칸 크기를 똑같이 두는 것은 세 종류가 섞여도 줄이 안 흔들리게 하려는 것. */
+  const 개념그림 = `<svg viewBox="0 0 88 48" fill="none" stroke="#000" stroke-width="1.6">
+      <circle cx="20" cy="16" r="5"/><circle cx="20" cy="34" r="5"/><circle cx="66" cy="25" r="5"/>
+      <path d="M25 18l36 6M25 32l36-6"/></svg>`;
+  const 파일그림 = `<svg viewBox="0 0 88 48" fill="none" stroke="#000" stroke-width="1.6">
+      <path d="M36 8h12l8 8v24H36z"/><path d="M48 8v8h8"/><path d="M40 26h12M40 32h12"/></svg>`;
+
+  function 줄({ href, 색, 그림, 제목, 밑, 다운 }) {
+    return `<a class="find-hit" href="${href}"${다운 ? " download" : ""}>
+      <span class="find-fig" style="background:${색}">${그림}</span>
       <span class="find-text">
-        <b>${d.title}</b>
-        <span class="caption">${d.subject} · ${d.unit}</span>
+        <b>${제목}</b>
+        <span class="caption">${밑}</span>
       </span>
-      <span class="find-go" aria-hidden="true">→</span>
+      <span class="find-go" aria-hidden="true">${다운 ? "↓" : "→"}</span>
     </a>`;
+  }
+
+  /* --- 묶음 하나 그리기 --- */
+  function 묶음(이름, 줄들, 더보기) {
+    if (!줄들.length) return "";
+    const 남은 = 줄들.length - 묶음최대;
+    return `<div class="find-group">` +
+      `<p class="find-group-head caption">${이름}<span>${줄들.length}</span></p>` +
+      줄들.slice(0, 묶음최대).join("") +
+      (남은 > 0 ? `<p class="find-more"><a class="go" href="${더보기}">${남은}개 더 보기 →</a></p>` : "") +
+      `</div>`;
   }
 
   function 그리기() {
@@ -224,23 +261,61 @@ const NOTICES = [
       return;
     }
 
-    const 걸린것 = 열림.filter(d =>
-      (d.title + d.subject + d.unit + d.desc + d.use + d.keywords + d.year)
-        .toLowerCase().includes(말));
+    /* 1) 직접 보는 수학 */
+    const 자료줄 = 열림
+      .filter(d => 소문자(d.title, d.subject, d.unit, d.desc, d.use, d.keywords, d.year).includes(말))
+      .map(d => {
+        const m = meta(groupOf(d));
+        return 줄({ href: d.href, 색: m.color, 그림: d.fig,
+                   제목: d.title, 밑: `${d.subject} · ${d.unit}` });
+      });
 
-    if (!걸린것.length) {
-      세기.textContent = "찾는 자료가 없습니다";
+    /* 2) 개념 지도 — 개념 이름·설명뿐 아니라 그 개념에 매달린 자료 제목까지 본다.
+          '정사영'으로 쳐도 그게 걸린 개념(공간도형)이 같이 나오도록. */
+    const 개념줄 = Object.keys(NODES)
+      .filter(id => {
+        const n = NODES[id];
+        return 소문자(n.name, n.subject, n.year, n.about,
+                     n.demos.map(x => x.t).join(" ")).includes(말);
+      })
+      .map(id => {
+        const n = NODES[id];
+        const 개수 = n.demos.length;
+        return 줄({ href: `map.html?n=${id}`,
+                   색: SUBJECT_COLOR[n.subject] || "var(--surface-soft)",
+                   그림: 개념그림, 제목: n.name,
+                   밑: `${n.year} · ${n.subject}` +
+                       (개수 ? ` · 자료 ${개수}개` : " · 자료 준비 중") });
+      });
+
+    /* 3) 자료실 (내려받는 파일) */
+    const 파일줄 = (typeof FILES === "undefined" ? [] : FILES)
+      .filter(f => 소문자(f.title, f.subject, f.kind, f.keywords, f.date).includes(말))
+      .map(f => 줄({ href: f.href, 색: "var(--surface-soft)", 그림: 파일그림,
+                    제목: f.title, 다운: true,
+                    밑: [f.subject, f.kind, f.date].filter(Boolean).join(" · ") }));
+
+    const 합 = 자료줄.length + 개념줄.length + 파일줄.length;
+
+    if (!합) {
+      세기.textContent = "찾는 것이 없습니다";
       결과.innerHTML =
-        `<p class="find-none">아직 그 자료는 없습니다. ` +
+        `<p class="find-none">아직 그건 없습니다. ` +
         `<a href="ask.html">질문으로 남겨 주세요</a> — 보고 만들어 올리겠습니다.</p>`;
       return;
     }
 
-    세기.textContent = `${걸린것.length}개 찾았습니다`;
-    결과.innerHTML = 걸린것.slice(0, 최대).map(줄).join("") +
-      (걸린것.length > 최대
-        ? `<p class="find-more"><a class="go" href="library.html">자료실에서 전부 보기 →</a></p>`
-        : "");
+    // 무엇이 몇 개인지 먼저 알려 준다 (화면낭독기도 이 줄을 읽습니다)
+    세기.textContent = [
+      자료줄.length && `자료 ${자료줄.length}개`,
+      개념줄.length && `개념 ${개념줄.length}개`,
+      파일줄.length && `학습지 ${파일줄.length}개`,
+    ].filter(Boolean).join(" · ") + " 찾았습니다";
+
+    결과.innerHTML =
+      묶음("직접 보는 수학", 자료줄, "library.html") +
+      묶음("개념 지도", 개념줄, "map.html") +
+      묶음("자료실", 파일줄, "files.html");
   }
 
   칸.addEventListener("input", 그리기);
