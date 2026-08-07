@@ -489,6 +489,9 @@ img, svg { max-width: 100%; }
   border-radius: var(--r-md);
   max-width: 30em;
 }
+/* 폼이 안 뜰 때 빠져나갈 길. 평소엔 눈에 안 띄어야 하므로 작고 조용하게 */
+.askform-alt { margin: var(--sm) 0 0; }
+.askform-alt a { color: var(--inverse-ink); text-decoration: underline; }
 
 /* =========================================================
    특징 3칸
