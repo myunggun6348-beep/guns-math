@@ -911,7 +911,9 @@ img, svg { max-width: 100%; }
    ========================================================= */
 /* 위 공지 줄이 이미 경계를 그어 주므로, 섹션 기본 여백(96px)은 과했다 */
 #find { padding-top: var(--xxl); }
-.find { max-width: 40em; margin: 0 auto; text-align: center; }
+/* 40em(720px)이면 과목 칩 여섯 개가 한 줄에 732px 필요해 12px이 모자라
+   '기하' 하나만 다음 줄로 떨어졌다. 43em으로 여유를 둬 한 줄에 다 들어오게 한다. */
+.find { max-width: 43em; margin: 0 auto; text-align: center; }
 .find-note { margin: var(--sm) 0 0; color: rgba(0, 0, 0, 0.58); }
 
 .find-box { position: relative; margin-top: var(--lg); }
