@@ -710,6 +710,52 @@ img, svg { max-width: 100%; }
    좌표를 손으로 박아 두면 폰에서 반드시 깨지기 때문에, 배치는 CSS 에
    맡기고 script 는 '그려진 자리를 재서 선을 긋는' 일만 한다.
    ========================================================= */
+/* 지도 위 줄 — 색 읽는 법(왼쪽) + '전부 보기' 스위치(오른쪽) */
+.cmap-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sm) var(--lg);
+  margin-bottom: var(--md);
+  padding-bottom: var(--sm);
+  border-bottom: 1px solid var(--hairline);
+}
+/* 범례는 개념을 고르기 전에는 숨어 있다 — 아직 읽을 색이 없으므로 */
+.cmap-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--xs) var(--md);
+  margin: 0;
+}
+/* 동그라미와 그 설명은 한 덩어리로 묶는다 — 안 묶으면 폰에서 줄이 꺾일 때
+   동그라미만 윗줄에 남고 글자가 아랫줄로 떨어진다 */
+.cmap-legend > span { display: inline-flex; align-items: center; white-space: nowrap; }
+.cmap-legend .k {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  margin-right: 5px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--hairline);
+}
+.cmap-legend .k.on   { background: var(--ink); border-color: var(--ink); }
+.cmap-legend .k.pre  { background: var(--canvas); box-shadow: inset 0 0 0 2px var(--ink); border-color: var(--ink); }
+.cmap-legend .k.post { background: var(--block-lime); border-color: var(--block-lime); }
+
+.cmap-deep {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--xs);
+  min-height: 44px;          /* 손가락 기준 */
+  font-size: 15px;
+  font-weight: 460;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cmap-deep input { width: 17px; height: 17px; accent-color: var(--ink); cursor: pointer; }
+
 .cmap { position: relative; }
 /* 선은 상자 뒤로 — 상자를 가리지 않게 */
 .cmap-lines {
@@ -765,6 +811,21 @@ img, svg { max-width: 100%; }
   border-color: var(--ink);
   color: var(--inverse-ink);
 }
+
+/* --- 고른 개념과 이어진 상자들 ---
+   선만 밝히던 시절에는 얇은 선을 눈으로 따라가야 답을 알 수 있었다.
+   이제 상자 자체가 답한다: 검정=고른 것, 테두리=먼저, 연두=이어지는 것.
+
+   테두리를 border-width 로 두껍게 하지 않고 inset 그림자로 그리는 이유:
+   box-sizing 이 border-box 라 테두리가 굵어지면 안쪽 폭이 줄어 글자가
+   미세하게 움직인다. 그림자는 자리를 안 먹으므로 상자가 안 흔들린다. */
+.cmap.has-selection .cmap-node { opacity: 0.32; }
+.cmap.has-selection .cmap-node.on,
+.cmap.has-selection .cmap-node.pre,
+.cmap.has-selection .cmap-node.post { opacity: 1; }
+.cmap-node.pre  { box-shadow: inset 0 0 0 2px var(--ink); border-color: var(--ink); }
+.cmap-node.post { background: var(--block-lime); border-color: var(--block-lime); }
+.cmap-node.post .cmap-node-n { border-left-color: rgba(0, 0, 0, 0.25); }
 .cmap-node .dot { width: 9px; height: 9px; border-radius: var(--r-full); flex: none; }
 /* 볼 수 있는 자료가 몇 개 붙어 있는지 */
 .cmap-node-n {
@@ -797,6 +858,16 @@ img, svg { max-width: 100%; }
   border-top: 1px solid var(--hairline);
 }
 .cmap-panel-grid h3 { margin: 0 0 var(--sm); }
+/* '전부 보기'일 때 제목 옆에 붙는 "8개 · 배우는 순서" */
+.cmap-count {
+  margin-left: var(--xs);
+  padding: 1px 8px 2px;
+  border-radius: var(--r-pill);
+  background: var(--block-lime);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
 .cmap-chips { display: flex; flex-wrap: wrap; gap: var(--xs); }
 .cmap-chip {
   display: inline-flex;

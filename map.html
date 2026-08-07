@@ -68,6 +68,20 @@
       </div>
     </div>
 
+    <!-- 지도 위 줄 — 왼쪽은 색 읽는 법, 오른쪽은 '전부 보기' 스위치.
+         범례가 없으면 검정·테두리·연두가 무슨 뜻인지 알 길이 없습니다. -->
+    <div class="cmap-bar">
+      <p class="cmap-legend caption" id="cmapLegend" hidden>
+        <span><i class="k on"></i>고른 개념</span>
+        <span><i class="k pre"></i>먼저 알아야 하는 것</span>
+        <span><i class="k post"></i>여기서 이어지는 것</span>
+      </p>
+      <label class="cmap-deep">
+        <input type="checkbox" id="cmapDeep" />
+        <span>여기까지 오는 길 전부 보기</span>
+      </label>
+    </div>
+
     <!-- 지도 — 개념 상자는 CSS 로 배치하고, 잇는 선만 script 가 그립니다 -->
     <div class="cmap" id="cmap">
       <svg class="cmap-lines" id="cmapLines" aria-hidden="true"></svg>
@@ -108,13 +122,35 @@
    선만 얹습니다 — 그래서 화면 폭이 바뀌어도 저절로 다시 배치됩니다.
    ========================================================= */
 
-const cmap = document.getElementById("cmap");
-const lines = document.getElementById("cmapLines");
-const panel = document.getElementById("cmapPanel");
+const cmap   = document.getElementById("cmap");
+const lines  = document.getElementById("cmapLines");
+const panel  = document.getElementById("cmapPanel");
+const 깊게   = document.getElementById("cmapDeep");
+const 범례   = document.getElementById("cmapLegend");
 const NS = "http://www.w3.org/2000/svg";
 
 const before = id => EDGES.filter(e => e[1] === id).map(e => e[0]);
 const after  = id => EDGES.filter(e => e[0] === id).map(e => e[1]);
+
+/* 층에 적힌 순서가 곧 배우는 순서. 아래에서 '전부'를 이 순서로 돌려주므로
+   나온 것을 위에서부터 읽으면 그대로 공부 순서가 됩니다. */
+const 배운순서 = LAYERS.flatMap(l => l.ids);
+
+/* 거슬러 올라가며 앞선 개념을 전부 모읍니다.
+   한 단계만 보여 주면 "미적분Ⅱ 하려면 뭘 알아야 해요"에 답이 안 됩니다 —
+   그 답은 사슬 전체이기 때문입니다.
+   (이미 담은 것은 건너뛰므로 여러 길로 만나는 개념도 한 번만 나옵니다) */
+function 앞전부(id) {
+  const 모음 = new Set();
+  const 대기 = [...before(id)];
+  while (대기.length) {
+    const 지금 = 대기.pop();
+    if (모음.has(지금)) continue;
+    모음.add(지금);
+    대기.push(...before(지금));
+  }
+  return 배운순서.filter(x => 모음.has(x));
+}
 
 for (const layer of LAYERS) {
   const row = document.createElement("div");
@@ -176,12 +212,34 @@ function drawLines() {
 
 /* ---------- 개념 하나를 골랐을 때 ---------- */
 let selected = null;
+let 앞집합 = new Set();    // 지금 밝혀 둔 '먼저 알아야 하는 것'
+let 뒤집합 = new Set();    // 지금 밝혀 둔 '여기서 이어지는 것'
+
+/* 상자에 표시 달기.
+   예전에는 선만 밝히고 상자는 그대로 두었는데, 그러면 얇은 선을 눈으로
+   따라가야 답을 알 수 있었다. 지도가 하려는 말이 '이게 있어야 저게 된다'인데
+   그 답이 선 하나에만 실려 있던 셈이다. */
+function markNodes(id) {
+  cmap.classList.add("has-selection");
+  for (const el of cmap.querySelectorAll(".cmap-node")) {
+    const i = el.dataset.id;
+    el.classList.toggle("on", i === id);
+    el.classList.toggle("pre", 앞집합.has(i));
+    el.classList.toggle("post", 뒤집합.has(i));
+    el.setAttribute("aria-pressed", i === id ? "true" : "false");
+  }
+  범례.hidden = false;
+}
 
 function markLines(id) {
-  cmap.classList.add("has-selection");
   for (const p of lines.querySelectorAll(".cmap-line")) {
-    const hit = p.dataset.from === id || p.dataset.to === id;
-    p.classList.toggle("on", hit);
+    const { from, to } = p.dataset;
+    // 고른 개념에 바로 닿는 선
+    const 닿음 = from === id || to === id;
+    /* '전부 보기'일 때는 앞쪽 사슬 안에서 이어지는 선도 길의 일부다.
+       (앞 → 앞, 또는 앞 → 고른 것) */
+    const 길 = 앞집합.has(from) && (앞집합.has(to) || to === id);
+    p.classList.toggle("on", 닿음 || 길);
   }
 }
 
@@ -197,13 +255,22 @@ function select(id, push) {
   if (!n) return;
   selected = id;
 
-  for (const el of cmap.querySelectorAll(".cmap-node")) {
-    el.classList.toggle("on", el.dataset.id === id);
-    el.setAttribute("aria-pressed", el.dataset.id === id ? "true" : "false");
-  }
+  const 전부 = 깊게.checked;
+  const pre  = 전부 ? 앞전부(id) : before(id);
+  const post = after(id);
+
+  앞집합 = new Set(pre);
+  뒤집합 = new Set(post);
+
+  markNodes(id);
   markLines(id);
 
-  const pre = before(id), post = after(id);
+  /* '전부 보기'에서는 배우는 순서대로 나오므로, 위에서부터 읽으면
+     그대로 공부 순서가 된다. 그래서 제목에 그 뜻을 적어 둔다. */
+  const 앞제목 = 전부
+    ? `먼저 알아야 하는 것 <span class="cmap-count">${pre.length}개 · 배우는 순서</span>`
+    : `먼저 알아야 하는 것`;
+
   panel.innerHTML = `
     <div class="cmap-panel-head">
       <span class="caption">${n.year} · ${n.subject}</span>
@@ -212,7 +279,7 @@ function select(id, push) {
     </div>
     <div class="cmap-panel-grid">
       <div>
-        <h3 class="caption">먼저 알아야 하는 것</h3>
+        <h3 class="caption">${앞제목}</h3>
         <div class="cmap-chips">${chips(pre, "없음 — 여기서 출발합니다")}</div>
       </div>
       <div>
@@ -234,13 +301,17 @@ function select(id, push) {
 
 function clearPanel() {
   panel.innerHTML = `<p class="cmap-hint body-sm">개념을 하나 눌러 보세요. 그 개념이
-    <b>어디서 왔고 어디로 이어지는지</b> 선이 밝아지고, 볼 수 있는 자료가 여기에 나옵니다.</p>`;
+    <b>어디서 왔고 어디로 이어지는지</b> 지도에 표시되고, 볼 수 있는 자료가 여기에 나옵니다.</p>`;
 }
 
 cmap.addEventListener("click", e => {
   const btn = e.target.closest(".cmap-node");
   if (btn) select(btn.dataset.id, true);
 });
+
+/* 스위치를 켜고 끄면 고른 개념을 그대로 두고 다시 칠합니다.
+   (아무것도 안 고른 상태에서 켜면 보여 줄 것이 없으므로 그냥 둡니다) */
+깊게.addEventListener("change", () => { if (selected) select(selected, false); });
 panel.addEventListener("click", e => {
   const chip = e.target.closest(".cmap-chip");
   if (chip) {
