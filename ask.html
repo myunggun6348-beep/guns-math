@@ -7,13 +7,13 @@
      검게 바뀌는 깜빡임이 없습니다. 자세한 건 assets/theme.js 참고 -->
 <script src="assets/theme.js"></script>
 <title>질문 · 수학을 보다</title>
-<meta name="description" content="학생이 질문을 남기면 선생님이 직접 답합니다. 이름은 안 적어도 되고, 문제 사진 한 장만 보내도 됩니다." />
+<meta name="description" content="공부 방법에 대한 질문을 남기면 선생님이 직접 답합니다. 이름 없이 완전히 익명입니다." />
 
 <!-- 카카오톡·문자로 이 페이지 링크를 직접 공유할 때 보이는 미리보기 -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://guns-math.vercel.app/ask.html" />
 <meta property="og:title" content="질문 · 수학을 보다" />
-<meta property="og:description" content="학생이 질문을 남기면 선생님이 직접 답합니다. 이름은 안 적어도 되고, 문제 사진 한 장만 보내도 됩니다." />
+<meta property="og:description" content="공부 방법에 대한 질문을 남기면 선생님이 직접 답합니다. 이름 없이 완전히 익명입니다." />
 <meta property="og:locale" content="ko_KR" />
 <meta property="og:image" content="https://guns-math.vercel.app/assets/og.png" />
 <meta property="og:image:width" content="1200" />
@@ -69,23 +69,31 @@
   <div class="wrap">
     <div class="block block-navy">
       <span class="eyebrow">Q &amp; A</span>
-      <h1 class="display-lg">선생님한테 직접 물어보기</h1>
-      <!-- ⚠ "이름은 안 적어도 된다"고 쓰지 않는다.
-           구글 폼은 파일 업로드 칸이 하나라도 있으면 응답자에게 로그인을 강제하고,
-           그때 이메일이 응답에 남는다. 익명이 아닌데 익명인 것처럼 쓰면 안 된다. -->
+      <h1 class="display-lg">공부 방법, 편하게 물어보세요</h1>
       <p class="subhead" style="margin-top: 24px; max-width: 27em;">
-        학생이 질문을 남기면 이 페이지를 만든 제가 직접 답합니다.
-        수업 시간에 손 들기 애매했던 것, 문제 풀다 막힌 것 아무거나 좋습니다.
-        <b>수식을 적을 필요 없이 문제를 사진으로 찍어 올리면 됩니다.</b>
+        문제 풀이가 아니라 <b>공부하는 방법</b>에 대한 질문을 받습니다.
+        오답노트는 언제 다시 봐야 할지, 인강과 학교 수업 중 뭘 먼저 챙겨야
+        할지, 시험 2주 전엔 뭘 해야 할지 — 그런 것들요.
       </p>
       <p class="body-sm" style="margin-top: 12px; max-width: 30em; opacity: .8;">
-        사진을 올리려면 구글 계정 로그인이 필요합니다(구글 정책). 로그인하면
-        누가 물었는지 제게 보이지만, 질문과 답은 이름 없이 아래에 올립니다.
+        이름도, 로그인도 필요 없습니다. 완전히 익명입니다.
       </p>
-      <!-- 질문 쓰는 곳. 아래 script 의 질문폼주소 에 구글 폼 주소를 넣으면
-           여기에 폼이 그대로 나타납니다 (학생은 이 페이지를 안 떠납니다).
-           비워 두면 폼 대신 안내 문구만 나옵니다. -->
-      <div id="askForm"></div>
+      <!-- 질문 쓰는 곳. 이름을 묻지 않으므로 완전히 익명입니다.
+           아래 script 의 폼주소 에 Formspree 주소를 넣으면 실제로 전송됩니다.
+           비워 두면 칸이 잠기고 안내 문구만 보입니다. -->
+      <form id="askForm" class="qform">
+        <div class="qform-row">
+          <label for="qGrade">학년 (선택)</label>
+          <input type="text" id="qGrade" name="학년" placeholder="예: 고2 — 안 적어도 됩니다" />
+        </div>
+        <div class="qform-row">
+          <label for="qBody">질문 내용</label>
+          <textarea id="qBody" name="질문" rows="5" required
+            placeholder="예: 오답노트는 언제 다시 봐야 할까요?"></textarea>
+        </div>
+        <button type="submit" class="btn btn-secondary">질문 남기기 →</button>
+        <p class="qform-status caption" role="status" aria-live="polite"></p>
+      </form>
 
       <h2 class="caption" style="margin: 40px 0 0;">받은 질문과 답</h2>
       <!-- ✏️ 답변은 아래 script 의 QNA 배열에 한 줄씩 추가하면 됩니다 -->
@@ -115,52 +123,53 @@
 /* =========================================================
    ✏️ 질문 받는 곳 — 아래 따옴표 사이만 채우면 끝입니다.
 
-   1) docs.google.com/forms 에서 질문지를 하나 만듭니다.
-      (칸은 '학년/반'과 '질문 내용' 정도면 충분합니다. 이름은 안 받아도 됩니다.
-       사진을 받고 싶으면 '파일 업로드' 칸을 하나 더 넣으세요)
-   2) 오른쪽 위 [보내기] → 가운데 < > 아이콘(심기) 탭을 누릅니다.
-   3) 거기 나오는 주소를 복사해 아래에 붙여 넣습니다. 이렇게 생겼습니다:
-      https://docs.google.com/forms/d/e/1FAIpQL..../viewform?embedded=true
+   구글 폼 대신 이 페이지 자체가 질문을 받습니다 — 학생은 다른 사이트로
+   가지 않고, 로그인도 필요 없습니다. 대신 어딘가로 '보내는' 역할을 할
+   서비스가 하나 필요한데, 여기서는 Formspree(무료)를 씁니다.
 
-   그러면 질문 페이지 안에 폼이 그대로 들어가서, 학생이 사이트를 안 떠나고
-   바로 씁니다. 답은 선생님 구글 시트로 모입니다.
+   1) formspree.io 에서 계정을 만들고 New Form 을 누릅니다.
+      (양식 이름은 아무거나 좋습니다. 예: "수학을 보다 질문")
+   2) 만들어진 주소(Endpoint)를 복사합니다. 이렇게 생겼습니다:
+      https://formspree.io/f/abcdwxyz
+   3) 아래 따옴표 사이에 붙여 넣습니다.
 
-   폼 아래쪽이 잘려 보이면 질문폼높이 숫자만 키우면 됩니다.
-   (구글 폼 [심기] 탭에도 권장 높이가 적혀 있습니다)
+   학생이 보낸 질문은 Formspree 계정을 만들 때 쓴 이메일로 옵니다.
    ========================================================= */
-const 질문폼주소 = "https://docs.google.com/forms/d/e/1FAIpQLSeTNCkGOe_XVEQFWyrx-ix6424JB-Bqob58fkiDv-tFY8qtOg/viewform?embedded=true";
-const 질문폼높이 = 1100;
+const 폼주소 = "";
 
 /* ---------- 여기부터는 손대지 않아도 됩니다 ---------- */
 {
-  const 자리 = document.getElementById("askForm");
-  const 주소 = 질문폼주소.trim();
+  const 폼 = document.getElementById("askForm");
+  const 상태 = 폼.querySelector(".qform-status");
 
-  if (주소) {
-    /* 구글 폼은 남의 사이트라 이쪽에서 색이나 높이를 바꿀 수 없습니다.
-       그래서 흰 종이처럼 감싸 두고(.askform), 높이는 위 숫자로 정합니다.
-
-       밑에 '새 창에서 열기'를 같이 두는 이유: 폼이 여기 안 뜨는 경우가 있습니다.
-       - 폼을 아직 [게시]하지 않았을 때 ("게시되지 않은 문서입니다"가 뜹니다)
-       - 폼이 특정 학교·기관 소속으로 제한돼 있을 때
-       - 브라우저가 남의 사이트 끼워넣기를 막아 뒀을 때 (사파리 등)
-       그럴 때 학생이 오류 화면만 보고 막히지 않게, 빠져나갈 길을 하나 둡니다.
-       (embedded=true 를 뗀 주소가 평소 구글 폼 화면입니다) */
-    const 새창주소 = 주소.replace(/([?&])embedded=true&?/, "$1").replace(/[?&]$/, "");
-    자리.innerHTML =
-      `<div class="askform">
-         <iframe src="${주소}" height="${질문폼높이}"
-                 title="질문 남기기" loading="lazy">불러오는 중…</iframe>
-       </div>
-       <p class="askform-alt caption">
-         폼이 안 보이나요?
-         <a href="${새창주소}" target="_blank" rel="noopener">새 창에서 열기 →</a>
-       </p>`;
+  if (!폼주소) {
+    // 아직 주소를 안 넣었을 때 — 칸을 잠그고 안내만 보여 줍니다
+    폼.querySelectorAll("input, textarea, button").forEach(el => el.disabled = true);
+    상태.textContent = "질문 받는 곳을 준비하고 있습니다.";
   } else {
-    // 아직 폼을 안 만들었을 때 — 학생에게는 이 문구만 보입니다
-    자리.innerHTML =
-      `<p class="askform-none">질문 받는 곳을 준비하고 있습니다.
-         곧 여기에서 바로 쓸 수 있게 됩니다.</p>`;
+    폼.addEventListener("submit", async e => {
+      e.preventDefault();
+      const 버튼 = 폼.querySelector("button");
+      버튼.disabled = true;
+      상태.textContent = "보내는 중…";
+      try {
+        const 응답 = await fetch(폼주소, {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: new FormData(폼),
+        });
+        if (응답.ok) {
+          폼.reset();
+          상태.textContent = "질문이 전달됐습니다. 고맙습니다.";
+        } else {
+          상태.textContent = "지금은 안 보내져요. 잠시 뒤 다시 시도해 주세요.";
+        }
+      } catch (err) {
+        상태.textContent = "지금은 안 보내져요. 잠시 뒤 다시 시도해 주세요.";
+      } finally {
+        버튼.disabled = false;
+      }
+    });
   }
 }
 
@@ -169,13 +178,13 @@ const 질문폼높이 = 1100;
    최신 것이 위로 오도록 맨 앞에 넣어 주세요.
    ========================================================= */
 const QNA = [
-  { date: "2026-07-30", tag: "기하 · 공간도형",
-    q: "정사영 넓이 문제에서 cos θ 를 어디에 곱하는지 자꾸 헷갈려요.",
-    a: "교선과 나란한 방향은 길이가 그대로고, 교선과 수직인 방향만 cos θ 배로 줄어듭니다. 자료실의 정사영 자료에서 각을 0°와 90°로 놓고 보면 한 번에 정리됩니다." },
+  { date: "2026-08-05", tag: "고2",
+    q: "오답노트를 어떻게 정리해야 할지 모르겠어요. 문제를 그대로 옮겨 적기만 하고 있어요.",
+    a: "문제를 베끼지 말고, '왜 틀렸는지' 한 줄만 적으세요. 계산 실수인지, 개념을 몰랐는지, 문제를 잘못 읽었는지에 따라 다음에 조심할 게 다릅니다. 그 한 줄이 시험 전에 다시 볼 때 진짜 도움이 됩니다." },
 
-  { date: "2026-07-22", tag: "미적분Ⅰ · 미분",
-    q: "순간변화율이랑 평균변화율이 뭐가 다른 거예요?",
-    a: "평균변화율은 두 점을 잇는 직선의 기울기, 순간변화율은 그 두 점이 붙었을 때의 기울기입니다. 자료실의 ‘미분계수는 접선의 기울기’에서 h 를 0으로 보내 보면 할선이 접선에 붙는 게 보입니다." }
+  { date: "2026-07-28", tag: "고3",
+    q: "인강이랑 학교 수업 중에 뭘 더 우선해야 하나요?",
+    a: "학교 진도를 먼저 따라가세요. 인강은 학교에서 놓친 부분을 메우는 용도로 쓰는 게 낫습니다. 둘을 동시에 처음부터 끝까지 들으려 하면 어느 쪽도 제대로 안 남습니다." }
 ];
 
 document.getElementById("qna").innerHTML = QNA.map(it => `
