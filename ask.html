@@ -77,10 +77,10 @@
       </p>
       <p class="body-sm" style="margin-top: 12px; max-width: 30em; opacity: .8;">
         이름도, 로그인도 필요 없습니다. 완전히 익명입니다.
+        남긴 질문은 아래에 바로 올라가고, 답도 이 자리에서 함께 볼 수 있습니다.
       </p>
       <!-- 질문 쓰는 곳. 이름을 묻지 않으므로 완전히 익명입니다.
-           아래 script 의 폼주소 에 Formspree 주소를 넣으면 실제로 전송됩니다.
-           비워 두면 칸이 잠기고 안내 문구만 보입니다. -->
+           낸 질문은 곧바로 아래 목록에 올라갑니다. -->
       <form id="askForm" class="qform">
         <div class="qform-row">
           <label for="qGrade">학년 (선택)</label>
@@ -96,7 +96,9 @@
       </form>
 
       <h2 class="caption" style="margin: 40px 0 0;">받은 질문과 답</h2>
-      <!-- ✏️ 답변은 아래 script 의 QNA 배열에 한 줄씩 추가하면 됩니다 -->
+      <!-- 선생님이 답을 다는 칸. 평소엔 숨어 있고, 주소 끝에 ?admin 을 붙여
+           들어와 암호를 넣었을 때만 나타납니다. -->
+      <div id="adminBar"></div>
       <div class="rows" id="qna"></div>
     </div>
   </div>
@@ -121,78 +123,205 @@
 
 <script>
 /* =========================================================
-   ✏️ 질문 받는 곳 — 아래 따옴표 사이만 채우면 끝입니다.
+   질문 게시판 — 손대지 않아도 됩니다.
 
-   구글 폼 대신 이 페이지 자체가 질문을 받습니다 — 학생은 다른 사이트로
-   가지 않고, 로그인도 필요 없습니다. 대신 어딘가로 '보내는' 역할을 할
-   서비스가 하나 필요한데, 여기서는 Formspree(무료)를 씁니다.
+   학생이 질문을 내면 사이트 저장소에 바로 들어가고, 그 즉시 아래 목록에
+   올라갑니다. 선생님이 고르는 단계가 없으니 누구나 바로 보게 됩니다.
 
-   1) formspree.io 에서 계정을 만들고 New Form 을 누릅니다.
-      (양식 이름은 아무거나 좋습니다. 예: "수학을 보다 질문")
-   2) 만들어진 주소(Endpoint)를 복사합니다. 이렇게 생겼습니다:
-      https://formspree.io/f/abcdwxyz
-   3) 아래 따옴표 사이에 붙여 넣습니다.
+   ▶ 답을 다는 방법
+     주소 끝에 ?admin 을 붙여서 들어옵니다. 이렇게요:
+       https://guns-math.vercel.app/ask.html?admin
+     암호를 넣으면 질문마다 답 쓰는 칸과 '지우기'가 나타납니다.
+     (암호는 Vercel 에 넣어 둔 ADMIN_PASSWORD 입니다)
 
-   학생이 보낸 질문은 Formspree 계정을 만들 때 쓴 이메일로 옵니다.
+   ▶ 이메일 알림 (선택)
+     아래 폼주소를 비워 두면 알림을 안 보냅니다. 주소가 있으면 질문이
+     올라올 때 선생님 메일로도 한 통 갑니다. 질문이 사이트에 올라가는 것과
+     상관없이 '알림용'이라, 메일이 안 가도 게시판은 그대로 동작합니다.
    ========================================================= */
 const 폼주소 = "https://formspree.io/f/xrpzeevw";
 
-/* ---------- 여기부터는 손대지 않아도 됩니다 ---------- */
 {
   const 폼 = document.getElementById("askForm");
   const 상태 = 폼.querySelector(".qform-status");
+  const 목록칸 = document.getElementById("qna");
+  const 관리칸 = document.getElementById("adminBar");
 
-  if (!폼주소) {
-    // 아직 주소를 안 넣었을 때 — 칸을 잠그고 안내만 보여 줍니다
-    폼.querySelectorAll("input, textarea, button").forEach(el => el.disabled = true);
-    상태.textContent = "질문 받는 곳을 준비하고 있습니다.";
-  } else {
-    폼.addEventListener("submit", async e => {
-      e.preventDefault();
-      const 버튼 = 폼.querySelector("button");
-      버튼.disabled = true;
-      상태.textContent = "보내는 중…";
-      try {
-        const 응답 = await fetch(폼주소, {
-          method: "POST",
-          headers: { Accept: "application/json" },
-          body: new FormData(폼),
-        });
-        if (응답.ok) {
-          폼.reset();
-          상태.textContent = "질문이 전달됐습니다. 고맙습니다.";
-        } else {
-          상태.textContent = "지금은 안 보내져요. 잠시 뒤 다시 시도해 주세요.";
-        }
-      } catch (err) {
-        상태.textContent = "지금은 안 보내져요. 잠시 뒤 다시 시도해 주세요.";
-      } finally {
-        버튼.disabled = false;
-      }
-    });
+  let 질문들 = [];
+  // sessionStorage 라서 창을 닫으면 지워집니다 — 공용 컴퓨터에서 안전하도록
+  let 암호 = sessionStorage.getItem("수학을보다-암호") || "";
+
+  /* 학생이 쓴 글을 그대로 화면에 박으면 <script> 같은 걸 적어 넣었을 때
+     그게 코드로 실행돼 버립니다. 꺾쇠 같은 기호를 '글자'로 바꿔서 막습니다. */
+  const 안전하게 = 글 => String(글 ?? "").replace(/[&<>"']/g, 기호 => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[기호]));
+
+  /* ---------- 화면에 그리기 ---------- */
+  function 그리기() {
+    if (!질문들.length) {
+      목록칸.innerHTML = `<p class="body-sm" style="padding: var(--lg) 0; opacity: .7;">
+        아직 질문이 없습니다. 첫 질문을 남겨 보세요.</p>`;
+      return;
+    }
+    목록칸.innerHTML = 질문들.map(it => `
+      <article data-id="${안전하게(it.id)}">
+        <span class="caption">${안전하게(it.t)}${it.g ? " · " + 안전하게(it.g) : ""}</span>
+        <h3 class="card-title"><span class="qa-mark">Q</span>${안전하게(it.q)}</h3>
+        <p class="body-sm">${it.a
+          ? `<span class="qa-mark">A</span>${안전하게(it.a)}`
+          : `<span class="qa-wait">아직 답을 못 달았습니다. 곧 답할게요.</span>`}</p>
+        ${암호 ? `
+        <div class="qadmin">
+          <textarea rows="3" placeholder="답을 여기에 쓰고 저장을 누르세요">${안전하게(it.a)}</textarea>
+          <div class="qadmin-row">
+            <button type="button" class="btn btn-secondary" data-act="답변">답 저장</button>
+            <button type="button" class="qadmin-del" data-act="삭제">지우기</button>
+            <span class="qadmin-status caption"></span>
+          </div>
+        </div>` : ""}
+      </article>`).join("");
   }
+
+  function 안내만(글) {
+    목록칸.innerHTML = `<p class="body-sm" style="padding: var(--lg) 0; opacity: .7;">${글}</p>`;
+  }
+
+  async function 불러오기() {
+    try {
+      const 응답 = await fetch("/api/questions");
+      // 503 은 '저장소를 아직 안 만들었다'는 뜻입니다. 고장난 게 아니라
+      // 설정이 덜 끝난 것이므로, 질문 칸을 잠그고 준비 중이라고만 알립니다.
+      if (응답.status === 503) {
+        폼.querySelectorAll("input, textarea, button").forEach(el => (el.disabled = true));
+        상태.textContent = "질문 받는 곳을 준비하고 있습니다.";
+        안내만("질문 게시판을 준비하고 있습니다.");
+        return;
+      }
+      if (!응답.ok) throw new Error();
+      질문들 = await 응답.json();
+      그리기();
+    } catch {
+      안내만("질문을 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.");
+    }
+  }
+
+  /* ---------- 학생: 질문 남기기 ---------- */
+  폼.addEventListener("submit", async e => {
+    e.preventDefault();
+    const 버튼 = 폼.querySelector("button");
+    const 내용 = { 학년: 폼.querySelector("#qGrade").value, 질문: 폼.querySelector("#qBody").value };
+    버튼.disabled = true;
+    상태.textContent = "올리는 중…";
+    try {
+      const 응답 = await fetch("/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(내용),
+      });
+      const 결과 = await 응답.json();
+      if (!응답.ok) throw new Error(결과.오류 || "");
+
+      질문들.unshift(결과);   // 새로고침 없이 바로 위에 붙습니다
+      그리기();
+      폼.reset();
+      상태.textContent = "질문이 올라갔습니다. 고맙습니다.";
+
+      // 선생님한테 알림 메일 한 통 — 실패해도 게시판은 이미 올라갔으니 그냥 넘어갑니다
+      if (폼주소) {
+        fetch(폼주소, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(내용),
+        }).catch(() => {});
+      }
+    } catch (err) {
+      상태.textContent = err.message || "지금은 안 올라가요. 잠시 뒤 다시 시도해 주세요.";
+    } finally {
+      버튼.disabled = false;
+    }
+  });
+
+  /* ---------- 선생님: 답 달기 · 지우기 ---------- */
+  목록칸.addEventListener("click", async e => {
+    const 버튼 = e.target.closest("[data-act]");
+    if (!버튼) return;
+    const 글 = 버튼.closest("article");
+    const 작업 = 버튼.dataset.act;
+    const 쪽지 = 글.querySelector(".qadmin-status");
+
+    if (작업 === "삭제" && !confirm("이 질문을 지울까요? 되돌릴 수 없습니다.")) return;
+
+    버튼.disabled = true;
+    쪽지.textContent = 작업 === "삭제" ? "지우는 중…" : "저장하는 중…";
+    try {
+      const 응답 = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          암호, 작업, id: 글.dataset.id,
+          답변: 글.querySelector(".qadmin textarea").value,
+        }),
+      });
+      const 결과 = await 응답.json();
+      if (!응답.ok) throw new Error(결과.오류 || "");
+
+      if (작업 === "삭제") {
+        질문들 = 질문들.filter(it => String(it.id) !== 글.dataset.id);
+      } else {
+        질문들 = 질문들.map(it => (String(it.id) === 글.dataset.id ? 결과 : it));
+      }
+      그리기();
+    } catch (err) {
+      쪽지.textContent = err.message || "실패했습니다.";
+      버튼.disabled = false;
+    }
+  });
+
+  /* ---------- 선생님: 암호 넣는 칸 ---------- */
+  function 관리칸그리기() {
+    if (암호) {
+      관리칸.innerHTML = `<p class="qadmin-bar caption">
+        답을 달 수 있는 상태입니다. <button type="button" id="관리끄기">끄기</button></p>`;
+      document.getElementById("관리끄기").onclick = () => {
+        암호 = "";
+        sessionStorage.removeItem("수학을보다-암호");
+        관리칸그리기();
+        그리기();
+      };
+      return;
+    }
+    관리칸.innerHTML = `<form class="qadmin-bar" id="관리로그인">
+      <input type="password" placeholder="선생님 암호" autocomplete="current-password" />
+      <button type="submit" class="btn btn-secondary">확인</button>
+      <span class="caption"></span>
+    </form>`;
+    document.getElementById("관리로그인").onsubmit = async ev => {
+      ev.preventDefault();
+      const 칸 = ev.target.querySelector("input");
+      const 쪽지 = ev.target.querySelector(".caption");
+      쪽지.textContent = "확인 중…";
+      const 응답 = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 암호: 칸.value, 작업: "확인" }),
+      });
+      if (응답.ok) {
+        암호 = 칸.value;
+        sessionStorage.setItem("수학을보다-암호", 암호);
+        관리칸그리기();
+        그리기();
+      } else {
+        쪽지.textContent = "암호가 맞지 않습니다.";
+      }
+    };
+  }
+
+  // 평소엔 아무것도 안 보입니다. ?admin 을 붙여 왔거나 이미 켜 뒀을 때만.
+  if (location.search.includes("admin") || 암호) 관리칸그리기();
+
+  불러오기();
 }
-
-/* =========================================================
-   질문 · 답 — 여기에 한 항목씩 추가하면 화면에 올라갑니다.
-   최신 것이 위로 오도록 맨 앞에 넣어 주세요.
-   ========================================================= */
-const QNA = [
-  { date: "2026-08-05", tag: "고2",
-    q: "오답노트를 어떻게 정리해야 할지 모르겠어요. 문제를 그대로 옮겨 적기만 하고 있어요.",
-    a: "문제를 베끼지 말고, '왜 틀렸는지' 한 줄만 적으세요. 계산 실수인지, 개념을 몰랐는지, 문제를 잘못 읽었는지에 따라 다음에 조심할 게 다릅니다. 그 한 줄이 시험 전에 다시 볼 때 진짜 도움이 됩니다." },
-
-  { date: "2026-07-28", tag: "고3",
-    q: "인강이랑 학교 수업 중에 뭘 더 우선해야 하나요?",
-    a: "학교 진도를 먼저 따라가세요. 인강은 학교에서 놓친 부분을 메우는 용도로 쓰는 게 낫습니다. 둘을 동시에 처음부터 끝까지 들으려 하면 어느 쪽도 제대로 안 남습니다." }
-];
-
-document.getElementById("qna").innerHTML = QNA.map(it => `
-  <article>
-    <span class="caption">${it.date} · ${it.tag}</span>
-    <h3 class="card-title"><span class="qa-mark">Q</span>${it.q}</h3>
-    <p class="body-sm"><span class="qa-mark">A</span>${it.a}</p>
-  </article>`).join("");
 </script>
 
 </body>

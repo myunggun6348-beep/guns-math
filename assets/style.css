@@ -499,6 +499,78 @@ img, svg { max-width: 100%; }
    버튼이나 그 아래 내용이 밀리지 않게 한다 */
 .qform-status { margin: var(--sm) 0 0; min-height: 1.2em; color: rgba(255, 255, 255, 0.72); }
 
+/* --- 아직 답이 없는 질문 ---
+   A 배지 자리를 비워 두면 학생이 '무시당했나' 싶어진다. 답이 없다는 걸
+   말로 적어 두되, 답글보다는 흐리게 해서 둘이 헷갈리지 않게 한다. */
+.qa-wait { font-size: 14px; color: rgba(255, 255, 255, 0.45); }
+
+/* --- 선생님이 답을 다는 칸 (ask.html?admin) ---
+   평소엔 아예 그려지지 않고, 암호를 넣었을 때만 질문마다 나타난다.
+   .rows 의 두 칸 격자 안에 들어가므로 본문과 같은 오른쪽 칸에 맞춰 준다. */
+.qadmin { grid-column: 2; margin-top: var(--md); max-width: 46em; }
+.qadmin textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--inverse-ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  resize: vertical;
+}
+.qadmin textarea:focus { outline: none; border-color: var(--block-lime); }
+.qadmin-row {
+  display: flex;
+  align-items: center;
+  gap: var(--md);
+  margin-top: var(--sm);
+}
+.qadmin-row .btn { font-size: 16px; padding: 6px 14px 8px; }
+.qadmin-row .btn:disabled { opacity: 0.5; cursor: default; }
+/* 지우기는 되돌릴 수 없으니 단추처럼 안 생기게 — 눌러야 할 것 같지 않도록 */
+.qadmin-del {
+  font-family: inherit;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.qadmin-del:hover { color: var(--block-coral); }
+.qadmin-status { min-height: 1.2em; }
+
+/* 암호 넣는 줄 — 목록 바로 위 */
+.qadmin-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--md);
+  margin-top: var(--lg);
+}
+.qadmin-bar input {
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--inverse-ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--r-md);
+  padding: 8px 12px;
+}
+.qadmin-bar input:focus { outline: none; border-color: var(--block-lime); }
+.qadmin-bar .btn { font-size: 16px; padding: 6px 14px 8px; }
+.qadmin-bar button:not(.btn) {
+  font-family: inherit;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* =========================================================
    특징 3칸
    ========================================================= */
@@ -1321,7 +1393,8 @@ img, svg { max-width: 100%; }
   .rows > article { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
   .rows > article > .caption,
   .rows > article > h3,
-  .rows > article > p { grid-column: 1; grid-row: auto; }
+  .rows > article > p,
+  .rows > article > .qadmin { grid-column: 1; grid-row: auto; }
   .rows h3 { margin: var(--xs) 0; }
 
   .to-top { display: flex; }
