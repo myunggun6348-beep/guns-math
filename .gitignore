@@ -4,3 +4,8 @@
 # 윈도우가 폴더마다 만드는 파일
 Thumbs.db
 desktop.ini
+
+# api 코드가 쓰는 라이브러리 — Vercel이 배포할 때 알아서 새로 받으므로
+# 여기 올릴 필요가 없습니다 (용량도 큽니다)
+node_modules/
+package-lock.json

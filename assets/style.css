@@ -824,20 +824,78 @@ img, svg { max-width: 100%; }
    한 화면에 들어온다.
    ========================================================= */
 .filelist { border-top: 1px solid var(--hairline); }
-.filelist a {
+/* 평소엔 줄 전체가 링크 하나지만, 선생님이 로그인하면 오른쪽에 지우기
+   단추가 붙는다 — 그래서 줄(.filelist-row)과 링크를 따로 둔다. */
+.filelist-row { display: flex; align-items: center; gap: var(--sm); border-bottom: 1px solid var(--hairline); }
+.filelist-row a {
+  flex: 1;
+  min-width: 0;
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr) auto;
   align-items: baseline;
   gap: var(--md) var(--lg);
   padding: var(--md) var(--sm);
-  border-bottom: 1px solid var(--hairline);
   text-decoration: none;
 }
-.filelist a:hover { background: var(--surface-soft); }
+.filelist-row a:hover { background: var(--surface-soft); }
 .filelist-date { font-variant-numeric: tabular-nums; }
 .filelist-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .filelist-main b { font-weight: 520; }
 .filelist-go { font-size: 15px; font-weight: 480; white-space: nowrap; }
+
+/* --- 선생님이 파일을 올리는 칸 (files.html?admin) ---
+   질문 페이지의 .qadmin* 과 같은 구실이지만, 여기는 block-navy 위가
+   아니라 흰 캔버스 위라서 고정 흰색 대신 변수(var(--ink) 등)를 쓴다 —
+   그래야 다크 모드에서도 저절로 뒤집힌다. */
+.fadmin-bar, .fadmin-upload { margin: var(--lg) 0; }
+.fadmin-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sm) var(--md);
+  margin-bottom: var(--sm);
+}
+.fadmin-bar input,
+.fadmin-upload input[type="text"] {
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  padding: 8px 12px;
+}
+.fadmin-upload input[type="text"] { flex: 1; min-width: 160px; }
+.fadmin-bar input:focus,
+.fadmin-upload input:focus { outline: none; border-color: var(--ink); }
+.fadmin-bar .btn, .fadmin-upload .btn { font-size: 16px; padding: 6px 14px 8px; }
+.fadmin-bar button:not(.btn),
+.fadmin-upload button:not(.btn) {
+  font-family: inherit;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.5);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+html.theme-dark .fadmin-bar button:not(.btn),
+html.theme-dark .fadmin-upload button:not(.btn) { color: rgba(255, 255, 255, 0.5); }
+.fadmin-status { min-height: 1.2em; }
+.fadmin-del {
+  flex: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.4);
+  background: none;
+  border: 0;
+  padding: 0 var(--sm);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.fadmin-del:hover { color: var(--block-coral); }
+html.theme-dark .fadmin-del { color: rgba(255, 255, 255, 0.4); }
 
 /* =========================================================
    개념 지도 (map.html)
@@ -1463,7 +1521,7 @@ img, svg { max-width: 100%; }
   .find-box svg { left: 16px; }
 
   /* 자료실 목록 — 날짜 칸을 뺄 폭이 없다. 제목 위로 올린다 */
-  .filelist a { grid-template-columns: 1fr; gap: var(--xs); }
+  .filelist-row a { grid-template-columns: 1fr; gap: var(--xs); }
   .filelist-go { justify-self: start; }
 }
 
