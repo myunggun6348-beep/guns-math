@@ -78,9 +78,6 @@
       </div>
     </div>
 
-    <!-- 선생님이 파일을 올리는 칸. 평소엔 숨어 있고, 주소 끝에 ?admin 을 붙여
-         들어와 암호를 넣었을 때만 나타납니다. (질문 페이지와 같은 암호) -->
-    <div id="adminBar"></div>
     <div id="fileList"></div>
   </div>
 </section>
@@ -106,16 +103,14 @@
 /* =========================================================
    자료실 — 손대지 않아도 됩니다.
 
-   선생님이 파일을 올리면(주소 끝에 ?admin, 암호는 질문 페이지와 같음)
-   사이트 저장소에 들어가고 곧바로 목록에 뜹니다. 학생은 그냥 눌러서
-   내려받습니다.
+   선생님이 선생님 방(admin.html)에서 파일을 올리면 사이트 저장소에
+   들어가고 곧바로 이 목록에 뜹니다. 학생은 그냥 눌러서 내려받습니다.
+   이 페이지는 학생이 보는 곳이라 관리용 칸이 아예 들어 있지 않습니다.
    ========================================================= */
 {
   const 자리 = document.getElementById("fileList");
-  const 관리칸 = document.getElementById("adminBar");
 
   let 파일들 = [];
-  let 암호 = sessionStorage.getItem("수학을보다-암호") || "";
 
   const 안전하게 = 글 => String(글 ?? "").replace(/[&<>"']/g, 기호 => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -146,7 +141,6 @@
           </span>
           <span class="filelist-go" aria-hidden="true">내려받기 ↓</span>
         </a>
-        ${암호 ? `<button type="button" class="fadmin-del" data-id="${안전하게(f.id)}">지우기</button>` : ""}
       </div>`).join("");
   }
 
@@ -161,124 +155,6 @@
       안내만("목록을 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.");
     }
   }
-
-  /* ---------- 선생님: 지우기 ---------- */
-  자리.addEventListener("click", async e => {
-    const 버튼 = e.target.closest(".fadmin-del");
-    if (!버튼) return;
-    if (!confirm("이 파일을 지울까요? 되돌릴 수 없습니다.")) return;
-    버튼.disabled = true;
-    try {
-      const 응답 = await fetch(`/api/files-admin?act=delete&id=${encodeURIComponent(버튼.dataset.id)}&암호=${encodeURIComponent(암호)}`, { method: "POST" });
-      const 결과 = await 응답.json();
-      if (!응답.ok) throw new Error(결과.오류 || "");
-      파일들 = 파일들.filter(f => f.id !== 버튼.dataset.id);
-      그리기();
-    } catch (err) {
-      alert(err.message || "지우지 못했습니다.");
-      버튼.disabled = false;
-    }
-  });
-
-  /* ---------- 선생님: 올리기 폼 ---------- */
-  function 올리기폼그리기() {
-    관리칸.innerHTML = `<form class="fadmin-upload" id="파일올리기">
-      <div class="fadmin-row">
-        <input type="text" name="title" placeholder="제목 (예: 미분계수 연습 20제)" required />
-        <input type="text" name="subject" placeholder="과목 (예: 미적분Ⅰ)" />
-        <input type="text" name="kind" placeholder="종류 (예: 학습지)" />
-      </div>
-      <div class="fadmin-row">
-        <input type="file" name="file" accept=".pdf,.hwp,.hwpx" required />
-        <button type="submit" class="btn btn-secondary">올리기 ↑</button>
-        <button type="button" id="관리끄기">끄기</button>
-      </div>
-      <p class="caption fadmin-status" role="status" aria-live="polite"></p>
-    </form>`;
-
-    document.getElementById("관리끄기").onclick = () => {
-      암호 = "";
-      sessionStorage.removeItem("수학을보다-암호");
-      관리칸.innerHTML = "";
-      그리기();
-    };
-
-    const 폼 = document.getElementById("파일올리기");
-    const 쪽지 = 폼.querySelector(".fadmin-status");
-    폼.addEventListener("submit", async e => {
-      e.preventDefault();
-      const 파일 = 폼.file.files[0];
-      if (!파일) return;
-
-      const 확장자 = (파일.name.split(".").pop() || "").toLowerCase();
-      if (!["pdf", "hwp", "hwpx"].includes(확장자)) {
-        쪽지.textContent = "pdf, hwp, hwpx 파일만 올릴 수 있습니다.";
-        return;
-      }
-      if (파일.size > 4 * 1024 * 1024) {
-        쪽지.textContent = "파일이 너무 큽니다 (4MB까지). 나눠서 올려 주세요.";
-        return;
-      }
-
-      const 버튼 = 폼.querySelector('button[type="submit"]');
-      버튼.disabled = true;
-      쪽지.textContent = "올리는 중…";
-      try {
-        const 주소 = "/api/files-admin?" + new URLSearchParams({
-          act: "upload", 암호,
-          title: 폼.title.value, subject: 폼.subject.value, kind: 폼.kind.value,
-          filename: 파일.name,
-        });
-        const 응답 = await fetch(주소, {
-          method: "POST",
-          headers: { "Content-Type": "application/octet-stream" },
-          body: 파일,
-        });
-        const 결과 = await 응답.json();
-        if (!응답.ok) throw new Error(결과.오류 || "");
-
-        파일들.unshift(결과);
-        그리기();
-        폼.reset();
-        쪽지.textContent = "올렸습니다.";
-      } catch (err) {
-        쪽지.textContent = err.message || "올리지 못했습니다.";
-      } finally {
-        버튼.disabled = false;
-      }
-    });
-  }
-
-  /* ---------- 선생님: 암호 넣는 칸 ---------- */
-  function 관리칸그리기() {
-    if (암호) return 올리기폼그리기();
-    관리칸.innerHTML = `<form class="fadmin-bar" id="관리로그인">
-      <input type="password" placeholder="선생님 암호" autocomplete="current-password" />
-      <button type="submit" class="btn btn-secondary">확인</button>
-      <span class="caption"></span>
-    </form>`;
-    document.getElementById("관리로그인").onsubmit = async ev => {
-      ev.preventDefault();
-      const 칸 = ev.target.querySelector("input");
-      const 쪽지 = ev.target.querySelector(".caption");
-      쪽지.textContent = "확인 중…";
-      const 응답 = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 암호: 칸.value, 작업: "확인" }),
-      });
-      if (응답.ok) {
-        암호 = 칸.value;
-        sessionStorage.setItem("수학을보다-암호", 암호);
-        올리기폼그리기();
-        그리기();
-      } else {
-        쪽지.textContent = "암호가 맞지 않습니다.";
-      }
-    };
-  }
-
-  if (location.search.includes("admin") || 암호) 관리칸그리기();
 
   불러오기();
 }

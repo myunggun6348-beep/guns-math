@@ -504,73 +504,6 @@ img, svg { max-width: 100%; }
    말로 적어 두되, 답글보다는 흐리게 해서 둘이 헷갈리지 않게 한다. */
 .qa-wait { font-size: 14px; color: rgba(255, 255, 255, 0.45); }
 
-/* --- 선생님이 답을 다는 칸 (ask.html?admin) ---
-   평소엔 아예 그려지지 않고, 암호를 넣었을 때만 질문마다 나타난다.
-   .rows 의 두 칸 격자 안에 들어가므로 본문과 같은 오른쪽 칸에 맞춰 준다. */
-.qadmin { grid-column: 2; margin-top: var(--md); max-width: 46em; }
-.qadmin textarea {
-  width: 100%;
-  font-family: inherit;
-  font-size: 15px;
-  color: var(--inverse-ink);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--r-md);
-  padding: 10px 12px;
-  resize: vertical;
-}
-.qadmin textarea:focus { outline: none; border-color: var(--block-lime); }
-.qadmin-row {
-  display: flex;
-  align-items: center;
-  gap: var(--md);
-  margin-top: var(--sm);
-}
-.qadmin-row .btn { font-size: 16px; padding: 6px 14px 8px; }
-.qadmin-row .btn:disabled { opacity: 0.5; cursor: default; }
-/* 지우기는 되돌릴 수 없으니 단추처럼 안 생기게 — 눌러야 할 것 같지 않도록 */
-.qadmin-del {
-  font-family: inherit;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.5);
-  background: none;
-  border: 0;
-  padding: 0;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.qadmin-del:hover { color: var(--block-coral); }
-.qadmin-status { min-height: 1.2em; }
-
-/* 암호 넣는 줄 — 목록 바로 위 */
-.qadmin-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--md);
-  margin-top: var(--lg);
-}
-.qadmin-bar input {
-  font-family: inherit;
-  font-size: 15px;
-  color: var(--inverse-ink);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--r-md);
-  padding: 8px 12px;
-}
-.qadmin-bar input:focus { outline: none; border-color: var(--block-lime); }
-.qadmin-bar .btn { font-size: 16px; padding: 6px 14px 8px; }
-.qadmin-bar button:not(.btn) {
-  font-family: inherit;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
-  background: none;
-  border: 0;
-  padding: 0;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 /* =========================================================
    특징 3칸
    ========================================================= */
@@ -843,59 +776,78 @@ img, svg { max-width: 100%; }
 .filelist-main b { font-weight: 520; }
 .filelist-go { font-size: 15px; font-weight: 480; white-space: nowrap; }
 
-/* --- 선생님이 파일을 올리는 칸 (files.html?admin) ---
-   질문 페이지의 .qadmin* 과 같은 구실이지만, 여기는 block-navy 위가
-   아니라 흰 캔버스 위라서 고정 흰색 대신 변수(var(--ink) 등)를 쓴다 —
-   그래야 다크 모드에서도 저절로 뒤집힌다. */
-.fadmin-bar, .fadmin-upload { margin: var(--lg) 0; }
-.fadmin-row {
+/* =========================================================
+   선생님 방 (admin.html)
+
+   학생이 보는 페이지에는 관리용 칸이 아예 없다. 답 달기와 자료 올리기는
+   모두 이 페이지 하나에 모여 있다. 흰 캔버스 위이므로 색을 고정하지 않고
+   변수(--ink 등)를 써서 어두운 화면에서도 저절로 뒤집히게 둔다.
+   ========================================================= */
+.adm-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--lg);
+  flex-wrap: wrap;
+}
+.adm-block { margin-top: var(--xxl); }
+.adm-block > h2 { margin: 0; }
+.adm-note { margin: var(--sm) 0 var(--lg); max-width: 34em; opacity: 0.7; }
+
+.adm-login { margin-top: var(--xl); display: flex; align-items: center; gap: var(--md); flex-wrap: wrap; }
+.adm-upload { margin-bottom: var(--xl); }
+.adm-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sm) var(--md);
   margin-bottom: var(--sm);
 }
-.fadmin-bar input,
-.fadmin-upload input[type="text"] {
+.adm-login input,
+.adm-upload input[type="text"],
+.adm-q textarea {
   font-family: inherit;
   font-size: 15px;
   color: var(--ink);
   background: var(--surface-soft);
   border: 1px solid var(--hairline);
   border-radius: var(--r-md);
-  padding: 8px 12px;
+  padding: 9px 12px;
 }
-.fadmin-upload input[type="text"] { flex: 1; min-width: 160px; }
-.fadmin-bar input:focus,
-.fadmin-upload input:focus { outline: none; border-color: var(--ink); }
-.fadmin-bar .btn, .fadmin-upload .btn { font-size: 16px; padding: 6px 14px 8px; }
-.fadmin-bar button:not(.btn),
-.fadmin-upload button:not(.btn) {
-  font-family: inherit;
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.5);
-  background: none;
-  border: 0;
-  padding: 0;
-  text-decoration: underline;
-  cursor: pointer;
+.adm-upload input[type="text"] { flex: 1; min-width: 170px; }
+.adm-login input:focus,
+.adm-upload input:focus,
+.adm-q textarea:focus { outline: none; border-color: var(--ink); }
+.adm-login .btn, .adm-row .btn { font-size: 16px; padding: 6px 14px 8px; }
+.adm-login .btn:disabled, .adm-row .btn:disabled { opacity: 0.5; cursor: default; }
+.adm-status { min-height: 1.2em; flex-basis: 100%; margin: 0; }
+
+/* 받은 질문 한 건 */
+.adm-q {
+  padding: var(--lg) 0;
+  border-bottom: 1px solid var(--hairline);
 }
-html.theme-dark .fadmin-bar button:not(.btn),
-html.theme-dark .fadmin-upload button:not(.btn) { color: rgba(255, 255, 255, 0.5); }
-.fadmin-status { min-height: 1.2em; }
-.fadmin-del {
-  flex: none;
+.adm-q > .caption { margin: 0 0 var(--xs); }
+.adm-q-text { margin: 0 0 var(--md); font-size: 17px; max-width: 46em; }
+.adm-q textarea { width: 100%; max-width: 46em; resize: vertical; }
+
+/* 지우기·나가기는 되돌릴 수 없거나 흐름을 끊는 일이라, 단추처럼 안 생기게
+   둬서 눌러야 할 것처럼 보이지 않게 한다 */
+.adm-del, #나가기 {
   font-family: inherit;
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
   background: none;
   border: 0;
   padding: 0 var(--sm);
   text-decoration: underline;
   cursor: pointer;
 }
-.fadmin-del:hover { color: var(--block-coral); }
-html.theme-dark .fadmin-del { color: rgba(255, 255, 255, 0.4); }
+.adm-del:hover, #나가기:hover { color: var(--block-coral); }
+html.theme-dark .adm-del,
+html.theme-dark #나가기 { color: rgba(255, 255, 255, 0.45); }
+/* 선생님 방의 파일 목록에는 '지우기'가 오른쪽에 붙는다 */
+.adm-block .filelist-row .adm-del { flex: none; }
 
 /* =========================================================
    개념 지도 (map.html)
@@ -1451,8 +1403,7 @@ html.theme-dark .fadmin-del { color: rgba(255, 255, 255, 0.4); }
   .rows > article { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
   .rows > article > .caption,
   .rows > article > h3,
-  .rows > article > p,
-  .rows > article > .qadmin { grid-column: 1; grid-row: auto; }
+  .rows > article > p { grid-column: 1; grid-row: auto; }
   .rows h3 { margin: var(--xs) 0; }
 
   .to-top { display: flex; }

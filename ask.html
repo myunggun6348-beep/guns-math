@@ -96,9 +96,6 @@
       </form>
 
       <h2 class="caption" style="margin: 40px 0 0;">받은 질문과 답</h2>
-      <!-- 선생님이 답을 다는 칸. 평소엔 숨어 있고, 주소 끝에 ?admin 을 붙여
-           들어와 암호를 넣었을 때만 나타납니다. -->
-      <div id="adminBar"></div>
       <div class="rows" id="qna"></div>
     </div>
   </div>
@@ -129,10 +126,8 @@
    올라갑니다. 선생님이 고르는 단계가 없으니 누구나 바로 보게 됩니다.
 
    ▶ 답을 다는 방법
-     주소 끝에 ?admin 을 붙여서 들어옵니다. 이렇게요:
-       https://guns-math.vercel.app/ask.html?admin
-     암호를 넣으면 질문마다 답 쓰는 칸과 '지우기'가 나타납니다.
-     (암호는 Vercel 에 넣어 둔 ADMIN_PASSWORD 입니다)
+     이 페이지가 아니라 선생님 방(admin.html)에서 답니다. 이 페이지는
+     학생이 보는 곳이라 관리용 칸이 아예 들어 있지 않습니다.
 
    ▶ 이메일 알림 (선택)
      아래 폼주소를 비워 두면 알림을 안 보냅니다. 주소가 있으면 질문이
@@ -145,11 +140,8 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
   const 폼 = document.getElementById("askForm");
   const 상태 = 폼.querySelector(".qform-status");
   const 목록칸 = document.getElementById("qna");
-  const 관리칸 = document.getElementById("adminBar");
 
   let 질문들 = [];
-  // sessionStorage 라서 창을 닫으면 지워집니다 — 공용 컴퓨터에서 안전하도록
-  let 암호 = sessionStorage.getItem("수학을보다-암호") || "";
 
   /* 학생이 쓴 글을 그대로 화면에 박으면 <script> 같은 걸 적어 넣었을 때
      그게 코드로 실행돼 버립니다. 꺾쇠 같은 기호를 '글자'로 바꿔서 막습니다. */
@@ -171,15 +163,6 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
         <p class="body-sm">${it.a
           ? `<span class="qa-mark">A</span>${안전하게(it.a)}`
           : `<span class="qa-wait">아직 답을 못 달았습니다. 곧 답할게요.</span>`}</p>
-        ${암호 ? `
-        <div class="qadmin">
-          <textarea rows="3" placeholder="답을 여기에 쓰고 저장을 누르세요">${안전하게(it.a)}</textarea>
-          <div class="qadmin-row">
-            <button type="button" class="btn btn-secondary" data-act="답변">답 저장</button>
-            <button type="button" class="qadmin-del" data-act="삭제">지우기</button>
-            <span class="qadmin-status caption"></span>
-          </div>
-        </div>` : ""}
       </article>`).join("");
   }
 
@@ -241,84 +224,6 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
       버튼.disabled = false;
     }
   });
-
-  /* ---------- 선생님: 답 달기 · 지우기 ---------- */
-  목록칸.addEventListener("click", async e => {
-    const 버튼 = e.target.closest("[data-act]");
-    if (!버튼) return;
-    const 글 = 버튼.closest("article");
-    const 작업 = 버튼.dataset.act;
-    const 쪽지 = 글.querySelector(".qadmin-status");
-
-    if (작업 === "삭제" && !confirm("이 질문을 지울까요? 되돌릴 수 없습니다.")) return;
-
-    버튼.disabled = true;
-    쪽지.textContent = 작업 === "삭제" ? "지우는 중…" : "저장하는 중…";
-    try {
-      const 응답 = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          암호, 작업, id: 글.dataset.id,
-          답변: 글.querySelector(".qadmin textarea").value,
-        }),
-      });
-      const 결과 = await 응답.json();
-      if (!응답.ok) throw new Error(결과.오류 || "");
-
-      if (작업 === "삭제") {
-        질문들 = 질문들.filter(it => String(it.id) !== 글.dataset.id);
-      } else {
-        질문들 = 질문들.map(it => (String(it.id) === 글.dataset.id ? 결과 : it));
-      }
-      그리기();
-    } catch (err) {
-      쪽지.textContent = err.message || "실패했습니다.";
-      버튼.disabled = false;
-    }
-  });
-
-  /* ---------- 선생님: 암호 넣는 칸 ---------- */
-  function 관리칸그리기() {
-    if (암호) {
-      관리칸.innerHTML = `<p class="qadmin-bar caption">
-        답을 달 수 있는 상태입니다. <button type="button" id="관리끄기">끄기</button></p>`;
-      document.getElementById("관리끄기").onclick = () => {
-        암호 = "";
-        sessionStorage.removeItem("수학을보다-암호");
-        관리칸그리기();
-        그리기();
-      };
-      return;
-    }
-    관리칸.innerHTML = `<form class="qadmin-bar" id="관리로그인">
-      <input type="password" placeholder="선생님 암호" autocomplete="current-password" />
-      <button type="submit" class="btn btn-secondary">확인</button>
-      <span class="caption"></span>
-    </form>`;
-    document.getElementById("관리로그인").onsubmit = async ev => {
-      ev.preventDefault();
-      const 칸 = ev.target.querySelector("input");
-      const 쪽지 = ev.target.querySelector(".caption");
-      쪽지.textContent = "확인 중…";
-      const 응답 = await fetch("/api/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 암호: 칸.value, 작업: "확인" }),
-      });
-      if (응답.ok) {
-        암호 = 칸.value;
-        sessionStorage.setItem("수학을보다-암호", 암호);
-        관리칸그리기();
-        그리기();
-      } else {
-        쪽지.textContent = "암호가 맞지 않습니다.";
-      }
-    };
-  }
-
-  // 평소엔 아무것도 안 보입니다. ?admin 을 붙여 왔거나 이미 켜 뒀을 때만.
-  if (location.search.includes("admin") || 암호) 관리칸그리기();
 
   불러오기();
 }
