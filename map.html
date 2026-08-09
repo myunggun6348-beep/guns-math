@@ -324,6 +324,17 @@ function select(id, push) {
     </div>`;
 
   if (push) history.replaceState(null, "", "?n=" + id);
+
+  /* 폰에서는 설명칸이 개념 상자들 '아래'에 있어서, 상자를 눌러도 화면에
+     아무 변화가 없는 것처럼 보인다(설명이 두 화면쯤 밑에 있다). 그래서
+     눌러서 고른 경우에는 설명칸이 보이도록 따라 내려간다.
+
+     조건을 '화면 아래로 완전히 벗어났을 때'로 좁힌 이유: 넓은 화면에서는
+     설명칸 윗부분이 조금이라도 걸쳐 보이면 거기 뭔가 있다는 게 전해지고,
+     그때 화면이 저절로 움직이면 오히려 지도를 놓친다. */
+  if (push && panel.getBoundingClientRect().top >= innerHeight) {
+    panel.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
 }
 
 function clearPanel() {
@@ -341,8 +352,15 @@ cmap.addEventListener("click", e => {
 깊게.addEventListener("change", () => { if (selected) select(selected, false); });
 panel.addEventListener("click", e => {
   const chip = e.target.closest(".cmap-chip");
-  if (chip) {
-    select(chip.dataset.goto, true);
+  if (!chip) return;
+
+  /* 설명칸이 화면 밖에 있는 좁은 화면에서는 select() 가 설명칸으로 따라
+     내려간다. 그 뒤에 여기서 상자로 도로 올라가면 방금 연 설명을 놓치므로,
+     설명칸이 이미 보이는 넓은 화면에서만 상자를 가운데로 옮겨
+     '지도에서 어디로 옮겨 갔는지' 보여 준다. */
+  const 설명이멀리 = panel.getBoundingClientRect().top >= innerHeight;
+  select(chip.dataset.goto, true);
+  if (!설명이멀리) {
     nodeEl(chip.dataset.goto).scrollIntoView({ block: "center", behavior: "smooth" });
   }
 });

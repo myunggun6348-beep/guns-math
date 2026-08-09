@@ -1357,6 +1357,24 @@ html.theme-dark #나가기 { color: rgba(255, 255, 255, 0.45); }
 .canvas-host { position: relative; min-width: 0; background: var(--surface-soft); min-height: 320px; }
 .canvas-host canvas { display: block; }
 
+/* --- 어두운 화면일 때의 그림칸 ---
+   자료의 그림은 캔버스에 검은 선으로 그려진다(색이 코드에 박혀 있다).
+   배경까지 어두워지면 그 선이 안 보이므로, 그림칸만은 늘 밝은 '종이'로
+   둔다. 어두운 방에 흰 종이 한 장을 놓은 모양이 된다.
+
+   background 만 바꾸지 않고 변수를 통째로 밝은 값으로 되돌리는 이유:
+   그림칸 안에도 var(--ink) 같은 걸 쓰는 자료(예: 순열과 조합의 글자칸)가
+   있어서, 그것들까지 한꺼번에 제자리를 찾게 하려는 것이다. */
+html.theme-dark .canvas-host {
+  --canvas: #ffffff;
+  --ink: #000000;
+  --surface-soft: #f4f4f3;
+  --hairline: #e4e4e2;
+  --hairline-soft: #f0f0ee;
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+
 .panel {
   background: var(--canvas);
   border-left: 1px solid var(--hairline);
@@ -1488,6 +1506,15 @@ html.theme-dark #나가기 { color: rgba(255, 255, 255, 0.45); }
     border-bottom: 1px solid var(--hairline);
   }
   .panel { border-left: none; padding-top: var(--md); }
+
+  /* --- 손가락으로 집을 수 있게 ---
+     기본 슬라이더·체크상자는 16px 이라 폰에서 정확히 누르기 어렵다.
+     보이는 선 자체는 그대로 두고 '만질 수 있는 영역'만 44px 로 넓힌다
+     (애플·구글이 권하는 최소 크기). */
+  .panel input[type="range"] { height: 44px; }
+  .panel input[type="checkbox"] { width: 22px; height: 22px; }
+  .panel .check { padding: var(--xs) 0; gap: var(--sm); }
+  .panel select { min-height: 44px; }
 
   /* 좁은 화면에서는 데모 제목 줄이 두 줄이 되어도 잘리지 않게.
      다만 100px 은 667px 화면에서 너무 크다 — 설명 줄을 한 단계 줄인다. */
