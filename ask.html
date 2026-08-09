@@ -156,9 +156,15 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
         아직 질문이 없습니다. 첫 질문을 남겨 보세요.</p>`;
       return;
     }
+    /* 답을 단 지 얼마 안 된 질문에는 표를 붙입니다. 익명이라 "답 달렸어요"
+       하고 알려 줄 수가 없으니, 학생이 훑을 때 눈에 걸리게 하는 것뿐입니다. */
+    const 며칠전 = 날짜 => Math.floor((Date.now() - new Date(날짜 + "T00:00:00")) / 86400000);
+    const 새답 = it => it.at && 며칠전(it.at) <= 14;
+
     목록칸.innerHTML = 질문들.map(it => `
       <article data-id="${안전하게(it.id)}">
-        <span class="caption">${안전하게(it.t)}${it.g ? " · " + 안전하게(it.g) : ""}</span>
+        <span class="caption">${안전하게(it.t)}${it.g ? " · " + 안전하게(it.g) : ""}${
+          새답(it) ? ` <span class="qa-new">새 답변</span>` : ""}</span>
         <h3 class="card-title"><span class="qa-mark">Q</span>${안전하게(it.q)}</h3>
         <p class="body-sm">${it.a
           ? `<span class="qa-mark">A</span>${안전하게(it.a)}`
@@ -234,6 +240,13 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
   불러오기();
 }
 </script>
+
+<!-- 방문 통계 (Vercel Web Analytics)
+     어떤 자료가 실제로 쓰이는지 보려는 것입니다. 쿠키를 쓰지 않고
+     개인을 따라다니지도 않습니다 — 어느 페이지가 몇 번 열렸는지만 셉니다.
+     Vercel 대시보드에서 Analytics 를 켜야 실제로 기록됩니다.
+     선생님 방(admin.html)은 통계에 넣지 않습니다. -->
+<script defer src="/_vercel/insights/script.js"></script>
 
 </body>
 </html>

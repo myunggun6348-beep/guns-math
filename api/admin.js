@@ -80,7 +80,15 @@ module.exports = async (req, res) => {
       const 원본 = await 명령("HGET", 열쇠이름, id);
       if (!원본) return res.status(404).json({ 오류: "그 질문이 없습니다." });
       const 항목 = JSON.parse(원본);
-      항목.a = String(받은.답변 || "").trim().slice(0, 답변최대);
+      const 새답 = String(받은.답변 || "").trim().slice(0, 답변최대);
+
+      /* 답을 '처음 단 날'만 적어 둡니다(at). 홈에서 '새로 답한 질문'을
+         고르는 데 씁니다. 나중에 답을 고쳐 써도 날짜를 새로 찍지 않는 이유:
+         오래된 질문이 오탈자 하나 고쳤다고 다시 새 글로 올라오면 안 되니까요. */
+      if (새답 && !항목.a) 항목.at = new Date().toISOString().slice(0, 10);
+      if (!새답) delete 항목.at;          // 답을 지우면 날짜도 지웁니다
+      항목.a = 새답;
+
       await 명령("HSET", 열쇠이름, id, JSON.stringify(항목));
       return res.status(200).json({ id, ...항목 });
     }
