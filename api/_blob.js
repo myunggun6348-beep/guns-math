@@ -9,8 +9,8 @@
    것으로 봅니다. 아무것도 없으면 준비됨 이 false 가 되어, 자료실
    업로드가 막히는 대신 "준비 중" 안내만 보이게 됩니다.
    ========================================================= */
-const { put, del } = require("@vercel/blob");
+const { del, head, issueSignedToken, presignUrl } = require("@vercel/blob");
 
 const 준비됨 = Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
 
-module.exports = { 준비됨, put, del };
+module.exports = { 준비됨, del, head, issueSignedToken, presignUrl };

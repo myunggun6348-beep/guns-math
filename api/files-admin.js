@@ -2,20 +2,27 @@
    자료실 — 선생님 창구입니다. 손댈 일 없습니다.
 
    질문 게시판의 api/admin.js 와 같은 방식으로 암호를 확인합니다
-   (같은 ADMIN_PASSWORD). 파일 내용은 몸통(body)에 그대로 실어 보내고,
-   제목·과목 같은 정보는 주소 끝(?title=...) 에 붙여 보냅니다 — 파일
-   내용과 글자 정보를 같은 자리에 섞을 수 없어서입니다.
+   (같은 ADMIN_PASSWORD).
 
-   올릴 수 있는 파일: pdf, hwp, hwpx / 4MB까지
-   (Vercel 자체가 한 번에 보낼 수 있는 몸통 크기를 4.5MB로 막아 둬서,
-   그보다 큰 파일은 애초에 여기까지 오지 못합니다)
+   ▶ 파일을 올리는 순서 (두 걸음인 이유)
+     예전에는 파일이 이 함수를 거쳐 저장소로 갔는데, Vercel이 함수 하나에
+     4.5MB까지만 허용해서 스캔한 학습지처럼 큰 파일은 올라가지 않았습니다.
+     그래서 파일이 이 함수를 안 거치고 브라우저에서 저장소로 곧장 가도록
+     바꿨습니다.
+
+       1) presign — 여기서 암호를 확인하고 '이 파일만, 이 크기까지'라고
+                    적힌 일회용 출입증(주소)을 만들어 줍니다
+       2) 브라우저가 그 주소로 파일을 곧장 보냅니다 (이 함수는 안 거침)
+       3) record  — 정말 올라갔는지 확인하고 제목·과목을 목록에 적습니다
+
+   올릴 수 있는 파일: pdf, hwp, hwpx / 50MB까지
    ========================================================= */
 const crypto = require("crypto");
 const { 준비됨: redis준비됨, 명령 } = require("./_redis");
-const { 준비됨: blob준비됨, put, del } = require("./_blob");
+const { 준비됨: blob준비됨, del, head, issueSignedToken, presignUrl } = require("./_blob");
 
 const 열쇠이름 = "files";
-const 최대바이트 = 4 * 1024 * 1024;
+const 최대바이트 = 50 * 1024 * 1024;
 const 허용확장자 = {
   pdf: "application/pdf",
   hwp: "application/x-hwp",
@@ -47,21 +54,85 @@ module.exports = async (req, res) => {
   }
 
   try {
-    if (q.act === "delete") {
-      const id = String(q.id || "");
-      if (!id) return res.status(400).json({ 오류: "어느 파일인지 알 수 없습니다." });
-
-      const 원본 = await 명령("HGET", 열쇠이름, id);
-      if (원본) {
-        try {
-          const 항목 = JSON.parse(원본);
-          if (항목.url) await del(항목.url);
-        } catch { /* 파일 자체는 못 지워도 목록에서는 지웁니다 */ }
+    /* ---------- 1걸음: 올려도 좋다는 출입증 만들기 ---------- */
+    if (q.act === "presign") {
+      const 파일이름 = String(q.filename || "").trim();
+      const 확장자 = (파일이름.split(".").pop() || "").toLowerCase();
+      if (!파일이름 || !허용확장자[확장자]) {
+        return res.status(400).json({ 오류: "pdf, hwp, hwpx 파일만 올릴 수 있습니다." });
       }
-      await 명령("HDEL", 열쇠이름, id);
-      return res.status(200).json({ 좋음: true });
+      const 크기 = Number(q.size || 0);
+      if (!크기) return res.status(400).json({ 오류: "파일 내용이 비어 있습니다." });
+      if (크기 > 최대바이트) {
+        return res.status(400).json({ 오류: "파일이 너무 큽니다 (50MB까지)." });
+      }
+
+      /* 번호는 '올린 시각'이지만, 같은 밀리초에 두 개가 들어오면 번호가 겹쳐
+         뒤엣것이 앞엣것을 소리 없이 덮어씁니다(목록도 파일도). 뒤에 세 자리를
+         더 붙여 겹치지 않게 하되, 여전히 숫자라서 시간순 정렬은 그대로입니다. */
+      const id = String(Date.now() * 1000 + Math.floor(Math.random() * 1000));
+      // 파일 이름에 슬래시 같은 게 들어가면 엉뚱한 곳에 저장될 수 있어 지웁니다
+      const 안전한이름 = 파일이름.replace(/[\\/]/g, "-");
+      const pathname = `files/${id}-${안전한이름}`;
+      const contentType = 허용확장자[확장자];
+
+      // '이 파일 하나만, 이 종류로, 이 크기까지' 로 범위를 좁힌 출입증입니다.
+      // 남이 주소를 가로채도 다른 파일을 덮어쓰거나 더 큰 걸 올릴 수 없습니다.
+      const 토큰 = await issueSignedToken({
+        pathname,
+        operations: ["put"],
+        allowedContentTypes: [contentType],
+        maximumSizeInBytes: 최대바이트,
+      });
+      const { presignedUrl } = await presignUrl(토큰, {
+        operation: "put",
+        pathname,
+        access: "public",
+        allowedContentTypes: [contentType],
+        maximumSizeInBytes: 최대바이트,
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        validUntil: Date.now() + 30 * 60 * 1000, // 느린 인터넷도 넉넉하도록 30분
+      });
+
+      return res.status(200).json({ id, pathname, contentType, presignedUrl });
     }
 
+    /* ---------- 3걸음: 올라간 걸 확인하고 목록에 적기 ---------- */
+    if (q.act === "record") {
+      const id = String(q.id || "");
+      const pathname = String(q.pathname || "");
+      if (!id || !pathname.startsWith("files/")) {
+        return res.status(400).json({ 오류: "어느 파일인지 알 수 없습니다." });
+      }
+
+      // 진짜 올라갔는지 저장소에 직접 물어봅니다. 이걸 건너뛰면 올리지도
+      // 않은 파일이 목록에만 생겨서 눌러도 안 열리는 줄이 남습니다.
+      let 올라간것;
+      try {
+        올라간것 = await head(pathname);
+      } catch {
+        return res.status(400).json({ 오류: "파일이 저장소에 올라가지 않았습니다." });
+      }
+
+      const 파일이름 = pathname.slice(pathname.indexOf("-") + 1);
+      const 항목 = {
+        date: new Date().toISOString().slice(0, 10),
+        subject: String(q.subject || "").trim().slice(0, 30),
+        kind: String(q.kind || "").trim().slice(0, 30),
+        title: String(q.title || "").trim().slice(0, 120) || 파일이름,
+        // 개념 지도의 열쇠말(trig, prob …). 있으면 그 개념을 눌렀을 때
+        // 이 학습지가 같이 나옵니다. 없으면 자료실에만 있습니다.
+        concept: String(q.concept || "").trim().slice(0, 30),
+        filename: 파일이름,
+        url: 올라간것.url,
+        size: 올라간것.size,
+      };
+      await 명령("HSET", 열쇠이름, id, JSON.stringify(항목));
+      return res.status(200).json({ id, ...항목 });
+    }
+
+    /* ---------- 제목·과목·종류만 고치기 (파일은 그대로) ---------- */
     if (q.act === "edit") {
       const id = String(q.id || "");
       if (!id) return res.status(400).json({ 오류: "어느 파일인지 알 수 없습니다." });
@@ -75,44 +146,26 @@ module.exports = async (req, res) => {
       항목.title = 새제목;
       항목.subject = String(q.subject || "").trim().slice(0, 30);
       항목.kind = String(q.kind || "").trim().slice(0, 30);
+      항목.concept = String(q.concept || "").trim().slice(0, 30);
 
       await 명령("HSET", 열쇠이름, id, JSON.stringify(항목));
       return res.status(200).json({ id, ...항목 });
     }
 
-    if (q.act === "upload") {
-      const 파일이름 = String(q.filename || "").trim();
-      const 확장자 = (파일이름.split(".").pop() || "").toLowerCase();
-      if (!파일이름 || !허용확장자[확장자]) {
-        return res.status(400).json({ 오류: "pdf, hwp, hwpx 파일만 올릴 수 있습니다." });
-      }
+    /* ---------- 지우기 ---------- */
+    if (q.act === "delete") {
+      const id = String(q.id || "");
+      if (!id) return res.status(400).json({ 오류: "어느 파일인지 알 수 없습니다." });
 
-      const 내용 = req.body; // Content-Type: application/octet-stream → Buffer
-      if (!Buffer.isBuffer(내용) || !내용.length) {
-        return res.status(400).json({ 오류: "파일 내용이 비어 있습니다." });
+      const 원본 = await 명령("HGET", 열쇠이름, id);
+      if (원본) {
+        try {
+          const 항목 = JSON.parse(원본);
+          if (항목.url) await del(항목.url);
+        } catch { /* 파일 자체는 못 지워도 목록에서는 지웁니다 */ }
       }
-      if (내용.length > 최대바이트) {
-        return res.status(400).json({ 오류: "파일이 너무 큽니다 (4MB까지)." });
-      }
-
-      const id = String(Date.now());
-      const blob = await put(`files/${id}-${파일이름}`, 내용, {
-        access: "public",
-        contentType: 허용확장자[확장자],
-        addRandomSuffix: false,
-      });
-
-      const 항목 = {
-        date: new Date().toISOString().slice(0, 10),
-        subject: String(q.subject || "").trim().slice(0, 30),
-        kind: String(q.kind || "").trim().slice(0, 30),
-        title: String(q.title || "").trim().slice(0, 120) || 파일이름,
-        filename: 파일이름,
-        url: blob.url,
-        size: 내용.length,
-      };
-      await 명령("HSET", 열쇠이름, id, JSON.stringify(항목));
-      return res.status(200).json({ id, ...항목 });
+      await 명령("HDEL", 열쇠이름, id);
+      return res.status(200).json({ 좋음: true });
     }
 
     return res.status(400).json({ 오류: "무슨 작업인지 알 수 없습니다." });

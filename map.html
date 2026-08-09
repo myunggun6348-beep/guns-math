@@ -138,6 +138,17 @@ const NS = "http://www.w3.org/2000/svg";
 const before = id => EDGES.filter(e => e[1] === id).map(e => e[0]);
 const after  = id => EDGES.filter(e => e[0] === id).map(e => e[1]);
 
+/* ---------- 자료실 학습지 ----------
+   선생님이 자료를 올릴 때 고른 개념을 여기서 읽어, 그 개념을 눌렀을 때
+   '볼 것(데모)' 옆에 '풀 것(학습지)'을 같이 놓습니다. 자료실은 수시로
+   바뀌므로 코드에 적어 두지 않고 /api/files 에서 그때그때 받아 옵니다. */
+let 파일들 = [];
+const 학습지 = id => 파일들.filter(f => f.concept === id);
+
+const 안전하게 = 글 => String(글 ?? "").replace(/[&<>"']/g, 기호 => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+}[기호]));
+
 /* 층에 적힌 순서가 곧 배우는 순서. 아래에서 '전부'를 이 순서로 돌려주므로
    나온 것을 위에서부터 읽으면 그대로 공부 순서가 됩니다. */
 const 배운순서 = LAYERS.flatMap(l => l.ids);
@@ -169,7 +180,7 @@ for (const layer of LAYERS) {
       return `<button type="button" class="cmap-node" data-id="${id}">
         <span class="dot" style="background:${SUBJECT_COLOR[n.subject]}"></span>
         <span class="cmap-node-name">${n.name}</span>
-        ${n.demos.length ? `<span class="cmap-node-n">${n.demos.length}</span>` : ""}
+        <span class="cmap-node-n"${n.demos.length ? "" : " hidden"}>${n.demos.length}</span>
       </button>`;
     }).join("") +
     `</div>`;
@@ -297,7 +308,17 @@ function select(id, push) {
         <div class="cmap-links">${
           n.demos.length
             ? n.demos.map(d => `<a href="${d.h}">${d.t} →</a>`).join("")
-            : `<span class="cmap-none">이 개념은 아직 자료가 없습니다</span>`
+            : `<span class="cmap-none">이 개념은 아직 볼 자료가 없습니다</span>`
+        }</div>
+      </div>
+      <div>
+        <h3 class="caption">풀어 보는 학습지</h3>
+        <div class="cmap-links">${
+          학습지(id).length
+            ? 학습지(id).map(f =>
+                `<a href="${안전하게(f.url)}" target="_blank" rel="noopener">${안전하게(f.title)} ↓</a>`
+              ).join("")
+            : `<span class="cmap-none">이 개념은 아직 학습지가 없습니다</span>`
         }</div>
       </div>
     </div>`;
@@ -328,6 +349,25 @@ panel.addEventListener("click", e => {
 
 clearPanel();
 drawLines();
+
+/* 자료실에서 학습지 목록을 받아 옵니다. 늦게 도착하므로, 도착하면
+   상자의 숫자(볼 것 + 풀 것)를 다시 세고, 열려 있던 개념도 다시 그립니다. */
+fetch("/api/files")
+  .then(r => (r.ok ? r.json() : []))
+  .then(목록 => {
+    파일들 = Array.isArray(목록) ? 목록 : [];
+    if (!파일들.length) return;
+    for (const id of Object.keys(NODES)) {
+      const 배지 = nodeEl(id)?.querySelector(".cmap-node-n");
+      if (!배지) continue;
+      const 합 = NODES[id].demos.length + 학습지(id).length;
+      배지.textContent = 합;
+      배지.hidden = !합;
+    }
+    drawLines();                       // 배지가 생기면 상자 크기가 바뀔 수 있다
+    if (selected) select(selected, false);
+  })
+  .catch(() => {});
 
 // 폭이 바뀌면 상자가 다시 배치되므로 선도 다시 그린다
 addEventListener("resize", drawLines);

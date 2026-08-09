@@ -817,6 +817,19 @@ img, svg { max-width: 100%; }
 }
 .adm-upload input[type="text"],
 .adm-edit-row input[type="text"] { flex: 1; min-width: 170px; }
+/* 개념 고르는 칸 — 목록이 길어서 한 줄을 다 쓴다 */
+.adm-concept {
+  flex: 1;
+  min-width: 220px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  padding: 9px 12px;
+}
+.adm-concept:focus { outline: none; border-color: var(--ink); }
 .adm-login input:focus,
 .adm-upload input:focus,
 .adm-edit-row input:focus,
@@ -1014,7 +1027,8 @@ html.theme-dark #나가기 { color: rgba(255, 255, 255, 0.45); }
 .cmap-panel-head p { margin: 0; max-width: 44em; }
 .cmap-panel-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* 먼저 알 것 · 이어지는 것 · 볼 것(데모) · 풀 것(학습지) 네 칸 */
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--lg);
   margin-top: var(--xl);
   padding-top: var(--lg);
