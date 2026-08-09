@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>지수함수와 로그함수는 거울상 · 수학을 보다</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M20 20l7.5 7.5' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 직접 보는 수학</a>
+  <h1>지수함수와 로그함수는 거울상</h1>
+  <span class="caption">대수 · 지수함수와 로그함수 — y = x 에 비춰 보면 같은 함수입니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="base">밑 a = <span id="baseText">2.00</span></label>
+      <input type="range" id="base" min="0.2" max="5" value="2" step="0.05" />
+    </div>
+    <div class="group">
+      <label for="px">점 옮기기 x = <span id="pxText">1.50</span></label>
+      <input type="range" id="px" min="-4" max="4" value="1.5" step="0.05" />
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="showExp" checked /> 지수함수 y = aˣ</label>
+      <label class="check"><input type="checkbox" id="showLog" checked /> 로그함수 y = log&#8336; x</label>
+      <label class="check"><input type="checkbox" id="showMirror" checked /> 거울선 y = x 와 잇는 선</label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key"><span class="swatch shape"></span>지수함수 위의 점</span><span class="val" id="pExp">(1.50, 2.83)</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>로그함수 위의 점</span><span class="val" id="pLog">(2.83, 1.50)</span></div>
+        <div><span class="key">a<sup>x</sup></span><span class="val" id="vExp">2.83</span></div>
+        <div><span class="key">log&#8336;(a<sup>x</sup>)</span><span class="val" id="vBack">1.50</span></div>
+        <div class="rule"><strong id="rule">좌표가 서로 뒤바뀝니다</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        점을 움직여 보세요. 지수함수 위의 점이 <b>(x, y)</b> 일 때 로그함수 위에는
+        <b>(y, x)</b> 가 있습니다. 두 점을 이은 선은 늘 <em>y = x 와 수직</em>이고,
+        그 선의 한가운데가 y = x 위에 놓입니다.<br /><br />
+        <b>a 를 1 에 가깝게</b> 해 보세요. 두 곡선이 y = x 로 납작하게 몰립니다.
+        a = 1 이면 aˣ 이 늘 1 이라 함수 구실을 못 합니다 — 그래서 밑에서 1 을 뺍니다.<br /><br />
+        <b>a 를 1 보다 작게</b> 하면 둘 다 뒤집혀 감소합니다. 그래도 거울 관계는
+        그대로입니다.<br /><br />
+        지수함수는 x 가 −4 여도 값이 <b>양수</b>이고, 로그함수는 x 가 <b>양수일 때만</b>
+        존재합니다. 거울상이니 당연한 이야기입니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const NAVY = "#201f5e", LIME = "#c3e02f";
+let W = 0, H = 0, S = 40;
+const YR = 5;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  S = H / (2 * YR);
+}
+const sx = x => W / 2 + x * S;
+const sy = y => H / 2 - y * S;
+const fmt = v => (Math.abs(v) < 5e-3 ? 0 : v).toFixed(2).replace("-", "−");
+
+function line(x1, y1, x2, y2) {
+  ctx.beginPath(); ctx.moveTo(sx(x1), sy(y1)); ctx.lineTo(sx(x2), sy(y2)); ctx.stroke();
+}
+function dot(x, y, 색) {
+  ctx.fillStyle = 색;
+  ctx.beginPath(); ctx.arc(sx(x), sy(y), 6.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6; ctx.stroke();
+}
+
+function draw() {
+  const a = +$("base").value, px = +$("px").value;
+  const xL = -W / (2 * S), xR = W / (2 * S);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 모눈
+  ctx.strokeStyle = "rgba(0,0,0,0.07)"; ctx.lineWidth = 1;
+  for (let x = Math.ceil(xL); x <= xR; x++) line(x, -YR, x, YR);
+  for (let y = -Math.floor(YR); y <= YR; y++) line(xL, y, xR, y);
+
+  // 축
+  ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 1;
+  line(xL, 0, xR, 0); line(0, -YR, 0, YR);
+
+  // 거울선 y = x
+  ctx.strokeStyle = "rgba(0,0,0,0.32)"; ctx.lineWidth = 1.6;
+  ctx.setLineDash([7, 5]);
+  line(xL, xL, xR, xR);
+  ctx.setLineDash([]);
+
+  const 밑이1 = Math.abs(a - 1) < 1e-3;
+  const f = x => Math.pow(a, x);                 // 지수함수
+  const g = x => Math.log(x) / Math.log(a);      // 로그함수
+
+  // 지수함수 — y 가 폭발하므로 화면 밖은 그리지 않습니다
+  if ($("showExp").checked && !밑이1) {
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    let 시작 = true;
+    for (let p = 0; p <= W; p += 2) {
+      const x = (p - W / 2) / S, y = f(x);
+      if (!isFinite(y) || Math.abs(y) > YR * 1.4) { 시작 = true; continue; }
+      시작 ? (ctx.moveTo(sx(x), sy(y)), 시작 = false) : ctx.lineTo(sx(x), sy(y));
+    }
+    ctx.stroke();
+  }
+
+  // 로그함수 — x > 0 에서만
+  if ($("showLog").checked && !밑이1) {
+    ctx.strokeStyle = NAVY; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    let 시작 = true;
+    for (let p = 0; p <= W; p += 2) {
+      const x = (p - W / 2) / S;
+      if (x <= 1e-4) { 시작 = true; continue; }
+      const y = g(x);
+      if (!isFinite(y) || Math.abs(y) > YR * 1.4) { 시작 = true; continue; }
+      시작 ? (ctx.moveTo(sx(x), sy(y)), 시작 = false) : ctx.lineTo(sx(x), sy(y));
+    }
+    ctx.stroke();
+  }
+
+  // 짝이 되는 두 점
+  const ey = f(px);
+  const 보임 = !밑이1 && isFinite(ey) && Math.abs(ey) < YR * 1.4 && Math.abs(px) < YR * 1.4;
+  if (보임) {
+    if ($("showMirror").checked) {
+      // 두 점을 잇는 선 — y = x 와 수직입니다
+      ctx.strokeStyle = "rgba(0,0,0,0.4)"; ctx.lineWidth = 1.4;
+      ctx.setLineDash([4, 4]);
+      line(px, ey, ey, px);
+      ctx.setLineDash([]);
+      // 한가운데 점이 y = x 위에 놓입니다
+      const m = (px + ey) / 2;
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.beginPath(); ctx.arc(sx(m), sy(m), 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+    if ($("showExp").checked) dot(px, ey, LIME);
+    if ($("showLog").checked) dot(ey, px, "#ffffff");
+  }
+
+  // ---- 읽는 값 ----
+  $("baseText").textContent = a.toFixed(2);
+  $("pxText").textContent = px.toFixed(2);
+  if (밑이1) {
+    $("pExp").textContent = "—";
+    $("pLog").textContent = "—";
+    $("vExp").textContent = "1.00";
+    $("vBack").textContent = "—";
+    $("rule").textContent = "a = 1 이면 1ˣ 이 늘 1 — 그래서 밑에서 뺍니다";
+  } else {
+    $("pExp").textContent = `(${fmt(px)}, ${fmt(ey)})`;
+    $("pLog").textContent = `(${fmt(ey)}, ${fmt(px)})`;
+    $("vExp").textContent = fmt(ey);
+    $("vBack").textContent = fmt(g(ey));
+    $("rule").textContent = "좌표가 서로 뒤바뀝니다";
+  }
+}
+
+for (const id of ["base", "px", "showExp", "showLog", "showMirror"]) {
+  $(id).addEventListener("input", draw);
+  $(id).addEventListener("change", draw);
+}
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+</script>
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

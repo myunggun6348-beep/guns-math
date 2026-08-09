@@ -13,6 +13,48 @@ const G = 'fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round" s
 
 const DEMOS = [
   /* ---------- 공통수학 (고1) ---------- */
+  { year: "고1", subject: "공통수학1", unit: "다항식", title: "곱셈 공식을 넓이로",
+    desc: "(a+b)² 을 정사각형으로 잘라 보면 2ab 가 어디서 오는지 보입니다.",
+    use: "곱셈 공식을 외우기 전에 뜻부터 보여 줄 때",
+    keywords: "다항식 곱셈공식 전개 인수분해 완전제곱식 넓이 합차공식",
+    href: "demos/expand-area.html", ready: true,
+    fig: `<svg viewBox="0 0 88 48"><g ${G}>
+      <rect x="26" y="6" width="24" height="24" fill="#d9f26e"/>
+      <rect x="50" y="6" width="12" height="24"/>
+      <rect x="26" y="30" width="24" height="12"/>
+      <rect x="50" y="30" width="12" height="12" fill="#201f5e" stroke="none"/>
+      <rect x="26" y="6" width="36" height="36"/>
+    </g></svg>` },
+
+  { year: "고1", subject: "공통수학1", unit: "경우의 수", title: "순열과 조합, 실제로 늘어놓기",
+    desc: "모든 경우를 화면에 다 늘어놓고, 조합에서 무엇이 묶여 사라지는지 봅니다.",
+    use: "nPr 과 nCr 의 차이를 공식이 아니라 눈으로 가를 때",
+    keywords: "경우의수 순열 조합 nPr nCr 팩토리얼 계승 세기",
+    href: "demos/permutation-combination.html", ready: true,
+    fig: `<svg viewBox="0 0 88 48"><g ${G}>
+      <rect x="14" y="10" width="18" height="12" rx="2" fill="#d9f26e"/>
+      <rect x="36" y="10" width="18" height="12" rx="2"/>
+      <rect x="58" y="10" width="18" height="12" rx="2"/>
+      <rect x="14" y="27" width="18" height="12" rx="2"/>
+      <rect x="36" y="27" width="18" height="12" rx="2" stroke-opacity=".3"/>
+      <path d="M36 33h18" stroke-opacity=".55"/>
+      <rect x="58" y="27" width="18" height="12" rx="2" stroke-opacity=".3"/>
+      <path d="M58 33h18" stroke-opacity=".55"/>
+    </g></svg>` },
+
+  { year: "고1", subject: "공통수학2", unit: "함수와 그래프", title: "역함수는 왜 y = x 대칭인가",
+    desc: "점 (a, b) 와 (b, a) 를 함께 움직여 보면 접히는 축이 y = x 임이 보입니다.",
+    use: "역함수를 도입하고 '일대일'이 왜 필요한지 물을 때",
+    keywords: "함수 역함수 일대일 대응 대칭 y=x 정의역 치역 무리함수",
+    href: "demos/inverse-function.html", ready: true,
+    fig: `<svg viewBox="0 0 88 48"><g ${G}>
+      <path d="M14 42L74 6" stroke-dasharray="4 3" stroke-opacity=".45"/>
+      <path d="M16 40q14-4 20-16t20-16"/>
+      <path d="M12 36q14-4 26-16" stroke-opacity=".35"/>
+      <circle cx="34" cy="20" r="3" fill="#d9f26e"/>
+      <circle cx="52" cy="30" r="3" fill="#201f5e" stroke="none"/>
+    </g></svg>` },
+
   { year: "고1", subject: "공통수학1", unit: "방정식과 부등식", title: "a, b, c 를 움직이면",
     desc: "계수를 바꿀 때 포물선이 어떻게 변하는지, 판별식과 함께 봅니다.",
     use: "판별식의 부호와 x축 교점 개수를 연결시킬 때",
@@ -38,6 +80,43 @@ const DEMOS = [
     </g></svg>` },
 
   /* ---------- 대수 (고2) ---------- */
+  { year: "고2", subject: "대수", unit: "지수함수와 로그함수", title: "지수함수와 로그함수는 거울상",
+    desc: "밑을 바꿔 가며, 짝이 되는 두 점이 y = x 를 사이에 두고 마주 보는 것을 봅니다.",
+    use: "로그함수를 지수함수의 역함수로 도입할 때",
+    keywords: "지수함수 로그함수 역함수 밑 대칭 y=x 진수 정의역",
+    href: "demos/exp-log.html", ready: true,
+    fig: `<svg viewBox="0 0 88 48"><g ${G}>
+      <path d="M10 42L74 6" stroke-dasharray="4 3" stroke-opacity=".45"/>
+      <path d="M14 44q18 0 30-32"/>
+      <path d="M44 44q0-18 32-30" stroke="#201f5e"/>
+      <circle cx="38" cy="20" r="3" fill="#d9f26e"/>
+    </g></svg>` },
+
+  { year: "고2", subject: "대수", unit: "수열", title: "등차수열의 합을 눈으로",
+    desc: "계단을 거꾸로 하나 더 얹으면 반듯한 직사각형이 됩니다. 그래서 2로 나눕니다.",
+    use: "합 공식을 외우게 하기 전에 왜 그런지 보여 줄 때",
+    keywords: "수열 등차수열 합 공식 가우스 시그마 계차",
+    href: "demos/arithmetic-sum.html", ready: true,
+    fig: `<svg viewBox="0 0 88 48"><g ${G}>
+      <rect x="16" y="34" width="10" height="8" fill="#d9f26e"/>
+      <rect x="28" y="28" width="10" height="14" fill="#d9f26e"/>
+      <rect x="40" y="22" width="10" height="20" fill="#d9f26e"/>
+      <rect x="52" y="16" width="10" height="26" fill="#d9f26e"/>
+      <path d="M16 16h46v26" stroke-dasharray="4 3" stroke-opacity=".5"/>
+    </g></svg>` },
+
+  { year: "고2", subject: "미적분Ⅰ", unit: "극한과 연속", title: "가까이 가면 어떻게 되는가",
+    desc: "구멍·점프·발산을 갈아 끼우며 극한값과 함숫값이 다른 이야기임을 봅니다.",
+    use: "극한을 도입하고 연속의 세 조건을 따질 때",
+    keywords: "극한 연속 불연속 좌극한 우극한 발산 구멍 점프 lim",
+    href: "demos/limit-continuity.html", ready: true,
+    fig: `<svg viewBox="0 0 88 48"><g ${G}>
+      <path d="M10 40q16-2 26-14"/>
+      <path d="M50 18q10-8 28-10"/>
+      <path d="M44 6v36" stroke-dasharray="4 3" stroke-opacity=".45"/>
+      <circle cx="44" cy="20" r="4" fill="#fff"/>
+    </g></svg>` },
+
   { year: "고2", subject: "대수", unit: "삼각함수", title: "단위원과 삼각함수 그래프",
     desc: "원 위의 점이 돌아갈 때 사인 곡선이 그려지는 순간을 봅니다.",
     use: "삼각함수 그래프를 처음 도입할 때",

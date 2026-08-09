@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>순열과 조합, 실제로 늘어놓기 · 수학을 보다</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M20 20l7.5 7.5' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+<style>
+  /* 이 자료에만 쓰는 목록 — 경우를 실제로 다 늘어놓아 보여 줍니다 */
+  .listwrap { height: 100%; overflow-y: auto; padding: var(--lg); }
+  .cases { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
+  .case {
+    display: flex; gap: 3px;
+    padding: 6px 9px;
+    border-radius: var(--r-md);
+    background: var(--canvas);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+    font-size: 15px; font-weight: 500;
+  }
+  /* 조합에서 '같은 것으로 묶여 사라지는' 경우 — 흐리게 두고 줄을 긋습니다 */
+  .case.dim { opacity: 0.32; text-decoration: line-through; }
+  .case.head { background: var(--block-lime); box-shadow: none; font-weight: 600; }
+  .case i { font-style: normal; }
+  .listnote { margin: 0 0 var(--md); font-size: 14px; color: rgba(0, 0, 0, 0.6); }
+  .listnote b { color: #000; }
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 직접 보는 수학</a>
+  <h1>순열과 조합, 실제로 늘어놓기</h1>
+  <span class="caption">공통수학1 · 경우의 수 — 공식을 외우기 전에 다 세어 봅니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host">
+    <div class="listwrap">
+      <p class="listnote" id="note"></p>
+      <div class="cases" id="cases"></div>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="n">전체 n = <span id="nText">4</span></label>
+      <input type="range" id="n" min="2" max="6" value="4" step="1" />
+    </div>
+    <div class="group">
+      <label for="r">뽑을 개수 r = <span id="rText">2</span></label>
+      <input type="range" id="r" min="1" max="6" value="2" step="1" />
+    </div>
+
+    <div class="group">
+      <label for="mode">세는 방법</label>
+      <select id="mode">
+        <option value="P">순열 nPr — 순서를 따진다</option>
+        <option value="C">조합 nCr — 순서를 안 따진다</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">늘어놓은 개수</span><span class="val" id="shown">12</span></div>
+        <div><span class="key">순열 <sub>n</sub>P<sub>r</sub></span><span class="val" id="nP">12</span></div>
+        <div><span class="key">조합 <sub>n</sub>C<sub>r</sub></span><span class="val" id="nC">6</span></div>
+        <div><span class="key">r! (같은 것으로 묶이는 수)</span><span class="val" id="rf">2</span></div>
+        <div class="rule"><strong id="rule">nCr = nPr ÷ r!</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        <b>순열</b>로 두고 A,B 와 B,A 가 <em>따로</em> 세어지는 걸 확인시켜 주세요.
+        자리(1등·2등)가 다르면 다른 경우이기 때문입니다.<br /><br />
+        <b>조합</b>으로 바꾸면 순서만 다른 것들이 한 덩어리로 묶여 하나만 남습니다.
+        줄이 그어져 사라지는 것들이 바로 '같은 것으로 본' 경우입니다.<br /><br />
+        r 개를 줄 세우는 방법이 <b>r!</b> 가지이므로, 조합 하나마다 순열이 r! 개씩
+        딸려 있습니다. 그래서 nCr = nPr ÷ r! 입니다.<br /><br />
+        r = n 으로 놓으면 nCn = 1 — 전부 뽑는 방법은 한 가지뿐입니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const 글자 = ["A", "B", "C", "D", "E", "F"];
+const 최대표시 = 240;   // 너무 많으면 화면이 감당을 못 합니다
+
+const 계승 = n => (n <= 1 ? 1 : n * 계승(n - 1));
+const P = (n, r) => (r > n ? 0 : 계승(n) / 계승(n - r));
+const C = (n, r) => (r > n ? 0 : P(n, r) / 계승(r));
+
+/* n 개에서 r 개를 순서 있게 뽑는 모든 경우를 실제로 만듭니다 */
+function 순열들(n, r) {
+  const 결과 = [];
+  const 쓴것 = [];
+  (function 재귀(남은) {
+    if (남은 === 0) { 결과.push([...쓴것]); return; }
+    for (let i = 0; i < n; i++) {
+      if (쓴것.includes(i)) continue;
+      쓴것.push(i); 재귀(남은 - 1); 쓴것.pop();
+    }
+  })(r);
+  return 결과;
+}
+
+function draw() {
+  const n = +$("n").value;
+  let r = +$("r").value;
+
+  // r 은 n 을 넘을 수 없습니다 — 슬라이더 상한을 n 에 맞춥니다
+  $("r").max = n;
+  if (r > n) { r = n; $("r").value = n; }
+
+  const mode = $("mode").value;
+  const 전체 = 순열들(n, r);
+
+  /* 조합에서는 '정렬했을 때 같아지는 것'을 한 덩어리로 봅니다.
+     각 덩어리의 첫 번째(오름차순인 것)만 대표로 남기고 나머지는 흐리게. */
+  const 본것 = new Set();
+  const 칸들 = 전체.map(조합 => {
+    const 열쇠 = [...조합].sort((a, b) => a - b).join(",");
+    const 오름차순 = 조합.every((v, i) => i === 0 || 조합[i - 1] < v);
+    const 대표 = !본것.has(열쇠) && 오름차순;
+    if (대표) 본것.add(열쇠);
+    return { 조합, 대표 };
+  });
+
+  const 보일것 = 칸들.slice(0, 최대표시);
+  $("cases").innerHTML = 보일것.map(({ 조합, 대표 }) => {
+    const 흐림 = mode === "C" && !대표;
+    const 강조 = mode === "C" && 대표;
+    return `<span class="case${흐림 ? " dim" : ""}${강조 ? " head" : ""}">` +
+      조합.map(i => `<i>${글자[i]}</i>`).join("") + `</span>`;
+  }).join("");
+
+  const 넘침 = 칸들.length > 최대표시;
+  const p = P(n, r), c = C(n, r);
+  $("note").innerHTML = mode === "P"
+    ? `${글자.slice(0, n).join(", ")} 에서 <b>${r}개를 순서 있게</b> 뽑은 모든 경우입니다.` +
+      (넘침 ? ` (너무 많아 앞 ${최대표시}개만 보입니다)` : "")
+    : `순서만 다른 것끼리 묶어, 한 덩어리에서 <b>하나만</b> 남겼습니다. ` +
+      `연두색이 남는 것, 줄 그어진 것이 사라지는 것입니다.` +
+      (넘침 ? ` (앞 ${최대표시}개만 보입니다)` : "");
+
+  $("nText").textContent = n;
+  $("rText").textContent = r;
+  $("shown").textContent = mode === "P" ? p : c;
+  $("nP").textContent = p;
+  $("nC").textContent = c;
+  $("rf").textContent = 계승(r);
+  $("rule").textContent = `${p} ÷ ${계승(r)} = ${c}`;
+}
+
+for (const id of ["n", "r", "mode"]) {
+  $(id).addEventListener("input", draw);
+  $(id).addEventListener("change", draw);
+}
+
+draw();
+</script>
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

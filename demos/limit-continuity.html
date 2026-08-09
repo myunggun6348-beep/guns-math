@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>가까이 가면 어떻게 되는가 · 수학을 보다</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M20 20l7.5 7.5' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 직접 보는 수학</a>
+  <h1>가까이 가면 어떻게 되는가</h1>
+  <span class="caption">미적분Ⅰ · 함수의 극한과 연속 — 극한값과 함숫값은 다른 이야기입니다</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="kind">함수 고르기</label>
+      <select id="kind">
+        <option value="hole">구멍 — (x²−1)/(x−1), x = 1</option>
+        <option value="jump">점프 — 왼쪽·오른쪽이 다름, x = 1</option>
+        <option value="moved">값만 딴 데 — 극한은 있는데 점이 어긋남</option>
+        <option value="blow">발산 — 1/(x−1)², x = 1</option>
+        <option value="ok">연속 — x + 1, x = 1</option>
+      </select>
+    </div>
+    <div class="group">
+      <label for="dx">a 에서 떨어진 거리 = <span id="dxText">1.000</span></label>
+      <input type="range" id="dx" min="-3" max="0" value="0" step="0.02" />
+      <p class="note">오른쪽으로 밀수록 x = 1 에 바짝 다가갑니다.</p>
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="showLR" checked /> 왼쪽·오른쪽에서 같이 다가가기</label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">왼쪽에서 x →</span><span class="val" id="xL">0.000</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>그때 f(x)</span><span class="val" id="fL">2.000</span></div>
+        <div><span class="key">오른쪽에서 x →</span><span class="val" id="xR">2.000</span></div>
+        <div><span class="key"><span class="swatch shape"></span>그때 f(x)</span><span class="val" id="fR">2.000</span></div>
+        <div><span class="key">극한값 lim f(x)</span><span class="val" id="lim">2</span></div>
+        <div><span class="key">함숫값 f(1)</span><span class="val" id="val">없음</span></div>
+        <div class="rule"><strong id="rule">극한은 있지만 함숫값이 없어 불연속</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        극한은 <b>x = a 에서의 값</b>이 아니라 <b>a 로 다가갈 때 f(x) 가 몰려가는 값</b>입니다.
+        그래서 a 에서 구멍이 뚫려 있어도 극한은 멀쩡히 존재합니다.<br /><br />
+        <b>점프</b>를 골라 보세요. 왼쪽에서 다가간 값과 오른쪽에서 다가간 값이 다릅니다.
+        이럴 때는 극한값이 <em>없다</em>고 합니다 — 한 곳으로 몰려가지 않으니까요.<br /><br />
+        연속의 조건 세 가지를 여기서 다 확인할 수 있습니다.
+        ① f(a) 가 있고 ② 극한값이 있고 ③ <b>그 둘이 같아야</b> 합니다.
+        '값만 딴 데'는 ①②는 되는데 ③이 깨진 경우입니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const NAVY = "#201f5e", LIME = "#c3e02f", CORAL = "#e2725b";
+let W = 0, H = 0, S = 40;
+const YR = 4.5;
+const A = 1;   // 다가가는 지점 x = 1
+
+/* 왼쪽극한 / 오른쪽극한 / 함숫값을 각각 따로 적어 둡니다.
+   함숫값이 없으면 f1 을 null 로 둡니다. */
+const 함수들 = {
+  hole:  { f: x => (x * x - 1) / (x - 1), L: 2, R: 2, f1: null,
+           식: "(x²−1)/(x−1)", 설명: "극한은 있지만 함숫값이 없어 불연속" },
+  jump:  { f: x => (x < A ? x + 1 : x + 2.2), L: 2, R: 3.2, f1: 3.2,
+           식: "왼쪽 x+1 / 오른쪽 x+2.2", 설명: "왼쪽·오른쪽이 달라 극한값이 없음" },
+  moved: { f: x => (Math.abs(x - A) < 1e-9 ? 3.5 : x + 1), L: 2, R: 2, f1: 3.5,
+           식: "x+1 (단 f(1) = 3.5)", 설명: "극한값 ≠ 함숫값이라 불연속" },
+  blow:  { f: x => 1 / ((x - A) * (x - A)), L: Infinity, R: Infinity, f1: null,
+           식: "1/(x−1)²", 설명: "한없이 커져 극한값이 없음 (발산)" },
+  ok:    { f: x => x + 1, L: 2, R: 2, f1: 2,
+           식: "x + 1", 설명: "세 조건을 모두 만족 → 연속" },
+};
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  S = H / (2 * YR);
+}
+/* x = 1 을 화면 가운데쯤 두려고 살짝 왼쪽으로 옮겨 그립니다 */
+const sx = x => W / 2 + (x - A) * S;
+const sy = y => H / 2 - (y - 2) * S;
+const fmt = (v, n = 3) => (!isFinite(v) ? "∞" : (Math.abs(v) < 5e-4 ? 0 : v).toFixed(n).replace("-", "−"));
+
+function line(x1, y1, x2, y2) {
+  ctx.beginPath(); ctx.moveTo(sx(x1), sy(y1)); ctx.lineTo(sx(x2), sy(y2)); ctx.stroke();
+}
+function dot(x, y, 색, r = 6.5) {
+  ctx.fillStyle = 색;
+  ctx.beginPath(); ctx.arc(sx(x), sy(y), r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1.6; ctx.stroke();
+}
+
+function draw() {
+  const 정보 = 함수들[$("kind").value];
+  const 거리 = Math.pow(10, +$("dx").value);   // 1 → 0.001 까지 로그로 다가갑니다
+  const xL = A - 거리, xR = A + 거리;
+
+  const 왼끝 = (0 - W / 2) / S + A, 오른끝 = (W - W / 2) / S + A;
+  const 위 = 2 + (H / 2) / S, 아래 = 2 - (H / 2) / S;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 모눈
+  ctx.strokeStyle = "rgba(0,0,0,0.07)"; ctx.lineWidth = 1;
+  for (let x = Math.ceil(왼끝); x <= 오른끝; x++) line(x, 아래, x, 위);
+  for (let y = Math.ceil(아래); y <= 위; y++) line(왼끝, y, 오른끝, y);
+
+  // 축
+  ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 1;
+  line(왼끝, 0, 오른끝, 0); line(0, 아래, 0, 위);
+
+  // x = a 세로 점선
+  ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1.4;
+  ctx.setLineDash([6, 4]);
+  line(A, 아래, A, 위);
+  ctx.setLineDash([]);
+
+  // 극한값 가로 점선 (있을 때만)
+  if (isFinite(정보.L) && 정보.L === 정보.R) {
+    ctx.strokeStyle = "rgba(32,31,94,0.4)"; ctx.lineWidth = 1.4;
+    ctx.setLineDash([6, 4]);
+    line(왼끝, 정보.L, 오른끝, 정보.L);
+    ctx.setLineDash([]);
+  }
+
+  // 곡선 — x = a 를 사이에 두고 끊어 그립니다
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+  for (const [시작x, 끝x] of [[왼끝, A - 1e-6], [A + 1e-6, 오른끝]]) {
+    ctx.beginPath();
+    let 처음 = true;
+    for (let p = 0; p <= W; p += 1.5) {
+      const x = (p - W / 2) / S + A;
+      if (x < 시작x || x > 끝x) continue;
+      const y = 정보.f(x);
+      if (!isFinite(y) || Math.abs(y - 2) > YR * 1.6) { 처음 = true; continue; }
+      처음 ? (ctx.moveTo(sx(x), sy(y)), 처음 = false) : ctx.lineTo(sx(x), sy(y));
+    }
+    ctx.stroke();
+  }
+
+  // 함숫값이 없는 자리에는 빈 동그라미(구멍)
+  if (정보.f1 === null && isFinite(정보.L)) {
+    ctx.fillStyle = "#f4f4f3";
+    ctx.beginPath(); ctx.arc(sx(A), sy(정보.L), 6.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
+  }
+  // 점프에서는 왼쪽 끝이 비어 있습니다
+  if ($("kind").value === "jump") {
+    ctx.fillStyle = "#f4f4f3";
+    ctx.beginPath(); ctx.arc(sx(A), sy(정보.L), 6.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
+  }
+  // 실제 함숫값이 있으면 채운 점
+  if (정보.f1 !== null) dot(A, 정보.f1, CORAL);
+
+  // 다가가는 두 점
+  const yL = 정보.f(xL), yR = 정보.f(xR);
+  const 그릴만한 = v => isFinite(v) && Math.abs(v - 2) < YR * 1.5;
+  if ($("showLR").checked) {
+    if (그릴만한(yL)) {
+      ctx.strokeStyle = "rgba(32,31,94,0.5)"; ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]); line(xL, 2 - YR * 1.5, xL, yL); ctx.setLineDash([]);
+      dot(xL, yL, "#ffffff");
+    }
+    if (그릴만한(yR)) {
+      ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]); line(xR, 2 - YR * 1.5, xR, yR); ctx.setLineDash([]);
+      dot(xR, yR, LIME);
+    }
+  }
+
+  // ---- 읽는 값 ----
+  $("dxText").textContent = 거리.toFixed(3);
+  $("xL").textContent = fmt(xL);
+  $("xR").textContent = fmt(xR);
+  $("fL").textContent = fmt(yL);
+  $("fR").textContent = fmt(yR);
+  $("lim").textContent = 정보.L === 정보.R ? (isFinite(정보.L) ? String(정보.L) : "없음 (∞로 발산)") : "없음 (좌우가 다름)";
+  $("val").textContent = 정보.f1 === null ? "없음" : String(정보.f1);
+  $("rule").textContent = 정보.설명;
+}
+
+for (const id of ["kind", "dx", "showLR"]) {
+  $(id).addEventListener("input", draw);
+  $(id).addEventListener("change", draw);
+}
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+</script>
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>곱셈 공식을 넓이로 · 수학을 보다</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M20 20l7.5 7.5' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 직접 보는 수학</a>
+  <h1>곱셈 공식을 넓이로</h1>
+  <span class="caption">공통수학1 · 다항식 — (a+b)² 에 2ab 가 왜 붙는지</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="kind">공식 고르기</label>
+      <select id="kind">
+        <option value="sq">(a + b)² = a² + 2ab + b²</option>
+        <option value="diff">(a − b)² = a² − 2ab + b²</option>
+        <option value="prod">(a + b)(a − b) = a² − b²</option>
+      </select>
+    </div>
+    <div class="group">
+      <label for="a">a = <span id="aText">3.0</span></label>
+      <input type="range" id="a" min="1" max="6" value="3" step="0.1" />
+    </div>
+    <div class="group">
+      <label for="b">b = <span id="bText">2.0</span></label>
+      <input type="range" id="b" min="0.4" max="4" value="2" step="0.1" />
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="labels" checked /> 칸마다 넓이 적기</label>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">한 변</span><span class="val" id="side">a + b = 5.0</span></div>
+        <div><span class="key"><span class="swatch shape"></span>a²</span><span class="val" id="aa">9.00</span></div>
+        <div><span class="key"><span class="swatch shadow"></span>ab 칸 (두 개)</span><span class="val" id="ab">6.00 × 2</span></div>
+        <div><span class="key">b²</span><span class="val" id="bb">4.00</span></div>
+        <div><span class="key">전체 넓이</span><span class="val" id="total">25.00</span></div>
+        <div class="rule"><strong id="rule">9.00 + 12.00 + 4.00 = 25.00</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note" id="note">
+        한 변이 a+b 인 정사각형을 a 와 b 로 자르면 칸이 <b>넷</b> 생깁니다.
+        모서리의 a² 과 b² 말고 <em>직사각형 ab 가 두 개</em> 나오는데,
+        이것이 2ab 의 정체입니다.<br /><br />
+        (a+b)² 을 a²+b² 이라고 쓰는 실수는 이 두 칸을 빠뜨린 것입니다.
+        b 를 아주 작게 줄여 보면 그 칸이 얇아질 뿐 <b>사라지지는 않는다</b>는 걸
+        확인할 수 있습니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const LIME = "#c3e02f", NAVY = "#201f5e", CORAL = "#e2725b";
+let W = 0, H = 0;
+
+const 설명들 = {
+  sq: `한 변이 a+b 인 정사각형을 a 와 b 로 자르면 칸이 <b>넷</b> 생깁니다.
+       모서리의 a² 과 b² 말고 <em>직사각형 ab 가 두 개</em> 나오는데,
+       이것이 2ab 의 정체입니다.<br /><br />
+       (a+b)² 을 a²+b² 이라고 쓰는 실수는 이 두 칸을 빠뜨린 것입니다.
+       b 를 아주 작게 줄여 보면 그 칸이 얇아질 뿐 <b>사라지지는 않는다</b>는 걸
+       확인할 수 있습니다.`,
+  diff: `큰 정사각형 a² 에서 시작합니다. 가로로 ab 를 덜고, 세로로도 ab 를 덜면
+       모서리의 <b>b² 이 두 번</b> 빠집니다. 그래서 한 번 도로 더해 줘야 합니다.<br /><br />
+       그 겹친 자리가 오른쪽 아래 붉은 칸입니다. (a−b)² = a² − 2ab + <b>+b²</b>
+       에서 마지막 부호가 왜 플러스인지가 여기 있습니다.`,
+  prod: `가로 a+b, 세로 a−b 인 직사각형입니다. 오른쪽에 튀어나온 조각을 떼어
+       아래 빈 곳으로 <b>옮겨 붙이면</b>, a² 에서 b² 만큼만 파인 모양이 됩니다.<br /><br />
+       그래서 (a+b)(a−b) 는 <em>가운데 항이 없이</em> a² − b² 이 됩니다.
+       ab 가 한 번은 더해지고 한 번은 빠져 서로 지워지기 때문입니다.`,
+};
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+/* 칸 하나를 그리고 가운데에 이름·넓이를 적습니다 */
+function 칸(x, y, w, h, 색, 글, S, x0, y0) {
+  if (w <= 0 || h <= 0) return;
+  ctx.fillStyle = 색;
+  ctx.fillRect(x0 + x * S, y0 - (y + h) * S, w * S, h * S);
+  ctx.strokeStyle = "rgba(0,0,0,0.55)"; ctx.lineWidth = 1.5;
+  ctx.strokeRect(x0 + x * S, y0 - (y + h) * S, w * S, h * S);
+
+  if (글 && $("labels").checked && w * S > 34 && h * S > 24) {
+    ctx.fillStyle = "#000";
+    ctx.font = "600 15px Pretendard Variable, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(글, x0 + (x + w / 2) * S, y0 - (y + h / 2) * S);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  }
+}
+
+function draw() {
+  const kind = $("kind").value;
+  let a = +$("a").value, b = +$("b").value;
+
+  // (a−b) 꼴에서는 b 가 a 보다 크면 뜻이 없어집니다
+  if (kind !== "sq" && b > a - 0.3) { b = Math.max(0.4, a - 0.3); $("b").value = b.toFixed(1); }
+
+  ctx.clearRect(0, 0, W, H);
+
+  const 여백 = 46;
+  const 전체변 = kind === "sq" ? a + b : a;
+  const S = Math.min((W - 여백 * 2) / 전체변, (H - 여백 * 2) / 전체변);
+  const 그림 = 전체변 * S;
+  const x0 = (W - 그림) / 2, y0 = (H + 그림) / 2;
+
+  if (kind === "sq") {
+    칸(0, 0, a, a, LIME, "a²", S, x0, y0);
+    칸(a, 0, b, a, "#ffffff", "ab", S, x0, y0);
+    칸(0, a, a, b, "#ffffff", "ab", S, x0, y0);
+    칸(a, a, b, b, NAVY, "", S, x0, y0);
+    if ($("labels").checked && b * S > 30) {
+      ctx.fillStyle = "#fff";
+      ctx.font = "600 15px Pretendard Variable, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("b²", x0 + (a + b / 2) * S, y0 - (a + b / 2) * S);
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    }
+  } else if (kind === "diff") {
+    // a² 안에서 (a−b)² 이 남는 그림
+    const m = a - b;
+    칸(0, 0, m, m, LIME, "(a−b)²", S, x0, y0);
+    칸(m, 0, b, m, "#ffffff", "ab", S, x0, y0);
+    칸(0, m, m, b, "#ffffff", "ab", S, x0, y0);
+    칸(m, m, b, b, CORAL, "b²", S, x0, y0);
+  } else {
+    // (a+b)(a−b) — 튀어나온 조각을 옮겨 붙인 모양
+    const m = a - b;
+    칸(0, 0, a, m, LIME, "a(a−b)", S, x0, y0);
+    칸(0, m, m, b, "#ffffff", "b(a−b)", S, x0, y0);
+    // 옮겨 붙인 자리 (점선으로 표시)
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = "rgba(0,0,0,0.45)"; ctx.lineWidth = 1.5;
+    ctx.strokeRect(x0 + m * S, y0 - (m + b) * S, b * S, b * S);
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
+    ctx.font = "500 13px Pretendard Variable, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    if (b * S > 30) ctx.fillText("b² 만큼 빔", x0 + (m + b / 2) * S, y0 - (m + b / 2) * S);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  }
+
+  // 바깥 변 길이 적기
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.font = "500 13px Pretendard Variable, sans-serif";
+  ctx.textAlign = "center";
+  const 가로 = kind === "prod" ? a : 전체변;
+  ctx.fillText(
+    kind === "sq" ? `a + b = ${(a + b).toFixed(1)}` : kind === "prod" ? `a = ${a.toFixed(1)}` : `a = ${a.toFixed(1)}`,
+    x0 + (가로 * S) / 2, y0 + 24);
+  ctx.textAlign = "left";
+
+  // ---- 읽는 값 ----
+  $("aText").textContent = a.toFixed(1);
+  $("bText").textContent = b.toFixed(1);
+  $("note").innerHTML = 설명들[kind];
+
+  const f = v => v.toFixed(2);
+  if (kind === "sq") {
+    $("side").textContent = `a + b = ${(a + b).toFixed(1)}`;
+    $("aa").textContent = f(a * a);
+    $("ab").textContent = `${f(a * b)} × 2`;
+    $("bb").textContent = f(b * b);
+    $("total").textContent = f((a + b) * (a + b));
+    $("rule").textContent = `${f(a * a)} + ${f(2 * a * b)} + ${f(b * b)} = ${f((a + b) ** 2)}`;
+  } else if (kind === "diff") {
+    $("side").textContent = `a − b = ${(a - b).toFixed(1)}`;
+    $("aa").textContent = f(a * a);
+    $("ab").textContent = `${f(a * b)} × 2 (뺌)`;
+    $("bb").textContent = `${f(b * b)} (두 번 빠져 되더함)`;
+    $("total").textContent = f((a - b) * (a - b));
+    $("rule").textContent = `${f(a * a)} − ${f(2 * a * b)} + ${f(b * b)} = ${f((a - b) ** 2)}`;
+  } else {
+    $("side").textContent = `${(a + b).toFixed(1)} × ${(a - b).toFixed(1)}`;
+    $("aa").textContent = f(a * a);
+    $("ab").textContent = "서로 지워짐";
+    $("bb").textContent = f(b * b);
+    $("total").textContent = f((a + b) * (a - b));
+    $("rule").textContent = `${f(a * a)} − ${f(b * b)} = ${f(a * a - b * b)}`;
+  }
+}
+
+for (const id of ["kind", "a", "b", "labels"]) {
+  $(id).addEventListener("input", draw);
+  $(id).addEventListener("change", draw);
+}
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+</script>
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

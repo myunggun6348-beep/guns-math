@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>등차수열의 합을 눈으로 · 수학을 보다</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M20 20l7.5 7.5' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="../assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<div class="demo-bar">
+  <a class="back" href="../library.html">← 직접 보는 수학</a>
+  <h1>등차수열의 합을 눈으로</h1>
+  <span class="caption">대수 · 수열 — 왜 하필 (첫항 + 끝항) × 항수 ÷ 2 인지</span>
+</div>
+
+<div class="stage">
+  <div class="canvas-host" id="host"></div>
+
+  <aside class="panel">
+    <div class="group">
+      <label for="a">첫째항 a = <span id="aText">1</span></label>
+      <input type="range" id="a" min="1" max="12" value="1" step="1" />
+    </div>
+    <div class="group">
+      <label for="d">공차 d = <span id="dText">1</span></label>
+      <input type="range" id="d" min="1" max="6" value="1" step="1" />
+    </div>
+    <div class="group">
+      <label for="n">항수 n = <span id="nText">6</span></label>
+      <input type="range" id="n" min="2" max="12" value="6" step="1" />
+    </div>
+
+    <div class="group">
+      <label class="check"><input type="checkbox" id="flip" /> 거꾸로 뒤집어 포개기</label>
+      <p class="note" id="hint">체크하면 같은 계단을 하나 더 만들어 거꾸로 얹습니다.</p>
+    </div>
+
+    <div class="group">
+      <span class="caption">Readout</span>
+      <div class="readout">
+        <div><span class="key">수열</span><span class="val" id="seq">1, 2, 3, …</span></div>
+        <div><span class="key">끝항 l = a + (n−1)d</span><span class="val" id="last">6</span></div>
+        <div><span class="key">막대를 세어 보면 S</span><span class="val" id="sum">21</span></div>
+        <div><span class="key">포갠 직사각형 (a+l) × n</span><span class="val" id="rect">42</span></div>
+        <div class="rule"><strong id="rule">S = (a + l) × n ÷ 2 = 21</strong></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="caption">짚어 보기</span>
+      <p class="note">
+        계단 모양이라 한 번에 세기 어렵습니다. 그런데 <b>똑같은 계단을 거꾸로 얹으면</b>
+        울퉁불퉁한 곳이 서로 메워져 <em>반듯한 직사각형</em>이 됩니다.<br /><br />
+        그 직사각형은 가로 <b>n</b>, 세로 <b>a + l</b> 이므로 넓이가 (a+l)×n.
+        계단 두 개를 합친 것이니 원래 합은 그 <b>절반</b>입니다.<br /><br />
+        어느 자리에서 잘라도 위아래 두 막대의 합이 늘 a + l 로 같다는 점을
+        확인시켜 주세요. 가우스가 1부터 100까지를 순식간에 더한 방법입니다.
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const host = $("host");
+const cv = document.createElement("canvas");
+host.appendChild(cv);
+const ctx = cv.getContext("2d");
+
+const NAVY = "#201f5e", LIME = "#c3e02f";
+let W = 0, H = 0;
+
+function layout() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  W = host.clientWidth; H = host.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function draw() {
+  const a = +$("a").value, d = +$("d").value, n = +$("n").value;
+  const flip = $("flip").checked;
+
+  const 항 = Array.from({ length: n }, (_, i) => a + i * d);
+  const l = 항[n - 1];
+  const S = 항.reduce((p, c) => p + c, 0);
+
+  ctx.clearRect(0, 0, W, H);
+
+  /* 막대 하나의 크기 — 포갤 때는 세로로 a+l 칸이 필요하므로
+     그때 기준으로 칸 크기를 정해야 화면 밖으로 안 나갑니다 */
+  const 세로칸 = flip ? a + l : l;
+  const 여백 = 44;
+  const cw = (W - 여백 * 2) / n;
+  const ch = (H - 여백 * 2) / 세로칸;
+  const 칸 = Math.min(cw, ch);
+  const 폭 = 칸 * n, 높이 = 칸 * 세로칸;
+  const x0 = (W - 폭) / 2, y0 = (H + 높이) / 2;   // y0 는 바닥
+
+  const 막대 = (i, 값, 아래부터, 색, 테두리) => {
+    const x = x0 + i * 칸;
+    const y = y0 - (아래부터 + 값) * 칸;
+    ctx.fillStyle = 색;
+    ctx.fillRect(x + 1, y, 칸 - 2, 값 * 칸);
+    if (테두리) {
+      ctx.strokeStyle = "rgba(0,0,0,0.25)"; ctx.lineWidth = 1;
+      ctx.strokeRect(x + 1, y, 칸 - 2, 값 * 칸);
+    }
+    // 칸을 나누는 가로줄 — '몇 개인지' 세어 볼 수 있게
+    if (칸 > 14) {
+      ctx.strokeStyle = "rgba(0,0,0,0.12)"; ctx.lineWidth = 1;
+      for (let k = 1; k < 값; k++) {
+        const yy = y0 - (아래부터 + k) * 칸;
+        ctx.beginPath(); ctx.moveTo(x + 1, yy); ctx.lineTo(x + 칸 - 1, yy); ctx.stroke();
+      }
+    }
+  };
+
+  // 원래 계단 (아래쪽)
+  항.forEach((값, i) => 막대(i, 값, 0, LIME, true));
+
+  // 거꾸로 얹은 계단 (위쪽) — 합쳐서 직사각형이 됩니다
+  if (flip) {
+    항.forEach((값, i) => 막대(i, 항[n - 1 - i], 값, NAVY, false));
+
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2.4;
+    ctx.strokeRect(x0 + 1, y0 - (a + l) * 칸, 폭 - 2, (a + l) * 칸);
+
+    ctx.fillStyle = "#000";
+    ctx.font = "600 15px Pretendard Variable, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`가로 ${n}칸 × 세로 ${a + l}칸 = ${(a + l) * n}`, W / 2, y0 - (a + l) * 칸 - 12);
+    ctx.textAlign = "left";
+  }
+
+  // 항 번호
+  if (칸 > 18) {
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.font = "500 12px Pretendard Variable, sans-serif";
+    ctx.textAlign = "center";
+    항.forEach((값, i) => ctx.fillText(값, x0 + i * 칸 + 칸 / 2, y0 + 18));
+    ctx.textAlign = "left";
+  }
+
+  // ---- 읽는 값 ----
+  const 보일항 = 항.length > 6
+    ? 항.slice(0, 4).join(", ") + ", …, " + l
+    : 항.join(", ");
+  $("aText").textContent = a;
+  $("dText").textContent = d;
+  $("nText").textContent = n;
+  $("seq").textContent = 보일항;
+  $("last").textContent = l;
+  $("sum").textContent = S;
+  $("rect").textContent = (a + l) * n;
+  $("rule").textContent = `S = (${a} + ${l}) × ${n} ÷ 2 = ${S}`;
+  $("hint").textContent = flip
+    ? "위아래 두 막대의 합이 어느 자리에서나 " + (a + l) + " 로 같습니다."
+    : "체크하면 같은 계단을 하나 더 만들어 거꾸로 얹습니다.";
+}
+
+for (const id of ["a", "d", "n", "flip"]) {
+  $(id).addEventListener("input", draw);
+  $(id).addEventListener("change", draw);
+}
+addEventListener("resize", () => { layout(); draw(); });
+
+layout();
+draw();
+</script>
+
+<script src="../assets/state.js"></script>
+
+</body>
+</html>

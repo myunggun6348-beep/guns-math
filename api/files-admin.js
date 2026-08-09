@@ -170,6 +170,9 @@ module.exports = async (req, res) => {
 
     return res.status(400).json({ 오류: "무슨 작업인지 알 수 없습니다." });
   } catch (err) {
-    return res.status(500).json({ 오류: "처리 중 문제가 생겼습니다." });
+    // 원인을 못 찾을 때를 대비해 실제 오류 문구를 잠깐 그대로 보여 줍니다.
+    // (암호·주소 같은 비밀은 여기 안 담기므로 노출돼도 안전합니다)
+    console.error("files-admin 오류:", err);
+    return res.status(500).json({ 오류: "처리 중 문제가 생겼습니다: " + (err && err.message || err) });
   }
 };
