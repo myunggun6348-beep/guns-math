@@ -71,9 +71,12 @@ module.exports = async (req, res) => {
          뒤엣것이 앞엣것을 소리 없이 덮어씁니다(목록도 파일도). 뒤에 세 자리를
          더 붙여 겹치지 않게 하되, 여전히 숫자라서 시간순 정렬은 그대로입니다. */
       const id = String(Date.now() * 1000 + Math.floor(Math.random() * 1000));
-      // 파일 이름에 슬래시 같은 게 들어가면 엉뚱한 곳에 저장될 수 있어 지웁니다
-      const 안전한이름 = 파일이름.replace(/[\\/]/g, "-");
-      const pathname = `files/${id}-${안전한이름}`;
+      /* 저장 경로에는 원래 파일 이름(한글 포함)을 넣지 않습니다 — 이 경로가
+         출입증 안에도 그대로 박히는데, 한글 같은 글자가 그 안에서 깨지면
+         "출입증에 적힌 경로"와 "실제 요청 경로"가 서로 달라 보여 거부당합니다.
+         그래서 경로는 번호+확장자로만 만들고, 원래 이름은 record 단계에서
+         따로 받아 목록에 적습니다. */
+      const pathname = `files/${id}.${확장자}`;
       const contentType = 허용확장자[확장자];
 
       // '이 파일 하나만, 이 종류로, 이 크기까지' 로 범위를 좁힌 출입증입니다.
@@ -115,7 +118,9 @@ module.exports = async (req, res) => {
         return res.status(400).json({ 오류: "파일이 저장소에 올라가지 않았습니다." });
       }
 
-      const 파일이름 = pathname.slice(pathname.indexOf("-") + 1);
+      // 저장 경로에는 원래 이름이 없으므로(위 설명 참고), 화면에 보일 이름은
+      // 클라이언트가 다시 보내 줍니다. 안 보냈으면 경로에서라도 뽑아 둡니다.
+      const 파일이름 = String(q.filename || "").trim() || pathname.slice(pathname.lastIndexOf("/") + 1);
       const 항목 = {
         date: new Date().toISOString().slice(0, 10),
         subject: String(q.subject || "").trim().slice(0, 30),
@@ -170,9 +175,8 @@ module.exports = async (req, res) => {
 
     return res.status(400).json({ 오류: "무슨 작업인지 알 수 없습니다." });
   } catch (err) {
-    // 원인을 못 찾을 때를 대비해 실제 오류 문구를 잠깐 그대로 보여 줍니다.
-    // (암호·주소 같은 비밀은 여기 안 담기므로 노출돼도 안전합니다)
+    // 학생 눈에는 안 보이지만, Vercel 쪽 로그에는 원인이 남습니다
     console.error("files-admin 오류:", err);
-    return res.status(500).json({ 오류: "처리 중 문제가 생겼습니다: " + (err && err.message || err) });
+    return res.status(500).json({ 오류: "처리 중 문제가 생겼습니다." });
   }
 };

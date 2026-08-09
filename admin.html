@@ -464,7 +464,7 @@
       /* 3걸음 — 정말 올라갔는지 확인하고 목록에 적습니다 */
       쪽지.textContent = "마무리하는 중…";
       const 마무리 = await fetch("/api/files-admin?" + new URLSearchParams({
-        act: "record", 암호, id: 표.id, pathname: 표.pathname,
+        act: "record", 암호, id: 표.id, pathname: 표.pathname, filename: 파일.name,
         title: 올리기.title.value, subject: 올리기.subject.value, kind: 올리기.kind.value,
         concept: 올리기.concept.value,
       }), { method: "POST" });
