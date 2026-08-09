@@ -11,6 +11,7 @@
 const { 준비됨, 명령 } = require("./_redis");
 
 const 열쇠이름 = "qna";
+const 설정열쇠 = "설정";
 const 질문최대 = 1000;
 const 학년최대 = 20;
 const 시간당한도 = 5;
@@ -61,7 +62,8 @@ module.exports = async (req, res) => {
       }
       목록.sort((a, b) => Number(b.id) - Number(a.id)); // 최신 것이 위로
       res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json(목록);
+      // h 가 붙은 것은 '선생님 확인 대기 중'이라 학생에게는 보이지 않습니다
+      return res.status(200).json(목록.filter(it => !it.h));
     }
 
     if (req.method === "POST") {
@@ -77,13 +79,17 @@ module.exports = async (req, res) => {
       }
 
       await 예시넣기();
-      const id = String(Date.now());
+      // 선생님이 '확인 후 공개' 스위치를 켜 뒀으면 h 를 붙여 두고, 선생님이
+      // 선생님 방에서 공개를 눌러야 학생들에게 보입니다.
+      const 검토중 = (await 명령("HGET", 설정열쇠, "검토")) === "1";
+      const id = String(Date.now() * 1000 + Math.floor(Math.random() * 1000));
       const 항목 = {
         t: new Date().toISOString().slice(0, 10),
         g: 학년.slice(0, 학년최대),
         q: 질문,
         a: "",
       };
+      if (검토중) 항목.h = 1;
       await 명령("HSET", 열쇠이름, id, JSON.stringify(항목));
       return res.status(200).json({ id, ...항목 });
     }

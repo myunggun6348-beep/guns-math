@@ -68,7 +68,12 @@
           <span class="eyebrow">Admin</span>
           <h1 class="display-lg">선생님 방</h1>
         </div>
-        <button type="button" id="나가기">나가기</button>
+        <div class="adm-top-tools">
+          <!-- 저장소가 사라져도 글이 남도록, 질문·답과 자료 목록을
+               파일 하나로 내려받아 둘 수 있습니다 -->
+          <button type="button" id="내려받기">전부 내보내기</button>
+          <button type="button" id="나가기">나가기</button>
+        </div>
       </div>
 
       <!-- ===== 자료실 ===== -->
@@ -107,6 +112,14 @@
           답을 쓰고 저장하면 질문 페이지에 바로 올라갑니다.
           장난 글은 '지우기'로 없앨 수 있습니다.
         </p>
+
+        <!-- 평소엔 학생이 쓰는 즉시 공개됩니다. 시험 기간처럼 몰릴 때만
+             이 스위치를 켜 두면 선생님이 본 것만 올라갑니다. -->
+        <label class="adm-switch">
+          <input type="checkbox" id="검토스위치" />
+          <span>확인 후 공개 — 켜 두면 내가 공개를 누른 질문만 학생에게 보입니다</span>
+        </label>
+
         <div id="질문목록"></div>
       </section>
     </div>
@@ -186,12 +199,14 @@
       return;
     }
     질문목록.innerHTML = 질문들.map(it => `
-      <article class="adm-q" data-id="${안전하게(it.id)}">
-        <p class="caption">${안전하게(it.t)}${it.g ? " · " + 안전하게(it.g) : ""}${it.a ? "" : " · 답 없음"}</p>
+      <article class="adm-q${it.h ? " adm-q-wait" : ""}" data-id="${안전하게(it.id)}">
+        <p class="caption">${안전하게(it.t)}${it.g ? " · " + 안전하게(it.g) : ""}${it.a ? "" : " · 답 없음"}${
+          it.h ? ` <span class="adm-badge">학생에게 안 보임</span>` : ""}</p>
         <p class="adm-q-text">${안전하게(it.q)}</p>
         <textarea rows="3" placeholder="답을 여기에 쓰고 저장을 누르세요">${안전하게(it.a)}</textarea>
         <div class="adm-row">
           <button type="button" class="btn btn-primary" data-act="답변">답 저장</button>
+          ${it.h ? `<button type="button" class="btn btn-secondary" data-act="공개">공개하기</button>` : ""}
           <button type="button" class="adm-del" data-act="삭제">지우기</button>
           <span class="caption adm-status"></span>
         </div>
@@ -200,17 +215,43 @@
 
   async function 질문불러오기() {
     try {
-      const 응답 = await fetch("/api/questions");
+      // 학생용 목록과 달리 '확인 대기 중'인 질문까지 받아 옵니다
+      const 응답 = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 암호, 작업: "목록" }),
+      });
       if (응답.status === 503) {
         질문목록.innerHTML = `<p class="empty">질문 게시판을 준비하고 있습니다.</p>`;
         return;
       }
-      질문들 = await 응답.json();
+      const 결과 = await 응답.json();
+      if (!응답.ok) throw new Error();
+      질문들 = 결과.목록 || [];
+      document.getElementById("검토스위치").checked = Boolean(결과.검토);
       질문그리기();
     } catch {
       질문목록.innerHTML = `<p class="empty">질문을 불러오지 못했습니다.</p>`;
     }
   }
+
+  document.getElementById("검토스위치").addEventListener("change", async e => {
+    const 켬 = e.target.checked;
+    e.target.disabled = true;
+    try {
+      const 응답 = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 암호, 작업: "검토스위치", 켬 }),
+      });
+      if (!응답.ok) throw new Error();
+    } catch {
+      e.target.checked = !켬;         // 실패하면 스위치를 되돌려 놓습니다
+      alert("바꾸지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
+    } finally {
+      e.target.disabled = false;
+    }
+  });
 
   질문목록.addEventListener("click", async e => {
     const 버튼 = e.target.closest("[data-act]");
@@ -222,7 +263,7 @@
     if (작업 === "삭제" && !confirm("이 질문을 지울까요? 되돌릴 수 없습니다.")) return;
 
     버튼.disabled = true;
-    쪽지.textContent = 작업 === "삭제" ? "지우는 중…" : "저장하는 중…";
+    쪽지.textContent = { 삭제: "지우는 중…", 공개: "공개하는 중…" }[작업] || "저장하는 중…";
     try {
       const 응답 = await fetch("/api/admin", {
         method: "POST",
@@ -449,6 +490,38 @@
     질문불러오기();
     파일불러오기();
   }
+
+  /* ---------- 전부 내보내기 (백업) ----------
+     질문·답과 자료 목록을 파일 하나로 내려받습니다. 선생님이 쓴 답글이
+     가장 되살리기 어려운 것이라, 그것부터 확실히 남겨 둡니다.
+     (자료 파일 자체는 용량이 커서 넣지 않고 주소만 담습니다) */
+  document.getElementById("내려받기").onclick = async e => {
+    const 버튼 = e.target;
+    버튼.disabled = true;
+    const 원래글 = 버튼.textContent;
+    버튼.textContent = "모으는 중…";
+    try {
+      const 꾸러미 = {
+        내려받은날: new Date().toISOString(),
+        질문: 질문들,
+        자료: 파일들,
+      };
+      const 주소 = URL.createObjectURL(
+        new Blob([JSON.stringify(꾸러미, null, 2)], { type: "application/json" }));
+      const 링크 = document.createElement("a");
+      링크.href = 주소;
+      링크.download = `수학을보다-백업-${new Date().toISOString().slice(0, 10)}.json`;
+      링크.click();
+      URL.revokeObjectURL(주소);
+      버튼.textContent = "내려받았습니다";
+      setTimeout(() => (버튼.textContent = 원래글), 2000);
+    } catch {
+      버튼.textContent = "실패했습니다";
+      setTimeout(() => (버튼.textContent = 원래글), 2000);
+    } finally {
+      버튼.disabled = false;
+    }
+  };
 
   document.getElementById("나가기").onclick = () => {
     암호 = "";
