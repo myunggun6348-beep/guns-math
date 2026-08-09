@@ -62,6 +62,24 @@ module.exports = async (req, res) => {
       return res.status(200).json({ 좋음: true });
     }
 
+    if (q.act === "edit") {
+      const id = String(q.id || "");
+      if (!id) return res.status(400).json({ 오류: "어느 파일인지 알 수 없습니다." });
+
+      const 원본 = await 명령("HGET", 열쇠이름, id);
+      if (!원본) return res.status(404).json({ 오류: "그 파일이 없습니다." });
+
+      const 항목 = JSON.parse(원본);
+      const 새제목 = String(q.title || "").trim().slice(0, 120);
+      if (!새제목) return res.status(400).json({ 오류: "제목을 입력해 주세요." });
+      항목.title = 새제목;
+      항목.subject = String(q.subject || "").trim().slice(0, 30);
+      항목.kind = String(q.kind || "").trim().slice(0, 30);
+
+      await 명령("HSET", 열쇠이름, id, JSON.stringify(항목));
+      return res.status(200).json({ id, ...항목 });
+    }
+
     if (q.act === "upload") {
       const 파일이름 = String(q.filename || "").trim();
       const 확장자 = (파일이름.split(".").pop() || "").toLowerCase();

@@ -805,6 +805,7 @@ img, svg { max-width: 100%; }
 }
 .adm-login input,
 .adm-upload input[type="text"],
+.adm-edit-row input[type="text"],
 .adm-q textarea {
   font-family: inherit;
   font-size: 15px;
@@ -814,10 +815,16 @@ img, svg { max-width: 100%; }
   border-radius: var(--r-md);
   padding: 9px 12px;
 }
-.adm-upload input[type="text"] { flex: 1; min-width: 170px; }
+.adm-upload input[type="text"],
+.adm-edit-row input[type="text"] { flex: 1; min-width: 170px; }
 .adm-login input:focus,
 .adm-upload input:focus,
+.adm-edit-row input:focus,
 .adm-q textarea:focus { outline: none; border-color: var(--ink); }
+
+/* 자료 제목 고치는 줄 — 평소의 filelist-row(가로 한 줄)와 달리
+   입력칸 두 줄이 위아래로 쌓여야 하므로 flex 를 끈다 */
+.filelist-row.adm-edit-row { display: block; padding: var(--md) var(--sm); }
 .adm-login .btn, .adm-row .btn { font-size: 16px; padding: 6px 14px 8px; }
 .adm-login .btn:disabled, .adm-row .btn:disabled { opacity: 0.5; cursor: default; }
 .adm-status { min-height: 1.2em; flex-basis: 100%; margin: 0; }

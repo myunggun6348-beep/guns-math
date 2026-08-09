@@ -217,12 +217,30 @@
   });
 
   /* ---------- 자료실 ---------- */
+  let 수정중 = null; // 지금 제목을 고치고 있는 파일의 id (한 번에 하나만)
+
   function 파일그리기() {
     if (!파일들.length) {
       파일목록.innerHTML = `<p class="empty">아직 올린 파일이 없습니다.</p>`;
       return;
     }
-    파일목록.innerHTML = `<div class="filelist">` + 파일들.map(f => `
+    파일목록.innerHTML = `<div class="filelist">` + 파일들.map(f => {
+      if (f.id === 수정중) {
+        return `
+      <div class="filelist-row adm-edit-row" data-id="${안전하게(f.id)}">
+        <div class="adm-row">
+          <input type="text" class="adm-edit-title" placeholder="제목" value="${안전하게(f.title)}" required />
+          <input type="text" class="adm-edit-subject" placeholder="과목" value="${안전하게(f.subject)}" />
+          <input type="text" class="adm-edit-kind" placeholder="종류" value="${안전하게(f.kind)}" />
+        </div>
+        <div class="adm-row">
+          <button type="button" class="btn btn-primary" data-act="저장">저장</button>
+          <button type="button" class="adm-del" data-act="취소">취소</button>
+          <span class="caption adm-status"></span>
+        </div>
+      </div>`;
+      }
+      return `
       <div class="filelist-row">
         <a href="${안전하게(f.url)}" target="_blank" rel="noopener">
           <span class="caption filelist-date">${안전하게(f.date)}</span>
@@ -232,8 +250,10 @@
           </span>
           <span class="filelist-go" aria-hidden="true">열기 ↗</span>
         </a>
-        <button type="button" class="adm-del" data-id="${안전하게(f.id)}">지우기</button>
-      </div>`).join("") + `</div>`;
+        <button type="button" class="adm-del" data-act="수정" data-id="${안전하게(f.id)}">수정</button>
+        <button type="button" class="adm-del" data-act="삭제" data-id="${안전하게(f.id)}">지우기</button>
+      </div>`;
+    }).join("") + `</div>`;
   }
 
   async function 파일불러오기() {
@@ -251,21 +271,65 @@
   }
 
   파일목록.addEventListener("click", async e => {
-    const 버튼 = e.target.closest(".adm-del");
+    const 버튼 = e.target.closest("[data-act]");
     if (!버튼) return;
-    if (!confirm("이 파일을 지울까요? 되돌릴 수 없습니다.")) return;
-    버튼.disabled = true;
-    try {
-      const 응답 = await fetch(
-        `/api/files-admin?act=delete&id=${encodeURIComponent(버튼.dataset.id)}&암호=${encodeURIComponent(암호)}`,
-        { method: "POST" });
-      const 결과 = await 응답.json();
-      if (!응답.ok) throw new Error(결과.오류 || "");
-      파일들 = 파일들.filter(f => f.id !== 버튼.dataset.id);
+    const 작업 = 버튼.dataset.act;
+
+    if (작업 === "수정") {
+      수정중 = 버튼.dataset.id;
       파일그리기();
-    } catch (err) {
-      alert(err.message || "지우지 못했습니다.");
-      버튼.disabled = false;
+      return;
+    }
+    if (작업 === "취소") {
+      수정중 = null;
+      파일그리기();
+      return;
+    }
+
+    if (작업 === "삭제") {
+      if (!confirm("이 파일을 지울까요? 되돌릴 수 없습니다.")) return;
+      버튼.disabled = true;
+      try {
+        const 응답 = await fetch(
+          `/api/files-admin?act=delete&id=${encodeURIComponent(버튼.dataset.id)}&암호=${encodeURIComponent(암호)}`,
+          { method: "POST" });
+        const 결과 = await 응답.json();
+        if (!응답.ok) throw new Error(결과.오류 || "");
+        파일들 = 파일들.filter(f => f.id !== 버튼.dataset.id);
+        파일그리기();
+      } catch (err) {
+        alert(err.message || "지우지 못했습니다.");
+        버튼.disabled = false;
+      }
+      return;
+    }
+
+    if (작업 === "저장") {
+      const 줄 = 버튼.closest(".adm-edit-row");
+      const id = 줄.dataset.id;
+      const 쪽지 = 줄.querySelector(".adm-status");
+      const 제목 = 줄.querySelector(".adm-edit-title").value.trim();
+      if (!제목) { 쪽지.textContent = "제목을 입력해 주세요."; return; }
+
+      버튼.disabled = true;
+      쪽지.textContent = "저장하는 중…";
+      try {
+        const 주소 = "/api/files-admin?" + new URLSearchParams({
+          act: "edit", 암호, id,
+          title: 제목,
+          subject: 줄.querySelector(".adm-edit-subject").value.trim(),
+          kind: 줄.querySelector(".adm-edit-kind").value.trim(),
+        });
+        const 응답 = await fetch(주소, { method: "POST" });
+        const 결과 = await 응답.json();
+        if (!응답.ok) throw new Error(결과.오류 || "");
+        파일들 = 파일들.map(f => (f.id === id ? 결과 : f));
+        수정중 = null;
+        파일그리기();
+      } catch (err) {
+        쪽지.textContent = err.message || "저장하지 못했습니다.";
+        버튼.disabled = false;
+      }
     }
   });
 
