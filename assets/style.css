@@ -352,6 +352,10 @@ img, svg { max-width: 100%; }
 .cmap-head { align-items: center; margin-bottom: var(--lg); }
 .cmap-head .display-lg { font-size: clamp(26px, 3vw, 38px); }
 
+/* 요즘 올라온 것 — 새 소식 알림 줄일 뿐, 주요 섹션(찾기 등)과 같은
+   무게로 크게 나오면 정작 중요한 제목들과 구별이 안 된다. 여백도 줄인다. */
+.fresh-head { align-items: center; margin-bottom: var(--lg); }
+
 /* --- 히어로 : 크림 색면 + 수학 그림 --- */
 .hero {
   background: var(--block-cream);
