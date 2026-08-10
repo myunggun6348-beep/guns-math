@@ -517,6 +517,59 @@ img, svg { max-width: 100%; }
   font-weight: 700;
 }
 
+/* '내 질문' 표 — 이 브라우저에서 남긴 질문에 붙는다. 답변 표(연두)와
+   헷갈리지 않도록 채우지 않고 테두리만 두른다. */
+.qa-badge-mine {
+  display: inline-block;
+  margin-left: var(--xs);
+  padding: 2px 8px 3px;
+  border-radius: var(--r-full);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+/* 내 질문 줄은 왼쪽에 띠를 둘러 훑을 때 눈에 걸리게 한다 */
+.rows > article.qa-mine {
+  border-left: 2px solid var(--block-lime);
+  padding-left: var(--md);
+  margin-left: calc(var(--md) * -1);
+}
+
+/* 무엇만 볼지 고르는 줄 (전체 · 답변 · 내 질문) */
+.qa-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sm);
+  margin-top: var(--md);
+}
+.qa-tab {
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.08);
+  border: 0;
+  border-radius: var(--r-full);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.qa-tab:hover { background: rgba(255, 255, 255, 0.16); }
+.qa-tab.on { background: var(--block-lime); color: #14150f; font-weight: 650; }
+.qa-forget {
+  margin-left: auto;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.45);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.qa-forget:hover { color: rgba(255, 255, 255, 0.75); }
+
 /* =========================================================
    특징 3칸
    ========================================================= */
@@ -843,6 +896,28 @@ img, svg { max-width: 100%; }
 .filelist-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .filelist-main b { font-weight: 520; }
 .filelist-go { font-size: 15px; font-weight: 480; white-space: nowrap; }
+
+/* --- 데모 아래 '다음' 칸 (assets/demo-next.js 가 만들어 넣는다) ---
+   자료를 다 보고 나서 갈 곳을 알려 주는 자리. 조작판의 다른 칸들과
+   같은 결로 두되, 링크라는 게 드러나도록 밑줄 대신 화살표와 여백을 쓴다. */
+.demo-next { border-top: 1px solid var(--hairline); padding-top: var(--lg); }
+.demo-next-link {
+  display: block;
+  margin-top: var(--xs);
+  font-size: 15px;
+  font-weight: 480;
+  line-height: 1.45;
+  color: var(--ink);
+  text-decoration: none;
+}
+.demo-next-link:hover { text-decoration: underline; }
+.demo-next-head {
+  margin: var(--md) 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.55);
+}
+html.theme-dark .demo-next-head { color: rgba(255, 255, 255, 0.55); }
 
 /* =========================================================
    선생님 방 (admin.html)

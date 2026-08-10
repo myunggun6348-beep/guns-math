@@ -96,6 +96,9 @@
       </form>
 
       <h2 class="caption" style="margin: 40px 0 0;">받은 질문과 답</h2>
+      <!-- 무엇만 볼지 고르는 줄. '내 질문'은 이 브라우저에서 남긴 것이
+           있을 때만 나타납니다 (assets 아닌 아래 script 가 만듭니다) -->
+      <div class="qa-tabs" id="qFilter"></div>
       <div class="rows" id="qna"></div>
     </div>
   </div>
@@ -142,12 +145,32 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
   const 목록칸 = document.getElementById("qna");
 
   let 질문들 = [];
+  let 보기 = "전체";   // 전체 · 내질문 · 답변됨
 
   /* 학생이 쓴 글을 그대로 화면에 박으면 <script> 같은 걸 적어 넣었을 때
      그게 코드로 실행돼 버립니다. 꺾쇠 같은 기호를 '글자'로 바꿔서 막습니다. */
   const 안전하게 = 글 => String(글 ?? "").replace(/[&<>"']/g, 기호 => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[기호]));
+
+  /* ---------- 내가 낸 질문 기억하기 ----------
+     이름을 묻지 않으니 "답 달렸어요" 하고 알려 줄 방법이 없습니다. 대신
+     이 브라우저에서 낸 질문의 번호만 남겨 두었다가, 목록에서 표시해 줍니다.
+     내용이 아니라 번호만 저장하고, 서버로는 아무것도 보내지 않습니다.
+     (여러 사람이 함께 쓰는 컴퓨터라면 '지우기'로 없앨 수 있습니다) */
+  const 내질문열쇠 = "수학을보다-내질문";
+  const 내질문읽기 = () => {
+    try { return JSON.parse(localStorage.getItem(내질문열쇠) || "[]"); } catch { return []; }
+  };
+  const 내질문 = new Set(내질문읽기().map(String));
+  const 내질문추가 = id => {
+    내질문.add(String(id));
+    try { localStorage.setItem(내질문열쇠, JSON.stringify([...내질문])); } catch {}
+  };
+  const 내질문지우기 = () => {
+    내질문.clear();
+    try { localStorage.removeItem(내질문열쇠); } catch {}
+  };
 
   /* ---------- 화면에 그리기 ---------- */
   function 그리기() {
@@ -160,10 +183,25 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
        하고 알려 줄 수가 없으니, 학생이 훑을 때 눈에 걸리게 하는 것뿐입니다. */
     const 며칠전 = 날짜 => Math.floor((Date.now() - new Date(날짜 + "T00:00:00")) / 86400000);
     const 새답 = it => it.at && 며칠전(it.at) <= 14;
+    const 내것 = it => 내질문.has(String(it.id));
 
-    목록칸.innerHTML = 질문들.map(it => `
-      <article data-id="${안전하게(it.id)}">
+    거르개그리기();
+
+    const 보일것 = 질문들.filter(it =>
+      보기 === "내질문" ? 내것(it) : 보기 === "답변됨" ? Boolean(it.a) : true);
+
+    if (!보일것.length) {
+      목록칸.innerHTML = `<p class="body-sm" style="padding: var(--lg) 0; opacity: .7;">${
+        보기 === "내질문"
+          ? "이 브라우저에서 남긴 질문이 아직 없습니다."
+          : "답이 달린 질문이 아직 없습니다."}</p>`;
+      return;
+    }
+
+    목록칸.innerHTML = 보일것.map(it => `
+      <article data-id="${안전하게(it.id)}"${내것(it) ? ' class="qa-mine"' : ""}>
         <span class="caption">${안전하게(it.t)}${it.g ? " · " + 안전하게(it.g) : ""}${
+          내것(it) ? ` <span class="qa-badge-mine">내 질문</span>` : ""}${
           새답(it) ? ` <span class="qa-new">새 답변</span>` : ""}</span>
         <h3 class="card-title"><span class="qa-mark">Q</span>${안전하게(it.q)}</h3>
         <p class="body-sm">${it.a
@@ -172,9 +210,40 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
       </article>`).join("");
   }
 
+  /* ---------- 무엇만 볼지 고르는 줄 ---------- */
+  function 거르개그리기() {
+    const 자리 = document.getElementById("qFilter");
+    if (!자리) return;
+    const 내개수 = 질문들.filter(it => 내질문.has(String(it.id))).length;
+    const 답개수 = 질문들.filter(it => it.a).length;
+    const 단추 = (값, 글) =>
+      `<button type="button" class="qa-tab${보기 === 값 ? " on" : ""}" data-view="${값}">${글}</button>`;
+
+    자리.innerHTML =
+      단추("전체", `전체 ${질문들.length}`) +
+      단추("답변됨", `답변 ${답개수}`) +
+      (내개수 ? 단추("내질문", `내 질문 ${내개수}`) : "") +
+      (내개수 ? `<button type="button" class="qa-forget" id="내질문잊기">기억 지우기</button>` : "");
+  }
+
   function 안내만(글) {
     목록칸.innerHTML = `<p class="body-sm" style="padding: var(--lg) 0; opacity: .7;">${글}</p>`;
   }
+
+  document.getElementById("qFilter").addEventListener("click", e => {
+    const 잊기 = e.target.closest("#내질문잊기");
+    if (잊기) {
+      if (!confirm("이 브라우저가 기억한 '내 질문' 표시를 지울까요? 질문 자체는 남습니다.")) return;
+      내질문지우기();
+      if (보기 === "내질문") 보기 = "전체";
+      그리기();
+      return;
+    }
+    const 단추 = e.target.closest("[data-view]");
+    if (!단추) return;
+    보기 = 단추.dataset.view;
+    그리기();
+  });
 
   async function 불러오기() {
     try {
@@ -212,6 +281,7 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
       if (!응답.ok) throw new Error(결과.오류 || "");
 
       폼.reset();
+      내질문추가(결과.id);   // 나중에 답이 달렸는지 찾아볼 수 있게
       if (결과.h) {
         /* 선생님이 '확인 후 공개'를 켜 둔 때. 목록에 붙이면 자기 눈에만
            보이는 글이 생겨 혼란스러우므로, 왜 아직 안 보이는지 알려 줍니다. */
@@ -219,7 +289,7 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
       } else {
         질문들.unshift(결과);   // 새로고침 없이 바로 위에 붙습니다
         그리기();
-        상태.textContent = "질문이 올라갔습니다. 고맙습니다.";
+        상태.textContent = "질문이 올라갔습니다. 나중에 '내 질문'에서 답을 확인하세요.";
       }
 
       // 선생님한테 알림 메일 한 통 — 실패해도 게시판은 이미 올라갔으니 그냥 넘어갑니다
