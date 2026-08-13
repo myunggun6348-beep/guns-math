@@ -78,6 +78,16 @@
       </div>
     </div>
 
+    <!-- 과목 딱지와 검색 — 자료가 몇 개 안 될 때는 통째로 숨깁니다.
+         줄이 다섯 개도 안 되는데 거르개부터 보이면 방해만 됩니다.
+         (자료가 쌓이면 자바스크립트가 알아서 꺼내 놓습니다) -->
+    <div class="toolbar" id="자료거르개" hidden>
+      <div class="file-filters" id="과목딱지" role="group" aria-label="과목으로 거르기"></div>
+      <div class="search">
+        <input type="search" id="자료찾기" placeholder="제목·과목·종류 검색" aria-label="자료 검색" />
+      </div>
+    </div>
+
     <div id="fileList"></div>
   </div>
 </section>
@@ -109,8 +119,17 @@
    ========================================================= */
 {
   const 자리 = document.getElementById("fileList");
+  const 거르개 = document.getElementById("자료거르개");
+  const 과목딱지 = document.getElementById("과목딱지");
+  const 찾는칸 = document.getElementById("자료찾기");
+
+  /* 자료가 이만큼 쌓이기 전에는 거르개를 안 보여 줍니다 — 서너 줄짜리
+     목록 위에 과목 딱지와 검색칸이 붙어 있으면 도움이 아니라 방해입니다. */
+  const 거르개보일개수 = 5;
 
   let 파일들 = [];
+  let 고른과목 = "";   // 빈 값이면 전체
+  let 검색어 = "";
 
   const 안전하게 = 글 => String(글 ?? "").replace(/[&<>"']/g, 기호 => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -122,27 +141,90 @@
     return kb < 1024 ? `${Math.round(kb)}KB` : `${(kb / 1024).toFixed(1)}MB`;
   };
 
-  function 안내만(글) {
+  // 선생님이 손으로 적는 칸이라 앞뒤 빈칸이 섞여 들어옵니다.
+  // 그대로 두면 '미적분' 과 '미적분 ' 이 서로 다른 과목으로 갈라집니다.
+  const 과목of = f => String(f.subject ?? "").trim();
+
+  function 안내만(글, 되돌리기 = false) {
     자리.className = "";
-    자리.innerHTML = `<p class="empty">${글}</p>`;
+    자리.innerHTML = `<p class="empty">${글}` +
+      (되돌리기 ? ` <button type="button" class="file-reset" id="전체보기">전체 보기</button>` : "") +
+      `</p>`;
+  }
+
+  /* 지금 조건에 맞는 것만 골라 냅니다.
+     검색은 제목·과목·종류·파일이름을 한 덩어리로 붙여 놓고 찾습니다 —
+     학생은 '모의고사' 라고 칠 수도, 파일 이름을 기억할 수도 있습니다. */
+  function 고른것들() {
+    return 파일들.filter(f => {
+      if (고른과목 && 과목of(f) !== 고른과목) return false;
+      if (!검색어) return true;
+      const 건초더미 = [f.title, f.subject, f.kind, f.filename]
+        .filter(Boolean).join(" ").toLowerCase();
+      return 건초더미.includes(검색어);
+    });
+  }
+
+  function 딱지그리기() {
+    // 과목이 적힌 것만 딱지로 만듭니다 (과목을 안 적은 자료도 '전체' 에는 있습니다)
+    const 과목들 = [...new Set(파일들.map(과목of).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ko"));
+
+    const 딱지 = (값, 이름, 개수) =>
+      `<button type="button" class="file-filter${값 === 고른과목 ? " on" : ""}" data-subject="${안전하게(값)}"` +
+      `${값 === 고른과목 ? ' aria-pressed="true"' : ' aria-pressed="false"'}>` +
+      `${안전하게(이름)}<span class="n">${개수}</span></button>`;
+
+    과목딱지.innerHTML =
+      딱지("", "전체", 파일들.length) +
+      과목들.map(s => 딱지(s, s, 파일들.filter(f => 과목of(f) === s).length)).join("");
   }
 
   function 그리기() {
+    // 거르개는 자료가 어느 정도 쌓였을 때만 (과목이 하나뿐이면 딱지가 무의미)
+    const 과목수 = new Set(파일들.map(과목of).filter(Boolean)).size;
+    거르개.hidden = 파일들.length < 거르개보일개수 || 과목수 < 2;
+    if (!거르개.hidden) 딱지그리기();
+
     if (!파일들.length) return 안내만("아직 올린 파일이 없습니다.");
 
+    const 것들 = 고른것들();
+    if (!것들.length) return 안내만("조건에 맞는 자료가 없습니다.", true);
+
     자리.className = "filelist";
-    자리.innerHTML = 파일들.map(f => `
+    자리.innerHTML = 것들.map(f => `
       <div class="filelist-row">
         <a href="${안전하게(f.url)}" target="_blank" rel="noopener">
           <span class="caption filelist-date">${안전하게(f.date)}</span>
           <span class="filelist-main">
             <b>${안전하게(f.title)}</b>
-            <span class="caption">${[f.subject, f.kind, 크기표시(f.size)].filter(Boolean).map(안전하게).join(" · ")}</span>
+            <span class="caption">${[과목of(f), String(f.kind ?? "").trim(), 크기표시(f.size)]
+              .filter(Boolean).map(안전하게).join(" · ")}</span>
           </span>
           <span class="filelist-go" aria-hidden="true">내려받기 ↓</span>
         </a>
       </div>`).join("");
   }
+
+  과목딱지.addEventListener("click", e => {
+    const 단추 = e.target.closest("[data-subject]");
+    if (!단추) return;
+    고른과목 = 단추.dataset.subject;
+    그리기();
+  });
+
+  찾는칸.addEventListener("input", () => {
+    검색어 = 찾는칸.value.trim().toLowerCase();
+    그리기();
+  });
+
+  // '조건에 맞는 자료가 없습니다' 아래의 되돌리기 단추
+  자리.addEventListener("click", e => {
+    if (!e.target.closest("#전체보기")) return;
+    고른과목 = "";
+    검색어 = "";
+    찾는칸.value = "";
+    그리기();
+  });
 
   async function 불러오기() {
     try {

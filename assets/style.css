@@ -623,6 +623,9 @@ img, svg { max-width: 100%; }
   padding-bottom: var(--lg);
   border-bottom: 1px solid var(--hairline);
 }
+/* display:flex 는 hidden 속성보다 세서, 이 줄이 없으면 숨긴 줄이
+   빈 테두리만 남긴 채 자리를 그대로 차지한다 (자료실 거르개) */
+.toolbar[hidden] { display: none; }
 .search { margin-left: auto; }
 .search input {
   width: 260px;
@@ -681,6 +684,56 @@ img, svg { max-width: 100%; }
   font-variant-numeric: tabular-nums;
   font-weight: 420;
   opacity: 0.55;
+}
+
+/* 자료실 거르개 — '직접 보는 수학'의 과목 칩과 같은 모양이지만, 저쪽은
+   자리로 뛰는 링크고 이쪽은 목록을 좁히는 단추다. 고른 것이 한눈에
+   보여야 해서 켜진 딱지에 색을 채운다. */
+.file-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--xs);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.file-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--xs);
+  padding: 7px 14px 8px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 480;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+.file-filter:hover { background: var(--hairline); }
+.file-filter.on { background: var(--block-lime); color: #14150f; font-weight: 620; }
+.file-filter .n {
+  margin-left: 2px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(0, 0, 0, 0.18);
+  font-variant-numeric: tabular-nums;
+  font-weight: 420;
+  opacity: 0.55;
+}
+.file-filter.on .n { opacity: 0.75; }
+/* 아무것도 안 걸렸을 때 되돌아가는 단추 */
+.file-reset {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin-left: var(--xs);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* 맨 위로 — 자료실은 폰에서 8,000px 에 가깝다. 아래쪽 과목을 보다가
@@ -1752,6 +1805,9 @@ html.theme-dark .canvas-host {
 .theme-dark .eyebrow { color: rgba(255, 255, 255, 0.5); }
 .theme-dark .caption { color: rgba(255, 255, 255, 0.62); }
 .theme-dark .subject-nav .n { border-left-color: rgba(255, 255, 255, 0.18); }
+/* 켜진 딱지는 연두색 바탕이라 어두운 화면에서도 검은 줄이 맞다 */
+.theme-dark .file-filter .n { border-left-color: rgba(255, 255, 255, 0.18); }
+.theme-dark .file-filter.on .n { border-left-color: rgba(0, 0, 0, 0.22); }
 .theme-dark .card .use { color: rgba(255, 255, 255, 0.72); }
 .theme-dark .card .use b { color: rgba(255, 255, 255, 0.55); }
 .theme-dark .find-note { color: rgba(255, 255, 255, 0.58); }
