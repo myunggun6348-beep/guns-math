@@ -76,6 +76,39 @@
         </div>
       </div>
 
+      <!-- ===== 공지 =====
+           예전에는 index.html 안에 글로 박혀 있어서 한 줄 올리려면 코드를
+           고쳐야 했습니다. 여기서 쓰면 홈 맨 위 공지 줄에 바로 올라갑니다. -->
+      <section class="adm-block">
+        <h2 class="display-sm">공지</h2>
+        <p class="body-sm adm-note">
+          쓰면 홈 맨 위에 바로 올라갑니다. 맨 위 한 개는 늘 펼쳐져 보이고
+          나머지는 ＋ 를 눌러야 나오니, 제일 중요한 것을 마지막에 쓰세요.
+        </p>
+
+        <form class="adm-upload" id="공지쓰기">
+          <div class="adm-row">
+            <input type="text" name="구분" placeholder="구분 (예: 안내)" list="공지구분" />
+            <input type="text" name="제목" placeholder="제목 (예: 9월 모평 대비 학습지 올렸습니다)" required />
+          </div>
+          <datalist id="공지구분">
+            <option value="안내"></option>
+            <option value="자료"></option>
+            <option value="시험"></option>
+            <option value="수업"></option>
+          </datalist>
+          <div class="adm-row">
+            <textarea name="내용" rows="3" placeholder="자세한 내용 (안 써도 됩니다)"></textarea>
+          </div>
+          <div class="adm-row">
+            <button type="submit" class="btn btn-primary">공지 올리기</button>
+            <span class="caption adm-status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+
+        <div id="공지목록"></div>
+      </section>
+
       <!-- ===== 자료실 ===== -->
       <section class="adm-block">
         <h2 class="display-sm">자료실</h2>
@@ -153,11 +186,14 @@
   const 질문목록 = document.getElementById("질문목록");
   const 파일목록 = document.getElementById("파일목록");
   const 올리기 = document.getElementById("파일올리기");
+  const 공지목록 = document.getElementById("공지목록");
+  const 공지쓰기 = document.getElementById("공지쓰기");
 
   // sessionStorage 라서 창을 닫으면 지워집니다 — 공용 컴퓨터에서 안전하도록
   let 암호 = sessionStorage.getItem("수학을보다-암호") || "";
   let 질문들 = [];
   let 파일들 = [];
+  let 공지들 = [];
 
   /* 학생이 쓴 글을 그대로 화면에 박으면 <script> 같은 걸 적어 넣었을 때
      그게 코드로 실행돼 버립니다. 꺾쇠 같은 기호를 '글자'로 바꿔서 막습니다. */
@@ -191,6 +227,163 @@
         ).join("") + `</optgroup>`
       ).join("");
   }
+
+  /* ---------- 공지 ----------
+     질문과 달리 선생님이 직접 쓰는 글이라 검토 절차가 없습니다.
+     저장하면 홈 맨 위 공지 줄에 곧바로 올라갑니다. */
+  let 공지수정중 = null;   // 지금 고치고 있는 공지의 id (한 번에 하나만)
+
+  function 공지그리기() {
+    if (!공지들.length) {
+      공지목록.innerHTML = `<p class="empty">아직 올린 공지가 없습니다.</p>`;
+      return;
+    }
+    공지목록.innerHTML = `<div class="filelist">` + 공지들.map(n => {
+      if (n.id === 공지수정중) {
+        return `
+      <div class="filelist-row adm-edit-row" data-id="${안전하게(n.id)}">
+        <div class="adm-row">
+          <input type="text" class="adm-edit-tag" placeholder="구분" value="${안전하게(n.tag)}" />
+          <input type="text" class="adm-edit-title" placeholder="제목" value="${안전하게(n.title)}" required />
+        </div>
+        <div class="adm-row">
+          <textarea class="adm-edit-body" rows="3" placeholder="자세한 내용">${안전하게(n.body)}</textarea>
+        </div>
+        <div class="adm-row">
+          <button type="button" class="btn btn-primary" data-act="저장">저장</button>
+          <button type="button" class="adm-del" data-act="취소">취소</button>
+          <span class="caption adm-status"></span>
+        </div>
+      </div>`;
+      }
+      return `
+      <div class="filelist-row">
+        <a href="/#notice" target="_blank" rel="noopener">
+          <span class="caption filelist-date">${안전하게(n.date)}</span>
+          <span class="filelist-main">
+            <b>${안전하게(n.title)}</b>
+            <span class="caption">${[n.tag, n.body].filter(Boolean).map(안전하게).join(" · ")}</span>
+          </span>
+          <span class="filelist-go" aria-hidden="true">홈에서 보기 ↗</span>
+        </a>
+        <button type="button" class="adm-del" data-act="수정" data-id="${안전하게(n.id)}">수정</button>
+        <button type="button" class="adm-del" data-act="삭제" data-id="${안전하게(n.id)}">지우기</button>
+      </div>`;
+    }).join("") + `</div>`;
+  }
+
+  async function 공지불러오기() {
+    try {
+      const 응답 = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 암호, 작업: "공지목록" }),
+      });
+      if (응답.status === 503) {
+        공지목록.innerHTML = `<p class="empty">공지 저장소를 준비하고 있습니다.</p>`;
+        return;
+      }
+      const 결과 = await 응답.json();
+      if (!응답.ok) throw new Error();
+      공지들 = 결과.목록 || [];
+      공지그리기();
+    } catch {
+      공지목록.innerHTML = `<p class="empty">공지를 불러오지 못했습니다.</p>`;
+    }
+  }
+
+  공지쓰기.addEventListener("submit", async e => {
+    e.preventDefault();
+    const 쪽지 = 공지쓰기.querySelector(".adm-status");
+    const 제목 = 공지쓰기.제목.value.trim();
+    if (!제목) { 쪽지.textContent = "제목을 입력해 주세요."; return; }
+
+    const 버튼 = 공지쓰기.querySelector('button[type="submit"]');
+    버튼.disabled = true;
+    쪽지.textContent = "올리는 중…";
+    try {
+      const 응답 = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          암호, 작업: "공지쓰기",
+          구분: 공지쓰기.구분.value.trim(),
+          제목,
+          내용: 공지쓰기.내용.value.trim(),
+        }),
+      });
+      const 결과 = await 응답.json();
+      if (!응답.ok) throw new Error(결과.오류 || "");
+      공지들.unshift(결과);
+      공지그리기();
+      공지쓰기.reset();
+      쪽지.textContent = "올렸습니다. 홈 맨 위에 보입니다.";
+    } catch (err) {
+      쪽지.textContent = err.message || "올리지 못했습니다.";
+    } finally {
+      버튼.disabled = false;
+    }
+  });
+
+  공지목록.addEventListener("click", async e => {
+    const 버튼 = e.target.closest("[data-act]");
+    if (!버튼) return;
+    const 작업 = 버튼.dataset.act;
+
+    if (작업 === "수정") { 공지수정중 = 버튼.dataset.id; 공지그리기(); return; }
+    if (작업 === "취소") { 공지수정중 = null; 공지그리기(); return; }
+
+    if (작업 === "삭제") {
+      if (!confirm("이 공지를 지울까요? 되돌릴 수 없습니다.")) return;
+      버튼.disabled = true;
+      try {
+        const 응답 = await fetch("/api/admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 암호, 작업: "공지지우기", 공지id: 버튼.dataset.id }),
+        });
+        const 결과 = await 응답.json();
+        if (!응답.ok) throw new Error(결과.오류 || "");
+        공지들 = 공지들.filter(n => n.id !== 버튼.dataset.id);
+        공지그리기();
+      } catch (err) {
+        alert(err.message || "지우지 못했습니다.");
+        버튼.disabled = false;
+      }
+      return;
+    }
+
+    if (작업 === "저장") {
+      const 줄 = 버튼.closest(".adm-edit-row");
+      const id = 줄.dataset.id;
+      const 쪽지 = 줄.querySelector(".adm-status");
+      const 제목 = 줄.querySelector(".adm-edit-title").value.trim();
+      if (!제목) { 쪽지.textContent = "제목을 입력해 주세요."; return; }
+
+      버튼.disabled = true;
+      쪽지.textContent = "저장하는 중…";
+      try {
+        const 응답 = await fetch("/api/admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            암호, 작업: "공지고치기", 공지id: id,
+            구분: 줄.querySelector(".adm-edit-tag").value.trim(),
+            제목,
+            내용: 줄.querySelector(".adm-edit-body").value.trim(),
+          }),
+        });
+        const 결과 = await 응답.json();
+        if (!응답.ok) throw new Error(결과.오류 || "");
+        공지들 = 공지들.map(n => (n.id === id ? 결과 : n));
+        공지수정중 = null;
+        공지그리기();
+      } catch (err) {
+        쪽지.textContent = err.message || "저장하지 못했습니다.";
+        버튼.disabled = false;
+      }
+    }
+  });
 
   /* ---------- 질문 ---------- */
   function 질문그리기() {
@@ -487,6 +680,7 @@
     문앞.hidden = true;
     안쪽.hidden = false;
     개념칸채우기(올리기.concept);
+    공지불러오기();
     질문불러오기();
     파일불러오기();
   }
@@ -503,6 +697,7 @@
     try {
       const 꾸러미 = {
         내려받은날: new Date().toISOString(),
+        공지: 공지들,
         질문: 질문들,
         자료: 파일들,
       };

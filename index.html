@@ -95,10 +95,11 @@
 
 <!-- ===================== 공지 한 줄 =====================
      히어로 바로 아래. '오늘 알아야 할 것'이 있으면 그것부터 보이고,
-     없으면(NOTICES 가 비면) 줄 자체가 사라집니다.
-     ✏️ 공지는 아래 script 의 NOTICES 배열에 한 줄씩 추가하면 됩니다 -->
+     없으면 줄 자체가 사라집니다.
+     ✏️ 공지는 선생님 방(admin.html)에서 씁니다 — 여기는 손댈 것이 없습니다.
+     불러오기 전에는 숨겨 둡니다 (빈 줄이 잠깐 번쩍이지 않도록) -->
 <div class="wrap">
-  <details class="notice-strip" id="notice">
+  <details class="notice-strip" id="notice" hidden>
     <summary>
       <span class="label">공지</span>
       <span class="head" id="noticeHead"></span>
@@ -175,39 +176,47 @@
 
 <script>
 /* =========================================================
-   1. 공지 — 여기에 한 항목씩 추가하면 화면에 올라갑니다.
-      최신 것이 위로 오도록 맨 앞에 넣어 주세요.
-      (자료 목록은 library.html, 질문·답은 ask.html 에 있습니다)
+   1. 공지 — 손대지 않아도 됩니다.
+
+   예전에는 이 자리에 공지를 글로 박아 두었습니다. 한 줄 올리려면 코드를
+   열어 고치고 다시 올려야 했고, 그래서 결국 아무도 안 올리게 됐습니다.
+   이제 선생님 방(admin.html)에서 쓰면 여기로 곧장 들어옵니다.
+
+   접히는 한 줄로 보여 줍니다 — 맨 위 한 개는 늘 보이고, 나머지는 ＋ 를
+   누르면 나옵니다. 공지가 하나도 없으면 줄 자체가 사라집니다.
    ========================================================= */
-const NOTICES = [
-  { date: "2026-08-02", tag: "자료",
-    title: "자료를 17개로 늘리고 2022 개정 교육과정에 맞췄습니다",
-    body: "공통수학1·2, 대수, 미적분Ⅰ·Ⅱ, 확률과 통계, 기하 — 과목별로 정리했습니다. 카드에 과목과 영역이 적혀 있으니 진도에 맞는 것을 찾아 쓰세요." },
-
-  { date: "2026-07-28", tag: "안내",
-    title: "질문은 여기로 보내세요",
-    body: "수업 시간에 묻기 애매한 것들을 편하게 남겨 주세요. 답은 이 페이지에 모아 둡니다." }
-];
-
-/* 접히는 한 줄로 보여 줍니다 — 맨 위 한 개는 늘 보이고, 나머지는 ＋ 를 누르면 나옵니다.
-   공지가 하나도 없으면 줄 자체가 사라집니다 (빈 게시판이 남지 않게). */
 {
   const strip = document.getElementById("notice");
-  if (!NOTICES.length) {
-    strip.remove();
-  } else {
-    const [first, ...rest] = NOTICES;
+
+  const 안전하게 = 글 => String(글 ?? "").replace(/[&<>"']/g, 기호 => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[기호]));
+
+  function 그리기(목록) {
+    if (!목록.length) { strip.remove(); return; }
+
+    const [first, ...rest] = 목록;
     document.getElementById("noticeHead").innerHTML =
-      `<b>${first.title}</b> <span class="caption">${first.date}</span>`;
-    document.getElementById("noticeRest").innerHTML = NOTICES.map(it => `
+      `<b>${안전하게(first.title)}</b> <span class="caption">${안전하게(first.date)}</span>`;
+    document.getElementById("noticeRest").innerHTML = 목록.map(it => `
       <li>
-        <span class="caption">${it.date} · ${it.tag}</span>
-        <p class="body-sm" style="margin: 4px 0 0;"><b style="font-weight: 500;">${it.title}</b> — ${it.body}</p>
+        <span class="caption">${안전하게(it.date)} · ${안전하게(it.tag)}</span>
+        <p class="body-sm" style="margin: 4px 0 0;"><b style="font-weight: 500;">${안전하게(it.title)}</b>${
+          it.body ? " — " + 안전하게(it.body) : ""}</p>
       </li>`).join("");
+
     if (!rest.length) strip.querySelector("summary").style.pointerEvents = "none";
+    strip.hidden = false;
     // 다른 페이지의 '공지' 메뉴로 들어오면 펼친 채로 보여 줍니다
     if (location.hash === "#notice") strip.open = true;
   }
+
+  /* 저장소가 아직 준비 안 됐거나(503) 실패하면 줄을 지웁니다 —
+     비어 있는 공지 칸이 남아 있는 것보다 아예 없는 편이 낫습니다. */
+  fetch("/api/notices")
+    .then(응답 => (응답.ok ? 응답.json() : []))
+    .then(목록 => 그리기(Array.isArray(목록) ? 목록 : []))
+    .catch(() => strip.remove());
 }
 
 
