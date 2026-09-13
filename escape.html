@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<script src="assets/theme.js"></script>
+<title>수학 탈출 | 수학을 보다</title>
+<meta name="description" content="여섯 과목의 수학 문제를 풀고 교실을 탈출하는 15분 수학 활동입니다." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="assets/style.css" />
+<link rel="stylesheet" href="assets/escape.css" />
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13.5" cy="13.5" r="9" fill="#d9f26e"/><path d="M6 16q3.75-8 7.5-2.5t7.5-2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="13.5" cy="13.5" r="9" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M20 20l7.5 7.5" stroke="currentColor" stroke-width="3"/></svg>수학을 보다</a>
+    <div class="nav-links" id="navLinks"><a href="index.html#notice">공지</a><a href="library.html">직접 보는 수학</a><a href="map.html">개념 지도</a><a href="files.html">자료실</a><a href="ask.html">질문</a><a href="escape.html" aria-current="page">수학 탈출</a></div>
+    <div class="nav-right"><button type="button" id="themeToggle" class="theme-toggle" aria-pressed="false" aria-label="어두운 화면으로 보기"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></button><div class="nav-toggle-wrap"><input type="checkbox" class="nav-toggle-input" id="navToggle"/><label class="nav-toggle" for="navToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></label></div></div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="escape-hero">
+    <div class="wrap escape-hero-grid">
+      <div><span class="eyebrow">15 MINUTE MATH ESCAPE</span><h1 class="display-xl">마지막 종이<br/>울리기 전에</h1><p>문제를 풀고 단서를 모아 세 개의 교실을 탈출하세요. 객관식과 주관식이 섞여 있으며 태블릿 펜으로 풀이를 남길 수 있습니다.</p></div>
+      <div class="clock-art" aria-hidden="true"><span>15:00</span><i></i><b>× 6</b></div>
+    </div>
+  </section>
+
+  <section class="wrap escape-shell" id="lobby">
+    <div class="role-tabs" role="tablist"><button class="active" data-role="student" role="tab">학생으로 시작</button><button data-role="teacher" role="tab">교사 운영</button></div>
+    <div id="studentPanel" class="setup-panel">
+      <div><span class="step-no">01</span><h2>도전 설정</h2><p class="muted">방 코드가 있다면 선생님이 정한 과목과 난이도가 적용됩니다.</p></div>
+      <form id="studentForm" class="form-grid">
+        <label>이름 또는 별명<input name="student" required maxlength="20" autocomplete="nickname" placeholder="예: 2107 김수학" /></label>
+        <label>방 코드 <span class="optional">선택</span><input name="roomCode" maxlength="8" inputmode="text" autocomplete="off" placeholder="예: MATH12" /></label>
+        <label>과목<select name="course"><option>수학 종합</option><option>공통수학1</option><option>공통수학2</option><option>대수</option><option>미적분Ⅰ</option><option>확률과 통계</option><option>기하</option></select></label>
+        <label>난이도<select name="difficulty"><option value="basic">기본</option><option value="standard" selected>표준</option><option value="advanced">도전</option></select></label>
+        <button class="escape-btn primary wide" type="submit">탈출 시작</button>
+      </form>
+    </div>
+    <div id="teacherPanel" class="setup-panel" hidden>
+      <div><span class="step-no">T</span><h2>수업 운영</h2><p class="muted">기존 관리자 비밀번호를 사용합니다.</p></div>
+      <form id="teacherForm" class="form-grid">
+        <label>관리자 비밀번호<input name="password" required type="password" autocomplete="current-password" /></label>
+        <label>과목<select name="course"><option>수학 종합</option><option>공통수학1</option><option>공통수학2</option><option>대수</option><option>미적분Ⅰ</option><option>확률과 통계</option><option>기하</option></select></label>
+        <label>난이도<select name="difficulty"><option value="basic">기본</option><option value="standard" selected>표준</option><option value="advanced">도전</option></select></label>
+        <div class="button-pair"><button class="escape-btn primary" type="submit">새 방 만들기</button><button class="escape-btn" id="refreshRooms" type="button">기록 불러오기</button></div>
+      </form>
+      <div id="roomResult" class="room-result" hidden></div>
+      <div id="teacherRecords" class="records"></div>
+    </div>
+  </section>
+
+  <section class="wrap game" id="game" hidden>
+    <div class="game-top"><div><span class="status-chip" id="gameCourse"></span><strong id="studentLabel"></strong></div><div class="timer" id="timer" aria-live="polite">15:00</div><div class="score"><span>점수</span><strong id="score">0</strong></div></div>
+    <div class="progress-track"><span id="progressBar"></span></div>
+    <div class="room-heading"><span id="roomNumber">ROOM 1</span><h2 id="roomTitle">복도의 자물쇠</h2><p id="roomStory">두 개의 단서를 풀어 다음 문을 여세요.</p></div>
+    <div class="clue-grid" id="clueGrid"></div>
+    <div class="game-actions"><button class="escape-btn" id="leaveGame" type="button">나중에 이어하기</button></div>
+  </section>
+
+  <section class="wrap finish" id="finish" hidden><span class="eyebrow">ESCAPE COMPLETE</span><h2 id="finishTitle">탈출 성공!</h2><p id="finishText"></p><div class="finish-score"><span>최종 점수</span><strong id="finalScore">0</strong></div><button class="escape-btn primary" id="restart" type="button">새로 도전하기</button></section>
+</main>
+
+<dialog id="questionDialog" class="question-dialog">
+  <form method="dialog"><button class="dialog-close" aria-label="문제 닫기">×</button></form>
+  <div class="question-meta"><span id="questionSubject"></span><span id="questionType"></span></div>
+  <h2 id="questionTitle"></h2><pre id="questionPrompt"></pre>
+  <div id="answerArea"></div>
+  <div class="hint-line"><button class="text-btn" id="hintButton" type="button">힌트 보기 · 첫 시도 보너스 없음</button><span id="hintText"></span></div>
+  <section class="scratch"><div class="scratch-head"><div><strong>풀이 노트</strong><small>태블릿 펜·터치·마우스 지원</small></div><div class="tools"><button type="button" data-tool="pen" class="on">펜</button><button type="button" data-tool="eraser">지우개</button><button type="button" id="undoInk">↶</button><button type="button" id="redoInk">↷</button><button type="button" id="clearInk">비우기</button></div></div><canvas id="scratchCanvas" aria-label="손글씨 풀이판"></canvas><label class="finger"><input id="fingerDraw" type="checkbox"/> 손가락으로도 쓰기</label></section>
+  <div class="submit-row"><span id="inkStatus"></span><button class="escape-btn" id="saveInk" type="button">풀이 제출</button><button class="escape-btn primary" id="submitAnswer" type="button">정답 확인</button></div>
+  <p id="answerMessage" class="answer-message" aria-live="polite"></p>
+</dialog>
+
+<dialog id="reviewDialog" class="review-dialog"><form method="dialog"><button class="dialog-close" aria-label="풀이 닫기">×</button></form><h2 id="reviewTitle">학생 풀이</h2><div id="reviewPages"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="assets/escape.js"></script>
+</body>
+</html>
