@@ -309,6 +309,18 @@ const DEMOS = [
       <line x1="46" y1="33" x2="30" y2="37"/>
       <line x1="46" y1="8" x2="30" y2="37" stroke="#c3e02f" stroke-width="2.6"/>
       <circle cx="46" cy="8" r="2.4" fill="#000" stroke="none"/>
+    </g></svg>` },
+
+  { year: "고2–3", subject: "기하", unit: "이차곡선", title: "타원 당구대",
+    desc: "한 초점에서 어느 방향으로 공을 쳐도 벽에 한 번 맞고 다른 초점을 지나갑니다. PF₁ + PF₂ = 2a 도 함께 잽니다.",
+    use: "타원의 정의와 반사 성질을 한 번에 보여 줄 때",
+    keywords: "타원 당구 초점 반사 성질 장축 단축 이심률 PF1+PF2 2a 속삭임의 방 쇄석술 이차곡선",
+    href: "demos/elliptic-billiard.html", ready: true,
+    fig: `<svg viewBox="0 0 88 48"><g ${G}>
+      <ellipse cx="44" cy="24" rx="36" ry="19"/>
+      <polyline points="14,24 40,5.2 74,24" stroke="#201f5e" stroke-opacity=".7"/>
+      <circle cx="14" cy="24" r="3" fill="#d9f26e"/>
+      <circle cx="74" cy="24" r="3" fill="#d9f26e"/>
     </g></svg>` }
 ];
 

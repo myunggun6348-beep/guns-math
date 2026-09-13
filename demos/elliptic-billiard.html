@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>타원 당구대 · 수학을 보다</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M20 20l7.5 7.5' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+<!-- 이 자료는 사이트 공통 style.css 를 쓰지 않습니다 (.panel·.nav·.wrap 이름이 겹쳐서).
+     대신 맨 위 '← 직접 보는 수학' 링크만 따로 달아 둡니다. -->
+<style>
+.back{display:inline-block;font-size:14px;font-weight:700;color:var(--ink-soft);text-decoration:none;margin-bottom:10px}
+.back:hover{color:var(--ink)}
+:root{
+  --paper:#F6F7F3; --panel:#FFFFFF; --ink:#14212B; --ink-soft:#5C6B75;
+  --rule:#DFE4DC; --blue:#2B5F8E; --red:#C13B2E; --amber:#C98A12;
+  --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,"D2Coding",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px),linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:28px 28px;
+  color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:820px;margin:0 auto;padding:18px 14px 60px}
+header{margin-bottom:14px;text-align:center}
+h1{font-size:clamp(24px,5.5vw,34px);font-weight:800;letter-spacing:-.02em;margin:0 0 3px}
+.sub{color:var(--ink-soft);font-size:14px;margin:0}
+
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px;margin-bottom:12px}
+canvas{display:block;width:100%;border:1px solid var(--rule);border-radius:4px;background:#fff;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--ink-soft);margin-top:9px;justify-content:center}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.swatch{width:16px;height:3px;border-radius:2px;display:inline-block}
+
+/* ---------- 단계 카드 ---------- */
+.stepcard{background:var(--panel);border:2px solid var(--ink);border-radius:6px;padding:16px;margin-bottom:12px}
+.stepno{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--ink-soft);font-weight:700;margin-bottom:5px}
+.steptitle{font-size:clamp(18px,3.6vw,22px);font-weight:800;line-height:1.35;margin-bottom:6px}
+.stepdesc{font-size:14.5px;color:var(--ink-soft);margin-bottom:14px}
+.stepdesc b{color:var(--ink)}
+
+.bigbtn{
+  display:block;width:100%;font-family:inherit;font-size:19px;font-weight:800;
+  padding:17px 16px;border:0;border-radius:5px;background:var(--ink);color:#fff;cursor:pointer;
+  margin-bottom:9px;letter-spacing:-.01em;
+}
+.bigbtn:active{transform:translateY(1px)}
+.bigbtn.sub{background:var(--panel);color:var(--ink);border:2px solid var(--rule);font-size:16px;padding:13px}
+
+.result{
+  border:1px solid var(--rule);border-radius:5px;background:var(--paper);
+  padding:13px 14px;margin-bottom:12px;
+}
+.result .lbl{font-size:12px;color:var(--ink-soft);font-weight:700;margin-bottom:4px}
+.result .msg{font-size:16px;font-weight:700;line-height:1.45}
+.result .num{font-family:var(--mono);font-size:clamp(24px,6vw,34px);font-weight:700;letter-spacing:-.02em}
+.result .cmp{font-family:var(--mono);font-size:14px;color:var(--ink-soft);margin-top:3px}
+.count{font-family:var(--mono);font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:10px}
+
+.nav{display:flex;gap:9px}
+.nav button{
+  flex:1;font-family:inherit;font-size:15px;font-weight:700;padding:12px;
+  border:2px solid var(--rule);border-radius:5px;background:var(--panel);color:var(--ink);cursor:pointer;
+}
+.nav button.go{background:var(--blue);border-color:var(--blue);color:#fff}
+.nav button:disabled{opacity:.35;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+.tapnote{
+  text-align:center;font-size:15px;font-weight:700;color:var(--blue);
+  border:2px dashed var(--blue);border-radius:5px;padding:13px;margin-bottom:10px;
+}
+
+/* ---------- 자유 모드 ---------- */
+.free{display:none}
+.free.on{display:block}
+.row{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:var(--ink-soft);font-weight:700}
+.seg{display:flex;border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.seg button{font-family:inherit;font-size:14px;padding:9px 13px;border:0;background:var(--panel);color:var(--ink-soft);cursor:pointer;white-space:nowrap}
+.seg button + button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff;font-weight:700}
+.slider-block{flex:1 1 230px;min-width:190px}
+.slider-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.slider-head b{font-family:var(--mono);font-size:17px;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--blue);margin:0;height:26px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px}
+.stat{background:var(--panel);padding:9px 11px}
+.stat .k{font-size:11px;color:var(--ink-soft);font-weight:700;margin-bottom:2px}
+.stat .v{font-family:var(--mono);font-size:16px;font-weight:700}
+
+.freehead{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--rule)}
+.freehead .ftitle{font-size:18px;font-weight:800;margin-bottom:9px}
+
+/* ---------- 개념 ---------- */
+.toggle{
+  width:100%;font-family:inherit;font-size:15px;font-weight:700;padding:13px;
+  border:1px solid var(--rule);border-radius:5px;background:var(--panel);color:var(--ink);cursor:pointer;text-align:left;
+}
+.toggle::after{content:"  ▾";color:var(--ink-soft)}
+.toggle[aria-expanded=true]::after{content:"  ▴"}
+.concepts{display:none;padding:4px 2px 0}
+.concepts.on{display:block}
+.concept{border-left:3px solid var(--blue);padding:2px 0 2px 13px;margin:14px 0 0}
+.concept .t{font-weight:800;font-size:15px;margin-bottom:4px}
+.concept p{margin:0 0 6px;font-size:14px}
+.formula{font-family:var(--mono);font-size:16px;text-align:center;padding:11px;margin:8px 0;background:var(--paper);border:1px solid var(--rule);border-radius:4px}
+footer{margin-top:22px;font-size:12px;color:var(--ink-soft);text-align:center}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="back" href="../library.html">← 직접 보는 수학</a>
+<header>
+  <h1>타원 당구대</h1>
+  <p class="sub">초점에서 공을 치면 어디로 갈까?</p>
+</header>
+
+<div class="panel">
+  <canvas id="cv" height="380"></canvas>
+  <div class="legend">
+    <span><i class="dot" style="background:#C13B2E"></i>초점 F₁, F₂</span>
+    <span><i class="swatch" style="background:#2B5F8E"></i>공이 지나간 길</span>
+  </div>
+</div>
+
+<!-- 단계 카드 -->
+<div class="stepcard" id="card">
+  <div class="stepno" id="stepno">1 단계 / 4</div>
+  <div class="steptitle" id="steptitle"></div>
+  <div class="stepdesc" id="stepdesc"></div>
+
+  <div class="tapnote" id="tapnote" style="display:none">타원 안쪽 아무 곳이나 손가락으로 눌러 보세요</div>
+
+  <button class="bigbtn" id="mainbtn"></button>
+  <button class="bigbtn sub" id="subbtn" style="display:none"></button>
+  <div class="count" id="count"></div>
+
+  <div class="result" id="resbox">
+    <div class="lbl">결과</div>
+    <div class="msg" id="resmsg">버튼을 눌러 보세요.</div>
+    <div id="resnum" style="display:none">
+      <div class="num" id="numval">–</div>
+      <div class="cmp" id="numcmp"></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button id="prev">← 이전</button>
+    <button id="next" class="go">다음 →</button>
+  </div>
+</div>
+
+<!-- 자유 모드 -->
+<div class="panel free" id="freepanel">
+  <div class="freehead">
+    <div class="ftitle">자유롭게 해보기</div>
+    <div class="nav">
+      <button id="freeprev">← 4단계로</button>
+      <button id="freerestart">처음부터 ⟲</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label id="l1">출발점</label>
+      <div class="seg" role="group" aria-labelledby="l1">
+        <button type="button" data-start="focus" aria-pressed="true">초점 F₁</button>
+        <button type="button" data-start="center" aria-pressed="false">중심 O</button>
+      </div>
+    </div>
+    <div class="field">
+      <label id="l2">발사</label>
+      <div class="seg" role="group" aria-labelledby="l2">
+        <button type="button" data-mode="one" aria-pressed="true">한 발</button>
+        <button type="button" data-mode="fan" aria-pressed="false">사방으로</button>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="slider-block">
+      <div class="slider-head"><label for="ang">각도</label><b id="angval">30°</b></div>
+      <input type="range" id="ang" min="0" max="359" step="1" value="30">
+    </div>
+    <div class="slider-block">
+      <div class="slider-head"><label for="bounce">튕기는 횟수</label><b id="bounceval">1</b></div>
+      <input type="range" id="bounce" min="1" max="60" step="1" value="1">
+    </div>
+  </div>
+  <div class="row">
+    <div class="slider-block">
+      <div class="slider-head"><label for="bv">당구대 납작한 정도</label><b id="bval">1.20</b></div>
+      <input type="range" id="bv" min="0.40" max="2.00" step="0.01" value="1.20">
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label id="l3">보기</label>
+      <div class="seg" role="group" aria-labelledby="l3">
+        <button type="button" id="opt-sum" aria-pressed="true">거리 표시</button>
+        <button type="button" id="opt-keep" aria-pressed="false">길 남기기</button>
+      </div>
+    </div>
+    <button class="bigbtn" style="width:auto;padding:12px 20px;font-size:16px;margin:0" id="freeshoot">공 치기</button>
+    <button class="bigbtn sub" style="width:auto;padding:11px 18px;font-size:15px;margin:0" id="freeclear">지우기</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="k">장반지름 a</div><div class="v">2.00</div></div>
+    <div class="stat"><div class="k">단반지름 b</div><div class="v" id="s-b">1.20</div></div>
+    <div class="stat"><div class="k">초점거리 c</div><div class="v" id="s-c">–</div></div>
+    <div class="stat"><div class="k">이심률 e</div><div class="v" id="s-e">–</div></div>
+    <div class="stat"><div class="k">PF₁ + PF₂</div><div class="v" id="s-sum">–</div></div>
+  </div>
+</div>
+
+<button class="toggle" id="ctoggle" aria-expanded="false">개념 정리 보기</button>
+<div class="concepts" id="concepts">
+  <div class="concept">
+    <div class="t">① 타원이란 무엇인가</div>
+    <p>두 초점까지의 거리를 <b>더하면 항상 같은 값</b>이 나오는 점들이 모여 타원이 됩니다.
+       그 값이 장축의 길이 2a 입니다.</p>
+    <div class="formula">PF₁ + PF₂ = 2a</div>
+  </div>
+  <div class="concept">
+    <div class="t">② 타원의 반사 성질</div>
+    <p>한 초점에서 출발한 공은 <b>어느 각도로 쳐도</b> 벽에 한 번 맞고 반드시 다른 초점을 지나갑니다.</p>
+  </div>
+  <div class="concept">
+    <div class="t">③ 어디에 쓰일까</div>
+    <p><b>속삭임의 방</b> — 타원형 천장의 한 초점에서 속삭이면 반대편 초점에서만 또렷하게 들립니다.</p>
+    <p><b>체외충격파 쇄석술</b> — 한 초점에서 충격파를 쏘고 다른 초점에 결석을 두어 수술 없이 파쇄합니다.</p>
+  </div>
+</div>
+
+<footer>a = 2 고정 · 학습지와 함께 사용하세요</footer>
+</div>
+
+<script>
+"use strict";
+const A=2.0;
+const st={b:1.20,start:"focus",mode:"one",angle:30,bounces:1,
+          showSum:false,keep:false,free:{x:-1,y:.4},
+          paths:[],trail:[],step:1,shots:0,tapped:false};
+const C={ink:"#14212B",soft:"#5C6B75",blue:"#2B5F8E",red:"#C13B2E",amber:"#C98A12"};
+const MONO='12px SFMono-Regular,ui-monospace,Menlo,Consolas,monospace';
+const cv=document.getElementById("cv");
+let ctx,W,H,SC,OX,OY,raf=null;
+
+const cVal=()=>Math.sqrt(Math.max(0,A*A-st.b*st.b));
+const foci=()=>{const c=cVal();return[{x:-c,y:0},{x:c,y:0}];};
+const inside=p=>(p.x*p.x)/(A*A)+(p.y*p.y)/(st.b*st.b)<=0.985;
+function startPoint(){
+  if(st.start==="focus"){const c=cVal();return{x:-c,y:0};}
+  if(st.start==="center")return{x:0,y:0};
+  return{...st.free};
+}
+function hit(p,d){
+  const a2=A*A,b2=st.b*st.b;
+  const qa=(d.x*d.x)/a2+(d.y*d.y)/b2;
+  const qb=2*((p.x*d.x)/a2+(p.y*d.y)/b2);
+  const qc=(p.x*p.x)/a2+(p.y*p.y)/b2-1;
+  const disc=qb*qb-4*qa*qc; if(disc<0)return null;
+  const s=Math.sqrt(disc),t1=(-qb-s)/(2*qa),t2=(-qb+s)/(2*qa),eps=1e-9;
+  let t=t1>eps?t1:(t2>eps?t2:null); if(t===null)return null;
+  return{x:p.x+t*d.x,y:p.y+t*d.y};
+}
+function reflect(p,d){
+  let nx=p.x/(A*A),ny=p.y/(st.b*st.b);
+  const L=Math.hypot(nx,ny);nx/=L;ny/=L;
+  const dot=d.x*nx+d.y*ny;
+  return{x:d.x-2*dot*nx,y:d.y-2*dot*ny};
+}
+function trace(p0,deg,n){
+  const pts=[{...p0}];let p={...p0};
+  let d={x:Math.cos(deg*Math.PI/180),y:Math.sin(deg*Math.PI/180)};
+  for(let i=0;i<n;i++){
+    const q=hit(p,d); if(!q)break;
+    pts.push(q); d=reflect(q,d);
+    p={x:q.x+d.x*1e-9,y:q.y+d.y*1e-9};
+  }
+  const q=hit(p,d); if(q)pts.push(q);
+  return pts;
+}
+function fit(){
+  const dpr=window.devicePixelRatio||1;
+  W=cv.clientWidth; H=Math.max(280,Math.min(420,Math.round(W*0.60)));
+  cv.style.height=H+"px"; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  SC=Math.min(W/(2*A*1.14),H/(2*A*1.14)); OX=W/2; OY=H/2;
+}
+const X=x=>OX+x*SC,Y=y=>OY-y*SC;
+const invX=px=>(px-OX)/SC,invY=py=>(OY-py)/SC;
+
+function draw(pr){
+  ctx.clearRect(0,0,W,H);
+  ctx.beginPath(); ctx.ellipse(X(0),Y(0),A*SC,st.b*SC,0,0,Math.PI*2);
+  ctx.fillStyle="rgba(159,187,210,.10)"; ctx.fill();
+  ctx.strokeStyle=C.ink; ctx.lineWidth=3; ctx.stroke();
+
+  ctx.lineWidth=1; ctx.strokeStyle="rgba(43,95,142,.16)";
+  for(const p of st.trail) poly(p,1);
+  ctx.lineWidth=st.mode==="fan"?1.5:2.6;
+  ctx.strokeStyle=st.mode==="fan"?"rgba(43,95,142,.55)":C.blue;
+  for(const p of st.paths) poly(p,pr);
+
+  const m=st.paths[0],F=foci();
+  if(st.showSum&&m&&m.length>1){
+    const P=m[1];
+    ctx.setLineDash([5,4]); ctx.lineWidth=2; ctx.strokeStyle=C.amber;
+    ctx.beginPath();
+    ctx.moveTo(X(F[0].x),Y(F[0].y)); ctx.lineTo(X(P.x),Y(P.y)); ctx.lineTo(X(F[1].x),Y(F[1].y));
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  F.forEach((f,i)=>{
+    ctx.beginPath(); ctx.arc(X(f.x),Y(f.y),7,0,Math.PI*2); ctx.fillStyle=C.red; ctx.fill();
+    ctx.beginPath(); ctx.arc(X(f.x),Y(f.y),2.5,0,Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
+    ctx.fillStyle=C.ink; ctx.font="bold "+MONO; ctx.textAlign="center";
+    ctx.fillText(i===0?"F₁":"F₂",X(f.x),Y(f.y)-13);
+  });
+  const s=startPoint();
+  ctx.beginPath(); ctx.arc(X(s.x),Y(s.y),5,0,Math.PI*2); ctx.fillStyle=C.ink; ctx.fill();
+  if(m&&pr<1){
+    const q=along(m,pr);
+    if(q){ ctx.beginPath(); ctx.arc(X(q.x),Y(q.y),8,0,Math.PI*2);
+      ctx.fillStyle="#fff"; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle=C.blue; ctx.stroke(); }
+  }
+}
+function lens(pts){const L=[];let T=0;
+  for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);L.push(d);T+=d;}
+  return[L,T];}
+function poly(pts,pr){
+  if(pts.length<2)return;
+  const[L,T]=lens(pts);let want=T*pr,acc=0;
+  ctx.beginPath(); ctx.moveTo(X(pts[0].x),Y(pts[0].y));
+  for(let i=1;i<pts.length;i++){
+    if(acc+L[i-1]<=want){ctx.lineTo(X(pts[i].x),Y(pts[i].y));acc+=L[i-1];}
+    else{const r=(want-acc)/L[i-1];
+      ctx.lineTo(X(pts[i-1].x+(pts[i].x-pts[i-1].x)*r),Y(pts[i-1].y+(pts[i].y-pts[i-1].y)*r));break;}
+  }
+  ctx.stroke();
+}
+function along(pts,pr){
+  const[L,T]=lens(pts);let want=T*pr,acc=0;
+  for(let i=1;i<pts.length;i++){
+    if(acc+L[i-1]>=want){const r=(want-acc)/L[i-1];
+      return{x:pts[i-1].x+(pts[i].x-pts[i-1].x)*r,y:pts[i-1].y+(pts[i].y-pts[i-1].y)*r};}
+    acc+=L[i-1];
+  }
+  return pts[pts.length-1];
+}
+function dSeg(p,a,b){
+  const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,L2=vx*vx+vy*vy;
+  let t=L2>0?(wx*vx+wy*vy)/L2:0; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(p.x-(a.x+t*vx),p.y-(a.y+t*vy));
+}
+function shoot(){
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  if(st.keep){for(const p of st.paths)st.trail.push(p);} else st.trail=[];
+  if(st.trail.length>300)st.trail.splice(0,st.trail.length-300);
+  const s=startPoint(); st.paths=[];
+  if(st.mode==="fan"){for(let i=0;i<18;i++)st.paths.push(trace(s,i*20,st.bounces));}
+  else st.paths.push(trace(s,st.angle,st.bounces));
+  st.shots++;
+  report(); refreshFree();
+  const dur=st.mode==="fan"?900:700+st.bounces*70,t0=performance.now();
+  (function go(t){const pr=Math.min(1,(t-t0)/dur);draw(pr);
+    if(pr<1)raf=requestAnimationFrame(go);else raf=null;})(t0);
+}
+
+/* ---------- 단계 ---------- */
+const STEPS={
+ 1:{t:"초점에서 공을 쳐 봅시다",
+    d:"빨간 점 <b>F₁</b> 에서 아무 방향으로나 공을 칩니다. 버튼을 <b>다섯 번</b> 눌러 보세요. 매번 각도가 달라집니다.",
+    main:"공 치기 (각도는 무작위)",
+    setup(){st.start="focus";st.mode="one";st.bounces=1;st.showSum=false;st.keep=false;st.trail=[];}},
+ 2:{t:"한꺼번에 18개를 쳐 봅시다",
+    d:"사방으로 동시에 공을 칩니다. 18개의 공이 어디로 모이는지 보세요.",
+    main:"18개 한꺼번에 치기",
+    setup(){st.start="focus";st.mode="fan";st.bounces=1;st.showSum=false;st.keep=false;st.trail=[];}},
+ 3:{t:"두 초점까지의 거리를 재 봅시다",
+    d:"공이 맞은 자리에서 <b>F₁ 까지의 거리 + F₂ 까지의 거리</b> 를 재 줍니다. 각도를 바꿔도 값이 변하는지 보세요.",
+    main:"각도 바꿔 다시 치기",
+    setup(){st.start="focus";st.mode="one";st.bounces=1;st.showSum=true;st.keep=false;st.trail=[];}},
+ 4:{t:"초점이 아니면 어떻게 될까요",
+    d:"타원 안쪽 아무 곳이나 눌러 그 자리에서 공을 쳐 보세요. F₂ 를 지나갈까요?",
+    main:"초점 F₁ 에서 다시 치기 (비교)",
+    setup(){st.mode="one";st.bounces=1;st.showSum=false;st.keep=false;st.trail=[];st.tapped=false;st.start="focus";}}
+};
+function setStep(n){
+  st.step=n; st.shots=0;
+  const free=(n===5);
+  document.getElementById("freepanel").classList.toggle("on",free);
+  document.getElementById("card").style.display=free?"none":"block";
+  document.getElementById("prev").disabled=(n===1);
+  if(free){ st.showSum=true; refreshFree(); draw(1); return; }
+  const S=STEPS[n]; S.setup();
+  document.getElementById("stepno").textContent=n+" 단계 / 4";
+  document.getElementById("steptitle").textContent=S.t;
+  document.getElementById("stepdesc").innerHTML=S.d;
+  document.getElementById("mainbtn").textContent=S.main;
+  document.getElementById("tapnote").style.display=(n===4)?"block":"none";
+  document.getElementById("resnum").style.display=(n===3)?"block":"none";
+  document.getElementById("resmsg").textContent="버튼을 눌러 보세요.";
+  document.getElementById("count").textContent="";
+  document.getElementById("next").textContent=(n===4)?"자유롭게 해보기 →":"다음 →";
+  st.paths=[]; draw(1);
+}
+function report(){
+  const m=st.paths[0],F=foci();
+  const msg=document.getElementById("resmsg");
+  const cnt=document.getElementById("count");
+  if(st.step===1){
+    cnt.textContent=st.shots+"번 쳤습니다";
+    const miss=(m&&m.length>2)?dSeg(F[1],m[1],m[2]):9;
+    msg.textContent = miss<0.02
+      ? "공이 F₂ 를 정확히 지나갔습니다."
+      : "경로를 확인해 보세요.";
+    if(st.shots>=3&&miss<0.02) msg.textContent="또 F₂ 입니다. 각도가 달라도 결과는 같군요.";
+  }else if(st.step===2){
+    cnt.textContent="";
+    msg.textContent="18개가 모두 F₂ 한 점으로 모입니다.";
+  }else if(st.step===3){
+    cnt.textContent=st.shots+"번 쳤습니다";
+    msg.textContent="각도를 바꿔도 이 값은 그대로입니다.";
+    if(m&&m.length>1){
+      const P=m[1];
+      const sum=Math.hypot(P.x-F[0].x,P.y-F[0].y)+Math.hypot(P.x-F[1].x,P.y-F[1].y);
+      document.getElementById("numval").textContent=sum.toFixed(2);
+      document.getElementById("numcmp").textContent="장축의 길이 2a = "+(2*A).toFixed(2)+" 와 같습니다";
+    }
+  }else if(st.step===4){
+    cnt.textContent="";
+    const miss=(m&&m.length>2)?dSeg(F[1],m[1],m[2]):9;
+    msg.textContent = st.start==="free"
+      ? (miss<0.02?"지나갔습니다.":"F₂ 를 지나가지 않습니다. 초점일 때와 다릅니다.")
+      : "초점에서 치면 다시 F₂ 로 갑니다.";
+  }
+}
+function refreshFree(){
+  document.getElementById("s-b").textContent=st.b.toFixed(2);
+  document.getElementById("s-c").textContent=cVal().toFixed(2);
+  document.getElementById("s-e").textContent=(cVal()/A).toFixed(2);
+  const m=st.paths[0],F=foci();
+  const el=document.getElementById("s-sum");
+  if(m&&m.length>1){
+    const P=m[1];
+    el.textContent=(Math.hypot(P.x-F[0].x,P.y-F[0].y)+Math.hypot(P.x-F[1].x,P.y-F[1].y)).toFixed(2);
+  }else el.textContent="–";
+}
+
+/* ---------- 이벤트 ---------- */
+document.getElementById("mainbtn").addEventListener("click",()=>{
+  if(st.step===1||st.step===3){ st.angle=Math.floor(Math.random()*360); }
+  if(st.step===4){ st.start="focus"; }
+  shoot();
+});
+document.getElementById("next").addEventListener("click",()=>setStep(Math.min(5,st.step+1)));
+document.getElementById("prev").addEventListener("click",()=>setStep(Math.max(1,st.step-1)));
+
+cv.addEventListener("pointerdown",e=>{
+  if(st.step!==4&&st.step!==5)return;
+  const r=cv.getBoundingClientRect();
+  const p={x:invX(e.clientX-r.left),y:invY(e.clientY-r.top)};
+  if(!inside(p))return;
+  st.free=p; st.start="free"; st.trail=[];
+  document.querySelectorAll("[data-start]").forEach(o=>o.setAttribute("aria-pressed","false"));
+  shoot();
+});
+
+function seg(sel,key,after){
+  document.querySelectorAll(sel).forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll(sel).forEach(o=>o.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); st[key]=b.dataset[key];
+    st.trail=[]; if(after)after(); shoot();
+  }));
+}
+seg("[data-start]","start"); seg("[data-mode]","mode");
+function tog(id,key){
+  const el=document.getElementById(id);
+  el.addEventListener("click",()=>{st[key]=!st[key];el.setAttribute("aria-pressed",String(st[key]));draw(1);});
+}
+tog("opt-sum","showSum"); tog("opt-keep","keep");
+document.getElementById("ang").addEventListener("input",e=>{
+  st.angle=+e.target.value; document.getElementById("angval").textContent=st.angle+"°";
+  if(st.step===5)shoot();
+});
+document.getElementById("bounce").addEventListener("input",e=>{
+  st.bounces=+e.target.value; document.getElementById("bounceval").textContent=st.bounces;
+  if(st.step===5)shoot();
+});
+document.getElementById("bv").addEventListener("input",e=>{
+  st.b=parseFloat(e.target.value); document.getElementById("bval").textContent=st.b.toFixed(2);
+  st.trail=[]; if(!inside(st.free))st.free={x:0,y:0}; shoot();
+});
+document.getElementById("freeprev").addEventListener("click",()=>setStep(4));
+document.getElementById("freerestart").addEventListener("click",()=>setStep(1));
+document.getElementById("freeshoot").addEventListener("click",shoot);
+document.getElementById("freeclear").addEventListener("click",()=>{st.trail=[];st.paths=[];draw(1);});
+
+const ct=document.getElementById("ctoggle"),cbox=document.getElementById("concepts");
+ct.addEventListener("click",()=>{
+  const on=cbox.classList.toggle("on");
+  ct.setAttribute("aria-expanded",String(on));
+  ct.textContent=on?"개념 정리 닫기":"개념 정리 보기";
+});
+
+let rt;
+window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{fit();draw(1);},120);});
+fit(); setStep(1);
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

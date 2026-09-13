@@ -305,6 +305,7 @@ three.js 와 글꼴을 사이트 안에 같이 넣어 두었으므로, 학교 �
 | `demos/monty-hall.html` | 몬티 홀 문제 | 확률과 통계 · 확률 |
 | `demos/normal-distribution.html` | 정규분포와 신뢰구간 | 확률과 통계 · 통계 |
 | `demos/conic-sections.html` | 원뿔을 자르면 **3D** | 기하 · 이차곡선 |
+| `demos/elliptic-billiard.html` | 타원 당구대 | 기하 · 이차곡선 |
 | `demos/dot-product.html` | 벡터의 내적 | 기하 · 평면벡터 |
 | `demos/projection.html` | 정사영과 넓이 **3D** | 기하 · 공간도형 |
 | `demos/three-perpendiculars.html` | 삼수선의 정리 **3D** | 기하 · 공간도형 |
