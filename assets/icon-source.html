@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<!-- 선생님 방을 폰 홈 화면에 올렸을 때 보이는 아이콘(assets/icon-192.png ·
+     icon-512.png)의 원본입니다. 화면에 쓰이지는 않습니다.
+     다시 만들려면 README 의 "앱 아이콘" 참고. ?s=192 처럼 크기를 붙여 엽니다. -->
+<style>
+  html, body { margin: 0; background: #f8f1e3; }
+  body { display: grid; place-items: center; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<script>
+  const 크기 = Number(new URLSearchParams(location.search).get("s")) || 512;
+  document.body.style.width = document.body.style.height = 크기 + "px";
+  // 안드로이드가 아이콘을 원·물방울 모양으로 잘라도 로고가 안 잘리게 가운데 60% 에만 그립니다
+  const 로고 = Math.round(크기 * 0.6);
+  document.body.innerHTML =
+    `<svg width="${로고}" height="${로고}" viewBox="0 0 32 32">` +
+    `<circle cx="13.5" cy="13.5" r="9" fill="#d9f26e"/>` +
+    `<path d="M6 16q3.75-8 7.5-2.5t7.5-2.5" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>` +
+    `<circle cx="13.5" cy="13.5" r="9" fill="none" stroke="#000" stroke-width="2.5"/>` +
+    `<path d="M20 20l7.5 7.5" stroke="#000" stroke-width="3" stroke-linecap="round"/></svg>`;
+</script>
+</body>
+</html>

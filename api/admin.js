@@ -8,6 +8,7 @@
    ========================================================= */
 const crypto = require("crypto");
 const { 준비됨, 명령 } = require("./_redis");
+const 푸시 = require("./_push");
 
 const 열쇠이름 = "qna";
 const 설정열쇠 = "설정";
@@ -65,6 +66,42 @@ module.exports = async (req, res) => {
       const 켬 = 받은.켬 ? "1" : "0";
       await 명령("HSET", 설정열쇠, "검토", 켬);
       return res.status(200).json({ 검토: 켬 === "1" });
+    }
+
+    /* ---- 새 질문 알림 (웹 푸시) ----
+       자세한 설명은 api/_push.js 에 있습니다. */
+    if (받은.작업 === "알림상태") {
+      // 기기가 켜기 전에 필요한 공개 열쇠 + 지금 이 기기가 켜져 있는지 + 모두 몇 대인지
+      const { publicKey } = await 푸시.서명열쇠();
+      return res.status(200).json({
+        공개열쇠: publicKey,
+        이기기: await 푸시.이기기켜졌나(받은.구독),
+        기기수: await 푸시.기기수(),
+      });
+    }
+
+    if (받은.작업 === "알림켜기") {
+      try {
+        await 푸시.기기추가(받은.구독, 받은.기기);
+      } catch (err) {
+        return res.status(400).json({ 오류: err.message });
+      }
+      return res.status(200).json({ 이기기: true, 기기수: await 푸시.기기수() });
+    }
+
+    if (받은.작업 === "알림끄기") {
+      await 푸시.기기빼기(받은.구독);
+      return res.status(200).json({ 이기기: false, 기기수: await 푸시.기기수() });
+    }
+
+    if (받은.작업 === "알림시험") {
+      const 결과 = await 푸시.모두에게보내기({
+        title: "알림 시험",
+        body: "이 알림이 보이면 새 질문 알림이 제대로 옵니다.",
+        url: "/admin.html",
+        tag: "시험",
+      });
+      return res.status(200).json({ ...결과, 기기수: await 푸시.기기수() });
     }
 
     /* ---- 공지 ----

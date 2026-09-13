@@ -12,6 +12,14 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M20 20l7.5 7.5' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
 
+<!-- 폰 홈 화면에 '선생님 방' 앱으로 올릴 수 있게 합니다.
+     아이폰은 홈 화면에 올린 것에서만 알림을 받을 수 있어서 필요합니다.
+     학생 페이지에는 넣지 않습니다 (홈 화면 앱이 선생님 방으로 열리므로). -->
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/assets/icon-192.png" />
+<meta name="apple-mobile-web-app-title" content="선생님 방" />
+<meta name="theme-color" content="#f8f1e3" />
+
 <link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
 <link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
 <link rel="stylesheet" href="assets/style.css" />
@@ -90,6 +98,17 @@
         <h2 class="display-sm">받은 질문</h2>
         <!-- 답을 기다리는 질문이 몇 개인지 — 들어오자마자 보이게 -->
         <p class="adm-waiting" id="질문요약" role="status" aria-live="polite"></p>
+
+        <!-- 새 질문 알림 — 메일함을 확인하지 않아도 폰에 바로 뜹니다.
+             기기마다 따로 켭니다 (폰에서 켜면 폰으로, 컴퓨터에서 켜면 컴퓨터로). -->
+        <div class="adm-notify" id="알림칸">
+          <span class="adm-notify-text" id="알림글">알림 상태를 확인하는 중…</span>
+          <span class="adm-notify-tools">
+            <button type="button" class="btn btn-primary" id="알림켜기" hidden>이 기기에서 알림 받기</button>
+            <button type="button" class="adm-del" id="알림시험" hidden>시험 알림 보내기</button>
+            <button type="button" class="adm-del" id="알림끄기" hidden>이 기기 알림 끄기</button>
+          </span>
+        </div>
 
         <div id="질문목록"></div>
 
@@ -510,6 +529,177 @@
     질문불러오기();
   });
 
+  /* ---------- 새 질문 알림 (웹 푸시) ----------
+     메일은 스팸함으로 가거나 안 올 때가 있고, 확인하려면 메일함을 따로 열어야
+     했습니다. 이제 선생님 방에서 '이 기기에서 알림 받기'를 한 번 누르면
+     새 질문이 올 때 그 기기에 바로 알림이 뜨고, 누르면 답 칸이 열립니다.
+
+     기기마다 따로 켭니다. 서버 쪽 설명은 api/_push.js, 알림을 띄우는 일꾼은
+     sw.js 에 있습니다. 필요한 열쇠는 서버가 알아서 만듭니다 (설정할 것 없음). */
+  const 알림글 = document.getElementById("알림글");
+  const 알림켜기단추 = document.getElementById("알림켜기");
+  const 알림시험단추 = document.getElementById("알림시험");
+  const 알림끄기단추 = document.getElementById("알림끄기");
+  let 공개열쇠 = "";
+
+  const 아이폰인가 = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);   // 요즘 아이패드는 맥인 척합니다
+  const 홈화면앱인가 = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const 푸시되나 = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+  const 기기설명 = () => {
+    const ua = navigator.userAgent;
+    if (/Android/.test(ua)) return "안드로이드";
+    if (/iPhone|iPod/.test(ua)) return "아이폰";
+    if (/iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "아이패드";
+    if (/Windows/.test(ua)) return "윈도우 컴퓨터";
+    if (/Mac/.test(ua)) return "맥";
+    return "기타 기기";
+  };
+
+  // 서버가 주는 공개 열쇠(글자)를 브라우저가 원하는 모양(바이트)으로 바꿉니다
+  const 열쇠바이트 = 글 => {
+    const 채움 = "=".repeat((4 - (글.length % 4)) % 4);
+    const 원본 = atob((글 + 채움).replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from(원본, 글자 => 글자.charCodeAt(0));
+  };
+
+  const 관리요청 = async 몸 => {
+    const 응답 = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 암호, ...몸 }),
+    });
+    const 결과 = await 응답.json().catch(() => ({}));
+    if (!응답.ok) throw new Error(결과.오류 || "알림 설정을 바꾸지 못했습니다.");
+    return 결과;
+  };
+
+  async function 이기기구독() {
+    const 등록 = await navigator.serviceWorker.getRegistration("/");
+    return 등록 ? 등록.pushManager.getSubscription() : null;
+  }
+
+  function 알림칸그리기({ 켜짐, 기기수 = 0, 안내 = "" }) {
+    알림켜기단추.hidden = 켜짐;
+    알림끄기단추.hidden = !켜짐;
+    알림시험단추.hidden = 기기수 === 0;
+    document.getElementById("알림칸").classList.toggle("on", 켜짐);
+    알림글.textContent = 안내 || (켜짐
+      ? `이 기기로 새 질문 알림이 옵니다.${기기수 > 1 ? ` (알림 받는 기기 ${기기수}대)` : ""}`
+      : `새 질문이 오면 이 기기로 알림을 받을 수 있습니다 — 내 폰·내 컴퓨터에서만 켜세요.${
+          기기수 ? ` (지금 다른 기기 ${기기수}대가 받는 중)` : ""}`);
+  }
+
+  async function 알림상태확인() {
+    // 이 브라우저로는 아예 못 받는 경우 — 무엇을 하면 되는지 알려 줍니다
+    if (!푸시되나) {
+      알림켜기단추.hidden = 알림끄기단추.hidden = 알림시험단추.hidden = true;
+      알림글.textContent = 아이폰인가 && !홈화면앱인가
+        ? "아이폰은 홈 화면에 올린 '선생님 방'에서만 알림을 받습니다. Safari 아래쪽 공유 단추(□↑) → '홈 화면에 추가' → 새로 생긴 아이콘으로 열어서 여기서 켜세요."
+        : "이 브라우저로는 알림을 받을 수 없습니다. 크롬·엣지·삼성 인터넷으로 열어 주세요.";
+      return;
+    }
+    try {
+      const 구독 = await 이기기구독();
+      const 상태 = await 관리요청({ 작업: "알림상태", 구독: 구독 ? 구독.toJSON() : null });
+      공개열쇠 = 상태.공개열쇠;
+
+      if (Notification.permission === "denied") {
+        return 알림칸그리기({ 켜짐: false, 기기수: 상태.기기수,
+          안내: "이 기기에서 이 사이트의 알림이 막혀 있습니다. 주소창 왼쪽 자물쇠(또는 브라우저 설정 → 사이트 권한)에서 알림을 '허용'으로 바꾼 뒤 새로고침하세요." });
+      }
+      /* 이 기기는 받게 되어 있는데 서버 목록에서만 빠진 경우(예: 저장소를
+         옮겼거나 한동안 실패해서 지워짐) — 조용히 다시 올려 둡니다. */
+      if (구독 && Notification.permission === "granted" && !상태.이기기) {
+        const 다시 = await 관리요청({ 작업: "알림켜기", 구독: 구독.toJSON(), 기기: 기기설명() });
+        return 알림칸그리기({ 켜짐: true, 기기수: 다시.기기수 });
+      }
+      알림칸그리기({ 켜짐: Boolean(구독 && 상태.이기기), 기기수: 상태.기기수 });
+    } catch (err) {
+      알림켜기단추.hidden = 알림끄기단추.hidden = 알림시험단추.hidden = true;
+      알림글.textContent = "알림 상태를 확인하지 못했습니다. 잠시 뒤 새로고침해 주세요.";
+    }
+  }
+
+  알림켜기단추.addEventListener("click", async () => {
+    알림켜기단추.disabled = true;
+    알림글.textContent = "알림을 켜는 중… (허용할지 묻는 창이 뜨면 '허용'을 누르세요)";
+    try {
+      const 등록 = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+
+      const 허락 = await Notification.requestPermission();
+      if (허락 !== "granted") {
+        return 알림칸그리기({ 켜짐: false, 안내: 허락 === "denied"
+          ? "알림을 '차단'으로 고르셨습니다. 주소창 왼쪽 자물쇠에서 알림을 '허용'으로 바꾼 뒤 다시 누르세요."
+          : "알림을 허용하지 않아 켜지 못했습니다. 다시 누르고 '허용'을 골라 주세요." });
+      }
+      if (!공개열쇠) 공개열쇠 = (await 관리요청({ 작업: "알림상태" })).공개열쇠;
+
+      let 구독 = await 등록.pushManager.getSubscription();
+      const 옵션 = { userVisibleOnly: true, applicationServerKey: 열쇠바이트(공개열쇠) };
+      try {
+        if (!구독) 구독 = await 등록.pushManager.subscribe(옵션);
+      } catch {
+        // 예전에 다른 열쇠로 받던 흔적이 남아 있으면 지우고 다시 받습니다
+        if (구독) await 구독.unsubscribe();
+        구독 = await 등록.pushManager.subscribe(옵션);
+      }
+
+      const 결과 = await 관리요청({ 작업: "알림켜기", 구독: 구독.toJSON(), 기기: 기기설명() });
+      알림칸그리기({ 켜짐: true, 기기수: 결과.기기수,
+        안내: "켰습니다. '시험 알림 보내기'를 눌러 알림이 뜨는지 확인해 보세요." });
+    } catch (err) {
+      알림칸그리기({ 켜짐: false, 안내: "알림을 켜지 못했습니다: " + (err.message || "알 수 없는 문제") });
+    } finally {
+      알림켜기단추.disabled = false;
+    }
+  });
+
+  알림끄기단추.addEventListener("click", async () => {
+    알림끄기단추.disabled = true;
+    try {
+      const 구독 = await 이기기구독();
+      const 결과 = await 관리요청({ 작업: "알림끄기", 구독: 구독 ? 구독.toJSON() : null });
+      if (구독) await 구독.unsubscribe();
+      알림칸그리기({ 켜짐: false, 기기수: 결과.기기수, 안내: "이 기기 알림을 껐습니다." });
+    } catch (err) {
+      알림글.textContent = err.message;
+    } finally {
+      알림끄기단추.disabled = false;
+    }
+  });
+
+  알림시험단추.addEventListener("click", async () => {
+    알림시험단추.disabled = true;
+    알림글.textContent = "보내는 중…";
+    try {
+      const 결과 = await 관리요청({ 작업: "알림시험" });
+      const 켜짐 = !알림끄기단추.hidden;
+      알림칸그리기({ 켜짐, 기기수: 결과.기기수, 안내:
+        결과.보냄 === 0 && 결과.실패 === 0 ? "알림 받는 기기가 없습니다. 먼저 '이 기기에서 알림 받기'를 누르세요." :
+        결과.보냄 === 0 ? `보내지 못했습니다. 알림을 끈 기기는 목록에서 지웠으니, 받을 기기에서 다시 켜 주세요.` :
+        `${결과.보냄}대에 보냈습니다. 몇 초 안에 알림이 뜨면 제대로 된 것입니다.` +
+          (결과.실패 ? ` (${결과.실패}대는 실패 — 알림을 끈 기기는 목록에서 지웠습니다)` : "") });
+    } catch (err) {
+      알림글.textContent = err.message;
+    } finally {
+      알림시험단추.disabled = false;
+    }
+  });
+
+  /* 알림을 눌렀는데 선생님 방이 이미 열려 있으면, sw.js 가 새 창 대신 이리로
+     "이 질문으로 가라"고 알려 줍니다. 목록을 새로 받아 그 질문으로 갑니다. */
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", e => {
+      if (!e.data || e.data.종류 !== "질문열기" || 안쪽.hidden) return;
+      if (location.hash !== e.data.hash) history.replaceState(null, "", e.data.hash || "#");
+      메일에서왔나 = true;
+      질문불러오기();
+    });
+  }
+
   // 답 칸에서 Ctrl+Enter (맥은 ⌘+Enter) 로 바로 저장
   질문목록.addEventListener("keydown", e => {
     if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey) || e.target.tagName !== "TEXTAREA") return;
@@ -812,6 +1002,7 @@
     안쪽.hidden = false;
     개념칸채우기(올리기.concept);
     질문불러오기();   // 화면 맨 위에 있는 것부터
+    알림상태확인();
     공지불러오기();
     파일불러오기();
   }

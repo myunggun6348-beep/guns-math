@@ -9,6 +9,7 @@
    - 도배 : 같은 사람이 한 시간에 5개까지
    ========================================================= */
 const { 준비됨, 명령 } = require("./_redis");
+const { 모두에게보내기 } = require("./_push");
 
 const 열쇠이름 = "qna";
 const 설정열쇠 = "설정";
@@ -91,6 +92,22 @@ module.exports = async (req, res) => {
       };
       if (검토중) 항목.h = 1;
       await 명령("HSET", 열쇠이름, id, JSON.stringify(항목));
+
+      /* 선생님 기기로 알림. 응답을 보내기 전에 끝내야 합니다 — Vercel 은 응답을
+         보내는 순간 함수를 멈출 수 있어서, 뒤로 미루면 알림이 안 갈 때가 있습니다.
+         알림이 실패해도 질문은 이미 저장됐으니 학생에게는 성공으로 돌려줍니다. */
+      try {
+        const 미리보기 = 질문.replace(/\s+/g, " ");
+        await 모두에게보내기({
+          title: `새 질문${항목.g ? ` (${항목.g})` : ""}`,
+          body: 미리보기.length > 80 ? 미리보기.slice(0, 80) + "…" : 미리보기,
+          url: `/admin.html#q-${id}`,
+          tag: `q-${id}`,
+        });
+      } catch (err) {
+        console.error("새 질문 알림 실패:", err && err.message);
+      }
+
       return res.status(200).json({ id, ...항목 });
     }
 

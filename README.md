@@ -23,6 +23,11 @@ assets/style.css           사이트 전체 공통 스타일
 assets/state.js            수업용 링크 (조작값 ↔ 주소) — 모든 자료가 함께 씁니다
 assets/og.png              카톡·문자 공유 미리보기 이미지 (1200×630)
 assets/og-source.html      위 이미지를 다시 만들 때 쓰는 원본
+assets/icon-192.png · 512  선생님 방을 폰 홈 화면에 올렸을 때의 앱 아이콘
+assets/icon-source.html    위 아이콘을 다시 만들 때 쓰는 원본
+manifest.webmanifest       선생님 방을 '앱'으로 올리기 위한 설명서 (아이폰 알림에 필요)
+sw.js                      새 질문 알림을 받아 띄우는 일꾼 — 선생님 방에서만 등록됨
+api/_push.js               새 질문 알림 보내기 (열쇠는 저장소에 알아서 만들어 둠)
 assets/vendor/             three.js · 폰트 (인터넷 없이도 열리도록 함께 보관)
 폰으로 보기.bat            ← 더블클릭하면 홈페이지가 켜집니다 (아래 "내 컴퓨터·폰에서 보기")
 serve.js                   위 .bat 이 실행하는 것 — 폰에서 볼 주소도 찾아서 알려 줍니다
@@ -62,6 +67,16 @@ chrome --headless --window-size=1200,630 --screenshot=assets\og.png ^
 ```
 
 (크롬 경로는 보통 `C:\Program Files\Google\Chrome\Application\chrome.exe`)
+
+**앱 아이콘 다시 만들기** — 로고를 바꾸면 `assets/icon-source.html` 의 SVG 도 같이
+고치고, 같은 방법으로 두 크기를 찍는다.
+
+```
+chrome --headless --window-size=192,192 --screenshot=assets\icon-192.png ^
+       "http://localhost:5173/assets/icon-source.html?s=192"
+chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
+       "http://localhost:5173/assets/icon-source.html?s=512"
+```
 
 ### 상단 메뉴
 
@@ -402,6 +417,19 @@ demos/riemann.html?n=40&mode=right                직사각형 40개, 오른쪽 
 적혀 있습니다. 주소가 바뀌면 다섯 페이지에서 그 두 줄만 같이 고치면 됩니다.
 
 ### 질문을 실제로 받으려면
+
+> **지금은 이렇게 동작한다 (2026년 9월)** — 아래 긴 설명은 예전 방식의 기록이다.
+>
+> - 학생 질문은 사이트 저장소(Upstash Redis)에 바로 저장되고 질문 페이지에 공개된다.
+> - 답은 **선생님 방(`admin.html`)** 에서 단다. 답을 기다리는 질문이 맨 위에 모인다.
+> - **새 질문 알림** — 선생님 방 → 받은 질문 → **이 기기에서 알림 받기**. 기기마다
+>   한 번씩 켠다. 새 질문이 오면 그 기기에 알림이 뜨고, 누르면 그 질문 답 칸이 열린다.
+>   **시험 알림 보내기** 로 제대로 오는지 확인할 수 있다. 따로 설정할 것은 없다
+>   (필요한 열쇠는 처음 켤 때 서버가 만들어 저장소에 넣는다).
+>   - 안드로이드·컴퓨터: 크롬·엣지·삼성 인터넷에서 바로 켜진다.
+>   - 아이폰·아이패드: Safari 공유 단추 → **홈 화면에 추가** → 그 아이콘으로 열어서 켠다
+>     (애플이 홈 화면에 올린 사이트에만 알림을 허락한다).
+> - Formspree 메일은 예비로 남아 있다(`ask.html` 의 `폼주소`). 알림만 쓰려면 비워도 된다.
 
 이 사이트는 서버 없이 파일만 올라가는 방식이라, **학생이 쓴 글을 사이트가 직접
 저장할 수 없다.** 어딘가로 '보내는' 역할을 할 서비스가 하나는 필요하다.

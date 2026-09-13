@@ -1117,6 +1117,36 @@ html.theme-dark .demo-next-head { color: rgba(255, 255, 255, 0.55); }
 /* 'N일째 기다림' — 오래 기다린 질문이 한눈에 */
 .adm-days { font-weight: 650; color: inherit; }
 
+/* 새 질문 알림 켜기 — 한 번 켜 두면 끝이라 작고 조용하게.
+   켜져 있으면 연두 점을 붙여 '받는 중'임을 알린다. */
+.adm-notify {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sm) var(--md);
+  margin: 0 0 var(--md);
+  padding: var(--sm) var(--md);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  max-width: 46em;
+}
+.adm-notify-text { flex: 1 1 18em; }
+.adm-notify.on .adm-notify-text::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: var(--r-full);
+  background: var(--block-lime);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  vertical-align: 1px;
+}
+.adm-notify-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--xs); }
+.adm-notify .btn { font-size: 14px; padding: 5px 12px 6px; }
+.adm-notify .btn:disabled, .adm-notify .adm-del:disabled { opacity: 0.5; cursor: default; }
+
 /* 메일 링크로 곧장 들어온 질문 — 어느 것인지 잠깐 표시 */
 .adm-q-here {
   border-left: 3px solid var(--block-lime);
