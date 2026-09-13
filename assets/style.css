@@ -1168,6 +1168,127 @@ html.theme-dark .demo-next-head { color: rgba(255, 255, 255, 0.55); }
 .adm-done > summary:hover { opacity: 1; }
 .adm-done[open] > summary { margin-bottom: var(--xs); }
 
+/* ---------- 선생님 방 · 방문 ----------
+   막대 색은 사이트의 남색 계열에서, 막대로 읽히기 좋은 밝기 범위 안으로
+   고른 것이다(dataviz 검사 통과: 밝은 화면 #4b4ac2 / 어두운 화면 #7b79f0).
+   남색(#201f5e)·연두(#d9f26e) 원래 색은 너무 어둡거나 밝아서 막대로는 탈락. */
+:root { --adm-bar: #4b4ac2; }
+html.theme-dark { --adm-bar: #7b79f0; }
+
+.adm-range { display: flex; flex-wrap: wrap; gap: var(--xs); margin: 0 0 var(--lg); }
+
+#방문내용 { transition: opacity 0.15s ease; }
+#방문내용.adm-loading { opacity: 0.45; }
+
+/* 숫자 타일 — 이름은 조용히, 숫자는 굵게 */
+.adm-stats { display: flex; flex-wrap: wrap; gap: var(--md); margin-bottom: var(--sm); }
+.adm-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 9em;
+  padding: var(--sm) var(--md);
+  border-radius: var(--r-md);
+  background: var(--surface-soft);
+}
+.adm-stat b { font-size: 22px; font-weight: 620; line-height: 1.3; }
+.adm-stat b small { font-size: 14px; font-weight: 450; opacity: 0.7; }
+.adm-stat-note { margin: 0 0 var(--sm); }
+
+/* 날마다 열린 횟수 — 한 가지 색의 세로 막대. 막대 끝만 둥글고 바닥은 각지게,
+   막대 사이는 2px 틈으로 가르고(테두리 없음), 굵기는 24px 까지만. */
+.adm-chart { margin: var(--lg) 0 var(--sm); max-width: 46em; }
+.adm-chart figcaption { margin-bottom: var(--sm); }
+.adm-plot { position: relative; padding-top: 22px; }   /* 가장 높은 막대 위 숫자 자리 */
+.adm-cols {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 140px;
+  border-bottom: 1px solid var(--hairline);
+}
+.adm-col {
+  position: relative;
+  flex: 1 1 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: default;
+  outline: none;
+}
+.adm-col-bar {
+  display: block;
+  width: 100%;
+  max-width: 24px;
+  border-radius: 4px 4px 0 0;
+  background: var(--adm-bar);
+  transition: filter 0.12s ease;
+}
+.adm-col:hover .adm-col-bar,
+.adm-col:focus-visible .adm-col-bar { filter: brightness(1.18); }
+.adm-col:focus-visible { box-shadow: inset 0 -3px 0 var(--ink); }
+.adm-col-val {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.adm-xaxis { display: flex; justify-content: space-between; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+/* 막대에 올렸을 때 — 숫자가 먼저, 날짜는 작게 */
+.adm-tip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 9px 4px;
+  border-radius: var(--r-md);
+  background: var(--ink);
+  color: var(--canvas);
+  font-size: 12.5px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.adm-tip b { font-weight: 650; }
+.adm-tip span { opacity: 0.75; }
+
+.adm-table-view { margin-top: 0; }
+.adm-table { border-collapse: collapse; font-size: 14px; margin: var(--xs) 0 var(--md); }
+.adm-table th, .adm-table td { padding: 4px 16px 4px 0; border-bottom: 1px solid var(--hairline-soft); text-align: left; }
+.adm-table td:last-child, .adm-table th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+
+.adm-sub { margin: var(--lg) 0 var(--sm); font-size: 16px; font-weight: 600; }
+
+/* 많이 열린 페이지 — 가로 막대 순위. 글자는 막대 색을 입지 않는다. */
+.adm-pages { list-style: none; margin: 0; padding: 0; max-width: 46em; }
+.adm-pages li {
+  display: grid;
+  grid-template-columns: minmax(8em, 16em) 1fr auto;
+  align-items: center;
+  gap: var(--md);
+  padding: 5px 0;
+  font-size: 14.5px;
+}
+.adm-pages a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-pages-track { display: block; height: 8px; }
+.adm-pages-bar { display: block; height: 100%; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--adm-bar); }
+.adm-pages-n { min-width: 2.5em; text-align: right; font-variant-numeric: tabular-nums; font-weight: 550; }
+
+.adm-unused { margin: var(--lg) 0 0; max-width: 46em; font-size: 14px; line-height: 1.8; }
+.adm-unused b { font-weight: 600; }
+
+@media (max-width: 560px) {
+  .adm-pages li { grid-template-columns: 1fr auto; row-gap: 2px; }
+  .adm-pages-track { grid-column: 1 / -1; grid-row: 2; }
+  .adm-stat { flex: 1 1 100%; }
+}
+
 /* 로그인 칸의 '이 기기에서 기억하기' — 위 .adm-login input 규칙(입력칸 모양)이
    체크박스에까지 붙지 않도록 따로 되돌린다 */
 .adm-remember {

@@ -28,6 +28,9 @@ assets/icon-source.html    위 아이콘을 다시 만들 때 쓰는 원본
 manifest.webmanifest       선생님 방을 '앱'으로 올리기 위한 설명서 (아이폰 알림에 필요)
 sw.js                      새 질문 알림을 받아 띄우는 일꾼 — 선생님 방에서만 등록됨
 api/_push.js               새 질문 알림 보내기 (열쇠는 저장소에 알아서 만들어 둠)
+assets/hit.js · api/hit.js 방문 세기 — 페이지별 열린 횟수만 (누가 열었는지는 안 셈).
+                           선생님 방 '방문' 칸에서 본다. 새 페이지를 만들면 맨 아래에
+                           <script defer src="/assets/hit.js"></script> 한 줄을 붙일 것
 assets/vendor/             three.js · 폰트 (인터넷 없이도 열리도록 함께 보관)
 폰으로 보기.bat            ← 더블클릭하면 홈페이지가 켜집니다 (아래 "내 컴퓨터·폰에서 보기")
 serve.js                   위 .bat 이 실행하는 것 — 폰에서 볼 주소도 찾아서 알려 줍니다

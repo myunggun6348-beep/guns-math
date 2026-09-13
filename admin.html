@@ -182,6 +182,23 @@
         <div id="파일목록"></div>
       </section>
 
+      <!-- ===== 방문 =====
+           어느 자료가 실제로 열리는지. 예전에는 Vercel 대시보드에 따로 들어가야
+           했습니다. 누가 열었는지는 세지 않고 페이지별 횟수만 셉니다
+           (assets/hit.js → api/hit.js). 선생님 방 자신과 내 컴퓨터 미리보기는 빠집니다. -->
+      <section class="adm-block">
+        <h2 class="display-sm">방문</h2>
+        <p class="body-sm adm-note">
+          페이지가 몇 번 열렸는지만 셉니다. 누가 열었는지는 남기지 않습니다.
+          2026년 9월 13일부터 세기 시작했습니다.
+        </p>
+        <div class="adm-range" role="group" aria-label="기간">
+          <button type="button" class="file-filter on" data-days="7" aria-pressed="true">지난 7일</button>
+          <button type="button" class="file-filter" data-days="30" aria-pressed="false">지난 30일</button>
+        </div>
+        <div id="방문내용" aria-live="polite"></div>
+      </section>
+
     </div>
 
   </div>
@@ -195,6 +212,8 @@
 
 <!-- 개념 목록 — 자료를 올릴 때 '어느 개념인지' 고르는 칸을 여기서 만듭니다 -->
 <script src="assets/concepts.js"></script>
+<!-- 자료 목록 — '방문' 칸에서 주소 대신 자료 이름으로 보여 주려고 씁니다 -->
+<script src="assets/demos.js"></script>
 
 <script>
 /* =========================================================
@@ -996,6 +1015,158 @@
     }
   });
 
+  /* ---------- 방문 ----------
+     assets/hit.js 가 센 숫자를 보여 줍니다. 한 줄로 요약하면
+     "학생들이 요즘 무엇을 여는가". 수업 준비 때 어떤 자료를 더 만들지,
+     어떤 자료가 안 쓰이는지 가늠하는 용도입니다.
+
+     날마다 몇 번 열렸는지는 막대 하나(한 가지 색)로, 페이지별 순위는
+     가로 막대 목록으로 둡니다. 막대 위에 숫자를 다 쓰면 읽히지 않아서,
+     가장 많은 날 하나에만 숫자를 붙이고 나머지는 마우스를 올리거나
+     '표로 보기'를 펼치면 보입니다. */
+  const 세기시작일 = "2026-09-13";
+  const 방문내용 = document.getElementById("방문내용");
+  let 방문기간 = 7;
+  let 방문요청번호 = 0;   // 7일/30일을 빨리 바꿔 누르면 늦게 온 옛 응답이 새 화면을 덮지 않게
+
+  const 쪽이름 = p => ({
+    "/index.html": "홈", "/library.html": "직접 보는 수학", "/map.html": "개념 지도",
+    "/files.html": "자료실", "/ask.html": "질문",
+  })[p] || (typeof DEMOS !== "undefined" && (DEMOS.find(d => "/" + d.href === p) || {}).title) || p;
+
+  const 날짜말 = (날, 요일도 = true) => {
+    const [y, m, d] = 날.split("-").map(Number);
+    const 요일 = "일월화수목금토"[new Date(y, m - 1, d).getDay()];
+    return `${m}월 ${d}일` + (요일도 ? ` (${요일})` : "");
+  };
+
+  function 방문그리기(자료) {
+    방문내용.classList.remove("adm-loading");
+    const { 일별, 페이지, 합계 } = 자료;
+    const 덜셈 = 일별[0].날짜 < 세기시작일
+      ? `<p class="caption adm-stat-note">${날짜말(세기시작일, false)}부터 셌기 때문에 그 전 날짜는 0입니다.</p>` : "";
+
+    if (!합계) {
+      방문내용.innerHTML = `<p class="empty">이 기간에 센 방문이 아직 없습니다. 학생이 페이지를 열면 여기에 쌓입니다.</p>` + 덜셈;
+      return;
+    }
+
+    const 최대 = Math.max(...일별.map(d => d.합));
+    // 가장 많은 날이 여러 날이면 가장 최근 날에 숫자를 붙입니다
+    const 최대자리 = 일별.map(d => d.합).lastIndexOf(최대);
+    const 질문수 = (페이지.find(x => x.p === "/ask.html") || {}).수 || 0;
+    const 자료순위 = 페이지.filter(x => x.p.startsWith("/demos/"));
+    const 윗페이지 = 페이지.slice(0, 10);
+    const 순위최대 = 윗페이지.length ? 윗페이지[0].수 : 1;
+    const 연곳 = new Set(페이지.map(x => x.p));
+    const 안열린 = (typeof DEMOS !== "undefined" ? DEMOS : [])
+      .filter(d => d.ready && !연곳.has("/" + d.href));
+
+    방문내용.innerHTML = `
+      <div class="adm-stats">
+        <div class="adm-stat"><span class="caption">페이지 열림</span><b>${합계.toLocaleString("ko-KR")}번</b></div>
+        <div class="adm-stat"><span class="caption">질문 페이지</span><b>${질문수.toLocaleString("ko-KR")}번</b></div>
+        <div class="adm-stat"><span class="caption">가장 많이 연 자료</span><b>${
+          자료순위.length ? `${안전하게(쪽이름(자료순위[0].p))} <small>${자료순위[0].수}번</small>` : "없음"}</b></div>
+      </div>
+      ${덜셈}
+
+      <figure class="adm-chart">
+        <figcaption class="caption">날마다 열린 횟수</figcaption>
+        <div class="adm-plot">
+          <div class="adm-cols">
+            ${일별.map((d, i) => {
+              const 높이 = 최대 ? (d.합 / 최대) * 100 : 0;
+              return `<div class="adm-col" tabindex="0" data-i="${i}" aria-label="${날짜말(d.날짜)} ${d.합}번">
+                <span class="adm-col-bar" style="height:${높이}%"></span>
+                ${i === 최대자리 ? `<span class="adm-col-val" style="bottom:calc(${높이}% + 4px)">${d.합}</span>` : ""}
+              </div>`;
+            }).join("")}
+          </div>
+          <div class="adm-tip" hidden><b></b><span></span></div>
+        </div>
+        <div class="adm-xaxis caption"><span>${날짜말(일별[0].날짜, false)}</span><span>${날짜말(일별[일별.length - 1].날짜, false)}</span></div>
+      </figure>
+
+      <details class="adm-done adm-table-view">
+        <summary>표로 보기</summary>
+        <table class="adm-table">
+          <thead><tr><th scope="col">날짜</th><th scope="col">열린 횟수</th></tr></thead>
+          <tbody>${일별.slice().reverse().map(d => `<tr><td>${날짜말(d.날짜)}</td><td>${d.합}</td></tr>`).join("")}</tbody>
+        </table>
+      </details>
+
+      <h3 class="adm-sub">많이 열린 페이지</h3>
+      <ol class="adm-pages">
+        ${윗페이지.map(x => `
+          <li>
+            <a href="${안전하게(x.p)}" target="_blank" rel="noopener">${안전하게(쪽이름(x.p))}</a>
+            <span class="adm-pages-track" aria-hidden="true"><span class="adm-pages-bar" style="width:${(x.수 / 순위최대) * 100}%"></span></span>
+            <span class="adm-pages-n">${x.수}</span>
+          </li>`).join("")}
+      </ol>
+      ${페이지.length > 10 ? `<p class="caption">그 밖에 ${페이지.length - 10}개 페이지</p>` : ""}
+
+      ${안열린.length ? `
+        <p class="adm-unused"><b>이 기간에 한 번도 안 열린 자료 ${안열린.length}개</b><br />
+          ${안열린.map(d => `<a href="${안전하게(d.href)}" target="_blank" rel="noopener">${안전하게(d.title)}</a>`).join(" · ")}</p>` : ""}
+    `;
+
+    /* 막대에 마우스를 올리거나 키보드로 옮기면 그날 숫자를 띄웁니다.
+       막대가 아니라 그날 칸 전체가 닿는 자리라서, 얇은 막대를 정확히 겨누지 않아도 됩니다. */
+    const 판 = 방문내용.querySelector(".adm-plot");
+    const 말풍선 = 판.querySelector(".adm-tip");
+    const 보이기 = 칸 => {
+      const d = 일별[Number(칸.dataset.i)];
+      말풍선.querySelector("b").textContent = `${d.합}번`;
+      말풍선.querySelector("span").textContent = 날짜말(d.날짜);
+      말풍선.hidden = false;
+      const 가운데 = 칸.offsetLeft + 칸.offsetWidth / 2;
+      const 폭 = 말풍선.offsetWidth;
+      말풍선.style.left = Math.min(Math.max(0, 가운데 - 폭 / 2), 판.clientWidth - 폭) + "px";
+    };
+    판.querySelectorAll(".adm-col").forEach(칸 => {
+      칸.addEventListener("pointerenter", () => 보이기(칸));
+      칸.addEventListener("focus", () => 보이기(칸));
+      칸.addEventListener("pointerleave", () => { if (document.activeElement !== 칸) 말풍선.hidden = true; });
+      칸.addEventListener("blur", () => { 말풍선.hidden = true; });
+    });
+  }
+
+  async function 방문불러오기() {
+    const 번호 = ++방문요청번호;
+    // 다시 불러오는 동안 예전 화면을 흐리게 남겨 둡니다 (깜빡이거나 자리가 튀지 않게)
+    if (방문내용.children.length) 방문내용.classList.add("adm-loading");
+    else 방문내용.innerHTML = `<p class="empty">불러오는 중…</p>`;
+    try {
+      const 응답 = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 암호, 작업: "방문통계", 기간: 방문기간 }),
+      });
+      const 결과 = await 응답.json();
+      if (번호 !== 방문요청번호) return;
+      if (!응답.ok) throw new Error(결과.오류 || "");
+      방문그리기(결과);
+    } catch {
+      if (번호 !== 방문요청번호) return;
+      방문내용.classList.remove("adm-loading");
+      방문내용.innerHTML = `<p class="empty">방문 숫자를 불러오지 못했습니다.</p>`;
+    }
+  }
+
+  document.querySelector(".adm-range").addEventListener("click", e => {
+    const 단추 = e.target.closest("[data-days]");
+    if (!단추) return;
+    방문기간 = Number(단추.dataset.days);
+    document.querySelectorAll(".adm-range [data-days]").forEach(b => {
+      const 켬 = b === 단추;
+      b.classList.toggle("on", 켬);
+      b.setAttribute("aria-pressed", String(켬));
+    });
+    방문불러오기();
+  });
+
   /* ---------- 문 여닫기 ---------- */
   function 들어가기() {
     문앞.hidden = true;
@@ -1005,6 +1176,7 @@
     알림상태확인();
     공지불러오기();
     파일불러오기();
+    방문불러오기();
   }
 
   /* ---------- 전부 내보내기 (백업) ----------

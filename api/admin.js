@@ -9,6 +9,7 @@
 const crypto = require("crypto");
 const { 준비됨, 명령 } = require("./_redis");
 const 푸시 = require("./_push");
+const { 한국날짜 } = require("./hit");
 
 const 열쇠이름 = "qna";
 const 설정열쇠 = "설정";
@@ -66,6 +67,31 @@ module.exports = async (req, res) => {
       const 켬 = 받은.켬 ? "1" : "0";
       await 명령("HSET", 설정열쇠, "검토", 켬);
       return res.status(200).json({ 검토: 켬 === "1" });
+    }
+
+    /* ---- 방문 (api/hit.js 가 센 것) ----
+       지난 N일(오늘 포함)을 날짜별 합계와 페이지별 합계로 묶어 돌려줍니다. */
+    if (받은.작업 === "방문통계") {
+      const 기간 = Math.min(90, Math.max(1, Math.floor(Number(받은.기간) || 7)));
+      const 날짜들 = [];
+      for (let i = 기간 - 1; i >= 0; i--) 날짜들.push(한국날짜(Date.now() - i * 86400000));
+
+      const 날마다 = await Promise.all(날짜들.map(날 => 명령("HGETALL", `views:${날}`)));
+      const 페이지합 = {};
+      const 일별 = 날짜들.map((날짜, i) => {
+        const 납작한 = 날마다[i] || [];
+        let 합 = 0;
+        for (let j = 0; j < 납작한.length; j += 2) {
+          const 수 = Number(납작한[j + 1]) || 0;
+          합 += 수;
+          페이지합[납작한[j]] = (페이지합[납작한[j]] || 0) + 수;
+        }
+        return { 날짜, 합 };
+      });
+      const 페이지 = Object.entries(페이지합)
+        .map(([p, 수]) => ({ p, 수 }))
+        .sort((a, b) => b.수 - a.수 || a.p.localeCompare(b.p));
+      return res.status(200).json({ 기간, 일별, 페이지, 합계: 일별.reduce((s, d) => s + d.합, 0) });
     }
 
     /* ---- 새 질문 알림 (웹 푸시) ----
