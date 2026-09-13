@@ -292,12 +292,26 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
         상태.textContent = "질문이 올라갔습니다. 나중에 '내 질문'에서 답을 확인하세요.";
       }
 
-      // 선생님한테 알림 메일 한 통 — 실패해도 게시판은 이미 올라갔으니 그냥 넘어갑니다
+      /* 선생님한테 알림 메일 한 통 — 실패해도 게시판은 이미 올라갔으니 그냥 넘어갑니다.
+
+         메일에 '답하러 가기' 주소를 넣어 둡니다. 누르면 선생님 방이 열리면서
+         이 질문의 답 칸으로 곧장 갑니다(admin.html#q-번호). 예전 메일에는
+         질문 내용만 있어서, 답하려면 선생님 방을 찾아 들어가 맨 아래까지
+         내려가야 했습니다.
+         제목(_subject)도 정해 둡니다 — Formspree 기본 제목은 알아보기 어려워서
+         다른 메일에 묻히거나 스팸함으로 가기 쉽습니다. */
       if (폼주소) {
+        const 미리보기 = 내용.질문.replace(/\s+/g, " ").trim();
         fetch(폼주소, {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify(내용),
+          body: JSON.stringify({
+            _subject: `[수학을 보다] 새 질문${내용.학년 ? " (" + 내용.학년 + ")" : ""}: ${
+              미리보기.length > 30 ? 미리보기.slice(0, 30) + "…" : 미리보기}`,
+            학년: 내용.학년 || "(안 적음)",
+            질문: 내용.질문,
+            답하러가기: `${location.origin}/admin.html#q-${결과.id}`,
+          }),
         }).catch(() => {});
       }
     } catch (err) {

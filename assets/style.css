@@ -1101,6 +1101,64 @@ html.theme-dark .demo-next-head { color: rgba(255, 255, 255, 0.55); }
 .adm-q-text { margin: 0 0 var(--md); font-size: 17px; max-width: 46em; }
 .adm-q textarea { width: 100%; max-width: 46em; resize: vertical; }
 
+/* 답을 기다리는 질문이 몇 개인지 — 들어오자마자 보이는 한 줄.
+   기다리는 게 있으면 색을 채워 눈에 띄게, 없으면 조용히 둔다. */
+.adm-waiting {
+  display: inline-block;
+  margin: var(--sm) 0 var(--md);
+  padding: 6px 14px 7px;
+  border-radius: var(--r-full);
+  background: var(--surface-soft);
+  font-size: 15px;
+  font-weight: 500;
+}
+.adm-waiting:empty { display: none; }
+.adm-waiting.on { background: var(--block-coral); color: #14150f; font-weight: 620; }
+/* 'N일째 기다림' — 오래 기다린 질문이 한눈에 */
+.adm-days { font-weight: 650; color: inherit; }
+
+/* 메일 링크로 곧장 들어온 질문 — 어느 것인지 잠깐 표시 */
+.adm-q-here {
+  border-left: 3px solid var(--block-lime);
+  padding-left: var(--md);
+  animation: adm-here 2.4s ease-out;
+}
+@keyframes adm-here { from { background: rgba(217, 242, 110, 0.35); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .adm-q-here { animation: none; } }
+
+/* 답한 질문 — 접어 둔다. 고칠 일이 있을 때만 펼친다. */
+.adm-done { margin-top: var(--lg); }
+.adm-done > summary {
+  cursor: pointer;
+  padding: var(--sm) 0;
+  font-size: 15px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+.adm-done > summary:hover { opacity: 1; }
+.adm-done[open] > summary { margin-bottom: var(--xs); }
+
+/* 로그인 칸의 '이 기기에서 기억하기' — 위 .adm-login input 규칙(입력칸 모양)이
+   체크박스에까지 붙지 않도록 따로 되돌린다 */
+.adm-remember {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  flex-basis: 100%;
+  font-size: 14px;
+  cursor: pointer;
+}
+.adm-login .adm-remember input {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  accent-color: var(--block-lime);
+  cursor: pointer;
+}
+
 /* 지우기·나가기는 되돌릴 수 없거나 흐름을 끊는 일이라, 단추처럼 안 생기게
    둬서 눌러야 할 것처럼 보이지 않게 한다 */
 .adm-del, #나가기 {
