@@ -163,9 +163,16 @@
 
         <form class="adm-upload" id="파일올리기">
           <div class="adm-row">
-            <input type="text" name="title" placeholder="제목 (예: 미분계수 연습 20제)" required />
+            <input type="text" name="title" placeholder="제목 (예: 2027학년도 3월 모의고사 문제)" required />
+            <select name="grade" required><option value="">학년 선택</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option><option value="common">공통·기타</option></select>
             <input type="text" name="subject" placeholder="과목 (예: 미적분Ⅰ)" />
-            <input type="text" name="kind" placeholder="종류 (예: 학습지)" />
+            <input type="text" name="kind" list="자료종류" placeholder="종류 (예: 모의고사)" />
+          </div>
+          <div class="adm-row">
+            <input type="number" name="examYear" min="1990" max="2100" placeholder="시행 연도 (예: 2027)" />
+            <select name="examMonth"><option value="">시행월 선택</option><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
+            <input type="text" name="examName" placeholder="시험명 (예: 전국연합학력평가)" />
+            <datalist id="자료종류"><option value="모의고사"><option value="문제"><option value="정답"><option value="해설"><option value="학습지"><option value="개념 정리"></datalist>
           </div>
           <div class="adm-row">
             <!-- 개념을 골라 두면 개념 지도에서 그 개념을 눌렀을 때 이 학습지가
@@ -822,6 +829,10 @@
   /* ---------- 자료실 ---------- */
   let 수정중 = null; // 지금 제목을 고치고 있는 파일의 id (한 번에 하나만)
 
+  function 학년선택(값) {
+    return [["1","1학년"],["2","2학년"],["3","3학년"],["common","공통·기타"]].map(([v,n]) => `<option value="${v}"${String(값 || "common") === v ? " selected" : ""}>${n}</option>`).join("");
+  }
+
   function 파일그리기() {
     if (!파일들.length) {
       파일목록.innerHTML = `<p class="empty">아직 올린 파일이 없습니다.</p>`;
@@ -833,8 +844,14 @@
       <div class="filelist-row adm-edit-row" data-id="${안전하게(f.id)}">
         <div class="adm-row">
           <input type="text" class="adm-edit-title" placeholder="제목" value="${안전하게(f.title)}" required />
+          <select class="adm-edit-grade">${학년선택(f.grade)}</select>
           <input type="text" class="adm-edit-subject" placeholder="과목" value="${안전하게(f.subject)}" />
           <input type="text" class="adm-edit-kind" placeholder="종류" value="${안전하게(f.kind)}" />
+        </div>
+        <div class="adm-row">
+          <input type="number" class="adm-edit-year" min="1990" max="2100" placeholder="시행 연도" value="${안전하게(f.examYear)}" />
+          <input type="number" class="adm-edit-month" min="1" max="12" placeholder="시행월" value="${안전하게(f.examMonth)}" />
+          <input type="text" class="adm-edit-exam" placeholder="시험명" value="${안전하게(f.examName)}" />
         </div>
         <div class="adm-row">
           <select class="adm-edit-concept adm-concept"></select>
@@ -852,7 +869,7 @@
           <span class="caption filelist-date">${안전하게(f.date)}</span>
           <span class="filelist-main">
             <b>${안전하게(f.title)}</b>
-            <span class="caption">${[f.subject, f.kind, 크기표시(f.size),
+            <span class="caption">${[{"1":"1학년","2":"2학년","3":"3학년",common:"공통·기타"}[f.grade || "common"], f.examYear, f.examMonth ? f.examMonth + "월" : "", f.examName, f.subject, f.kind, 크기표시(f.size),
               f.concept ? "개념: " + 개념이름(f.concept) : "개념 연결 안 됨"]
               .filter(Boolean).map(안전하게).join(" · ")}</span>
           </span>
@@ -932,7 +949,11 @@
         const 주소 = "/api/files-admin?" + new URLSearchParams({
           act: "edit", 암호, id,
           title: 제목,
+          grade: 줄.querySelector(".adm-edit-grade").value,
           subject: 줄.querySelector(".adm-edit-subject").value.trim(),
+          examYear: 줄.querySelector(".adm-edit-year").value,
+          examMonth: 줄.querySelector(".adm-edit-month").value,
+          examName: 줄.querySelector(".adm-edit-exam").value.trim(),
           kind: 줄.querySelector(".adm-edit-kind").value.trim(),
           concept: 줄.querySelector(".adm-edit-concept")?.value || "",
         });
@@ -998,7 +1019,8 @@
       쪽지.textContent = "마무리하는 중…";
       const 마무리 = await fetch("/api/files-admin?" + new URLSearchParams({
         act: "record", 암호, id: 표.id, pathname: 표.pathname, filename: 파일.name,
-        title: 올리기.title.value, subject: 올리기.subject.value, kind: 올리기.kind.value,
+        title: 올리기.title.value, grade: 올리기.grade.value, subject: 올리기.subject.value, kind: 올리기.kind.value,
+        examYear: 올리기.examYear.value, examMonth: 올리기.examMonth.value, examName: 올리기.examName.value,
         concept: 올리기.concept.value,
       }), { method: "POST" });
       const 결과 = await 마무리.json();

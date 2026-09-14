@@ -22,6 +22,10 @@ const { 준비됨: redis준비됨, 명령 } = require("./_redis");
 const { 준비됨: blob준비됨, del, head, issueSignedToken, presignUrl } = require("./_blob");
 
 const 열쇠이름 = "files";
+const 허용학년 = new Set(["1", "2", "3", "common"]);
+const 학년값 = 값 => 허용학년.has(String(값)) ? String(값) : "common";
+const 연도값 = 값 => /^(19|20)\d{2}$/.test(String(값 || "")) ? String(값) : "";
+const 월값 = 값 => /^(?:0?[1-9]|1[0-2])$/.test(String(값 || "")) ? String(Number(값)) : "";
 const 최대바이트 = 50 * 1024 * 1024;
 const 허용확장자 = {
   pdf: "application/pdf",
@@ -123,7 +127,11 @@ module.exports = async (req, res) => {
       const 파일이름 = String(q.filename || "").trim() || pathname.slice(pathname.lastIndexOf("/") + 1);
       const 항목 = {
         date: new Date().toISOString().slice(0, 10),
+        grade: 학년값(q.grade),
         subject: String(q.subject || "").trim().slice(0, 30),
+        examYear: 연도값(q.examYear),
+        examMonth: 월값(q.examMonth),
+        examName: String(q.examName || "").trim().slice(0, 60),
         kind: String(q.kind || "").trim().slice(0, 30),
         title: String(q.title || "").trim().slice(0, 120) || 파일이름,
         // 개념 지도의 열쇠말(trig, prob …). 있으면 그 개념을 눌렀을 때
@@ -149,7 +157,11 @@ module.exports = async (req, res) => {
       const 새제목 = String(q.title || "").trim().slice(0, 120);
       if (!새제목) return res.status(400).json({ 오류: "제목을 입력해 주세요." });
       항목.title = 새제목;
+      항목.grade = 학년값(q.grade);
       항목.subject = String(q.subject || "").trim().slice(0, 30);
+      항목.examYear = 연도값(q.examYear);
+      항목.examMonth = 월값(q.examMonth);
+      항목.examName = String(q.examName || "").trim().slice(0, 60);
       항목.kind = String(q.kind || "").trim().slice(0, 30);
       항목.concept = String(q.concept || "").trim().slice(0, 30);
 
