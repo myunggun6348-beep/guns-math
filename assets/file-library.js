@@ -1,7 +1,8 @@
 (() => {
   const grades=["1","2","3","common"],names={all:"전체","1":"1학년","2":"2학년","3":"3학년",common:"공통·기타"},kindNames={problem:"문제",answer:"정답",solution:"해설"};
   const list=document.getElementById("fileList"),tabs=document.getElementById("gradeTabs"),kind=document.getElementById("kindFilter"),year=document.getElementById("yearFilter"),search=document.getElementById("fileSearch"),heading=document.getElementById("archiveHeading"),count=document.getElementById("archiveCount");
-  let files=[],selected="all";
+  const params=new URLSearchParams(location.search);
+  let files=[],selected=grades.includes(params.get("grade"))?params.get("grade"):"all";
   const safe=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const safeUrl=value=>{try{const u=new URL(String(value),location.href);return ["http:","https:"].includes(u.protocol)?safe(u.href):"#"}catch{return "#"}};
   const gradeOf=f=>grades.includes(String(f.grade))?String(f.grade):"common";
@@ -57,6 +58,6 @@
   Promise.allSettled([fetch("/assets/exam-catalog.json").then(r=>r.ok?r.json():{items:[]}),fetch("/api/files").then(r=>r.ok?r.json():[])]).then(([catalogResult,uploadResult])=>{
     const catalog=catalogResult.status==="fulfilled"?(catalogResult.value.items||[]):[];
     const uploads=uploadResult.status==="fulfilled"&&Array.isArray(uploadResult.value)?uploadResult.value:[];
-    files=[...catalog,...uploads];drawFilters();draw();
+    files=[...catalog,...uploads];drawFilters();if(/^\d{4}$/.test(params.get("year")||""))year.value=params.get("year");if(params.get("q"))search.value=params.get("q");draw();
   });
 })();

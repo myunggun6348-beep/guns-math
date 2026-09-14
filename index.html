@@ -71,29 +71,22 @@
   </div>
 </header>
 
-<!-- ===================== 히어로 (크림 색면 + 수학 그림) ===================== -->
-<section class="hero" id="top">
+<!-- ===================== 히어로 — 학년별 학습 입구 ===================== -->
+<section class="hero portal-hero" id="top">
   <div class="wrap hero-grid">
     <div class="hero-text">
-      <span class="eyebrow">Math · Grade 1–3</span>
+      <span class="eyebrow">High School Math · Grade 1–3</span>
       <h1 class="display-xl">수학을 보다</h1>
-      <p class="hero-intro">보면 알게 되는 것들이 있습니다.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="library.html">직접 보는 수학</a>
-        <!-- "질문 남기기" 라고 하면 ask.html 안의 진짜 제출 버튼과 문구가 같아져서,
-             거길 갔을 때 "방금 그거 아닌가" 하고 헷갈린다. 여기는 이동일 뿐이니
-             다르게 부른다. -->
-        <a class="btn btn-secondary" href="ask.html">질문하러 가기</a>
-        <a class="btn btn-secondary" href="games.html">게임 보러 가기</a>
-      </div>
+      <p class="hero-intro">보고, 풀고, 질문하며 수학을 이해합니다.<br>내 학년을 선택하고 필요한 자료부터 시작하세요.</p>
+      <nav class="grade-entry" aria-label="학년별 자료 바로가기">
+        <a href="files.html?grade=1"><span class="grade-number">1</span><span><b>1학년</b><small>최근 3개년 기출</small></span><span class="grade-arrow" aria-hidden="true">→</span></a>
+        <a href="files.html?grade=2"><span class="grade-number">2</span><span><b>2학년</b><small>최근 3개년 기출</small></span><span class="grade-arrow" aria-hidden="true">→</span></a>
+        <a href="files.html?grade=3"><span class="grade-number">3</span><span><b>3학년</b><small>모의평가·수능 대비</small></span><span class="grade-arrow" aria-hidden="true">→</span></a>
+      </nav>
+      <a class="hero-text-link" href="#quick-start">다른 활동 둘러보기 ↓</a>
     </div>
-
     <figure class="hero-figure">
-      <!-- viewBox 아래위를 그림에 바짝 맞춘다. 0 0 520 340 이면 위아래로
-           58px 씩 빈 채로 그려져, 캡션이 그림에서 떨어져 떠 보였다.
-           (그림 좌표는 그대로 — 세로축 58~282 만 보이게 잘라 낸 것) -->
-      <svg id="heroArt" viewBox="0 44 520 254" role="img"
-           aria-label="단위원 위의 점이 돌아가면서 오른쪽에 사인 곡선이 그려지는 그림"></svg>
+      <svg id="heroArt" viewBox="0 44 520 254" role="img" aria-label="단위원 위의 점이 돌아가면서 오른쪽에 사인 곡선이 그려지는 그림"></svg>
       <figcaption class="caption en">P(cos θ, sin θ) → y = sin θ</figcaption>
     </figure>
   </div>
@@ -113,6 +106,23 @@
     <ul id="noticeRest"></ul>
   </details>
 </div>
+
+<!-- ===================== 주요 학습 활동 ===================== -->
+<section class="section home-start" id="quick-start">
+  <div class="wrap">
+    <div class="home-start-head">
+      <span class="eyebrow">Start here</span>
+      <div><h2 class="headline">오늘 무엇을 할까요?</h2><p class="body-sm">필요한 활동을 고르면 바로 시작할 수 있습니다.</p></div>
+    </div>
+    <div class="portal-grid">
+      <a class="portal-card portal-card-exam" href="files.html"><span class="portal-kicker">기출 자료실</span><h3>최근 3개년 수학 기출</h3><p>학년별 문제·정답·해설을 시험 한 회차씩 모았습니다.</p><span class="portal-go"><b id="examCount">39개 시험</b> 모두 보기 →</span></a>
+      <a class="portal-card portal-card-view" href="library.html"><span class="portal-kicker">보고 이해하기</span><h3>직접 보는 수학</h3><p>그래프와 도형을 움직이며 개념을 확인합니다.</p><span class="portal-go">자료 열기 →</span></a>
+      <a class="portal-card portal-card-map" href="map.html"><span class="portal-kicker">연결해서 보기</span><h3>개념 지도</h3><p>학년과 과목을 넘어 이어지는 개념을 찾습니다.</p><span class="portal-go">지도 열기 →</span></a>
+      <a class="portal-card portal-card-game" href="games.html"><span class="portal-kicker">도전하며 익히기</span><h3>수학 게임</h3><p>방탈출을 시작으로 다양한 수학 게임을 만납니다.</p><span class="portal-go">게임 고르기 →</span></a>
+      <a class="portal-card portal-card-question" href="ask.html"><span class="portal-kicker">막힌 곳 해결하기</span><h3>질문하기</h3><p>풀이 중 막힌 부분을 익명으로 질문할 수 있습니다.</p><span class="portal-go">질문하러 가기 →</span></a>
+    </div>
+  </div>
+</section>
 
 <!-- ===================== 요즘 올라온 것 =====================
      학생은 익명으로 묻기 때문에 "답 달렸어요" 하고 알려 줄 방법이 없습니다.
@@ -141,7 +151,7 @@
   <div class="wrap">
     <div class="find">
       <h2 class="display-lg">뭘 찾고 있나요</h2>
-      <p class="body-sm find-note">개념 이름을 치면 자료·개념·학습지를 한꺼번에 찾습니다.</p>
+      <p class="body-sm find-note">개념·시각 자료·기출·학습지를 한꺼번에 찾습니다.</p>
 
       <div class="find-box">
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
@@ -149,7 +159,7 @@
           <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
         </svg>
         <input type="search" id="findQ" autocomplete="off" aria-label="자료 검색"
-               aria-describedby="findCount" placeholder="예: 정사영, 삼각함수, 정규분포" />
+               aria-describedby="findCount" placeholder="예: 정사영, 삼각함수, 고3 9월" />
       </div>
 
       <p class="caption find-count" id="findCount" role="status" aria-live="polite"></p>
@@ -252,10 +262,24 @@
   // 따로 불러와야 검색에 걸립니다. 불러오기 전엔 FILES(항상 빈 배열)만
   // 쓰다가, 도착하면 합쳐서 다시 그립니다.
   let 동적파일 = [];
-  fetch("/api/files").then(r => (r.ok ? r.json() : [])).then(list => {
-    동적파일 = (Array.isArray(list) ? list : []).map(f => ({ ...f, href: f.url }));
+  Promise.all([
+    fetch("/api/files").then(r => (r.ok ? r.json() : [])).catch(() => []),
+    fetch("/assets/exam-catalog.json").then(r => (r.ok ? r.json() : { items: [] })).catch(() => ({ items: [] })),
+  ]).then(([uploads, catalog]) => {
+    const 올린파일 = (Array.isArray(uploads) ? uploads : []).map(f => ({ ...f, href: f.url }));
+    const 기출묶음 = (Array.isArray(catalog.items) ? catalog.items : []).map(f => ({
+      title: f.title + " 수학",
+      subject: (f.sets || []).map(set => set.subject).join(" · "),
+      kind: f.examName,
+      date: f.examDate,
+      href: "files.html?grade=" + f.grade + "&year=" + f.examYear + "&q=" + encodeURIComponent(f.title),
+      bundle: true,
+    }));
+    동적파일 = [...기출묶음, ...올린파일];
+    const 시험수 = document.getElementById("examCount");
+    if (시험수 && 기출묶음.length) 시험수.textContent = 기출묶음.length + "개 시험";
     그리기();
-  }).catch(() => {});
+  });
   const 열림 = DEMOS.filter(d => d.ready);
 
   /* 묶음마다 넷까지. 전체를 하나로 잘라 버리면 앞 묶음이 자리를 다 먹어
@@ -349,7 +373,7 @@
     const 파일줄 = [...(typeof FILES === "undefined" ? [] : FILES), ...동적파일]
       .filter(f => 소문자(f.title, f.subject, f.kind, f.keywords, f.date).includes(말))
       .map(f => 줄({ href: f.href, 색: "var(--surface-soft)", 그림: 파일그림,
-                    제목: f.title, 다운: true,
+                    제목: f.title, 다운: !f.bundle,
                     밑: [f.subject, f.kind, f.date].filter(Boolean).join(" · ") }));
 
     const 합 = 자료줄.length + 개념줄.length + 파일줄.length;
@@ -411,7 +435,11 @@
 
   const 받기 = 주소 => fetch(주소).then(r => (r.ok ? r.json() : [])).catch(() => []);
 
-  Promise.all([받기("/api/files"), 받기("/api/questions")]).then(([파일, 질문]) => {
+  Promise.all([
+    받기("/api/files"),
+    받기("/api/questions"),
+    fetch("/assets/exam-catalog.json").then(r => (r.ok ? r.json() : { items: [] })).catch(() => ({ items: [] })),
+  ]).then(([파일, 질문, 기출]) => {
     const 목록 = [];
 
     for (const f of Array.isArray(파일) ? 파일 : []) {
@@ -420,6 +448,15 @@
         종류: "학습지", 날짜: f.date, 제목: f.title,
         밑: [f.subject, f.kind].filter(Boolean).join(" · "),
         href: f.url, 다운: true,
+      });
+    }
+    for (const f of Array.isArray(기출.items) ? 기출.items : []) {
+      if (!f.examDate) continue;
+      목록.push({
+        종류: "기출", 날짜: f.examDate, 제목: f.title + " 수학",
+        밑: (f.sets || []).map(set => set.subject).join(" · "),
+        href: "files.html?grade=" + f.grade + "&year=" + f.examYear + "&q=" + encodeURIComponent(f.title),
+        다운: false,
       });
     }
     // at 이 있는 것 = 선생님이 답을 단 질문
@@ -438,7 +475,7 @@
 
     자리.innerHTML = 목록.slice(0, 최대).map(it => `
       <a class="fresh-hit" href="${안전하게(it.href)}"${it.다운 ? ' target="_blank" rel="noopener"' : ""}>
-        <span class="fresh-kind fresh-${it.종류 === "학습지" ? "file" : "answer"}">${it.종류}</span>
+        <span class="fresh-kind fresh-${it.종류 === "학습지" ? "file" : it.종류 === "기출" ? "exam" : "answer"}">${it.종류}</span>
         <span class="fresh-text">
           <b>${안전하게(it.제목)}</b>
           <span class="caption">${안전하게(it.밑)}</span>
