@@ -9,3 +9,9 @@ desktop.ini
 # 여기 올릴 필요가 없습니다 (용량도 큽니다)
 node_modules/
 package-lock.json
+
+# 기출 카탈로그 생성·브라우저 검사 중 생기는 임시 파일
+.exam-source-cache/
+assets/exam-catalog-source/
+downloads/
+artifacts/
