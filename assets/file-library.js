@@ -30,11 +30,13 @@
   function bundleCard(f){
     const g=gradeOf(f);
     const sets=(f.sets||[]).map(subjectSet=>{
+      const solve=subjectSet.files?.problem?.format==="pdf"?'<a class="exam-file-button exam-solve-button" href="solve.html?id='+encodeURIComponent(f.id)+'&amp;subject='+encodeURIComponent(subjectSet.subject)+'"><span aria-hidden="true">✎</span> 바로 풀기</a>':"";
       const buttons=["problem","answer","solution"].filter(k=>subjectSet.files?.[k]).map(k=>{
         const file=subjectSet.files[k],details=[file.format?.toUpperCase(),sizeOf(file.size)].filter(Boolean).join(" · ");
-        return '<a class="exam-file-button" href="'+safeUrl(file.url)+'" target="_blank" rel="noopener" title="'+safe(details)+'">'+kindNames[k]+' <span>↗</span></a>';
+        const label=k==="problem"?"문제 원본":kindNames[k];
+        return '<a class="exam-file-button" href="'+safeUrl(file.url)+'" target="_blank" rel="noopener" title="'+safe(details)+'">'+label+' <span>↗</span></a>';
       }).join("");
-      return '<div class="exam-set"><strong>'+safe(subjectSet.subject)+'</strong><div class="exam-actions">'+buttons+"</div></div>";
+      return '<div class="exam-set"><strong>'+safe(subjectSet.subject)+'</strong><div class="exam-actions">'+solve+buttons+"</div></div>";
     }).join("");
     return '<article class="archive-card exam-bundle"><span class="archive-grade">'+g+'학년</span><div class="archive-copy"><h3>'+safe(f.title)+'</h3><span class="archive-meta"><span>'+safe(examOf(f))+'</span><span>'+safe(f.subject)+'</span></span><div class="exam-sets">'+sets+'</div><a class="exam-source" href="'+safeUrl(f.sourcePage)+'" target="_blank" rel="noopener">출처: '+safe(f.source||"공식 기출")+' ↗</a></div></article>';
   }

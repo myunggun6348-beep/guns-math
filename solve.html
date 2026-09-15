@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<script src="assets/theme.js"></script>
+<title>기출문제 풀기 · 수학을 보다</title>
+<meta name="description" content="태블릿 펜으로 기출문제 PDF 위에 직접 풀이하는 화면입니다." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M20 20l7.5 7.5' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="assets/style.css" />
+<link rel="stylesheet" href="assets/solve.css" />
+</head>
+<body class="solve-body">
+<header class="solve-head">
+  <a class="solve-back" id="backLink" href="files.html" aria-label="자료실로 돌아가기">← <span>자료실</span></a>
+  <div class="solve-title">
+    <strong id="examTitle">기출문제를 불러오는 중</strong>
+    <span id="examMeta">잠시만 기다려 주세요.</span>
+  </div>
+  <div class="solve-head-actions">
+    <span class="save-state" id="saveState" role="status">자동 저장</span>
+    <button class="icon-button" id="fullscreenButton" type="button" aria-label="전체 화면">⛶</button>
+  </div>
+</header>
+
+<main class="solve-app">
+  <section class="solve-toolbar" aria-label="풀이 도구">
+    <div class="tool-group page-tools" aria-label="페이지 이동">
+      <button type="button" class="tool-button" id="prevPage" aria-label="이전 페이지">←</button>
+      <label class="page-field"><input id="pageNumber" type="number" min="1" value="1" inputmode="numeric" aria-label="현재 페이지" /><span>/ <b id="pageCount">–</b></span></label>
+      <button type="button" class="tool-button" id="nextPage" aria-label="다음 페이지">→</button>
+    </div>
+    <div class="tool-divider" aria-hidden="true"></div>
+    <div class="tool-group" role="group" aria-label="필기 도구">
+      <button type="button" class="tool-button tool-mode" data-tool="hand" aria-pressed="false"><span aria-hidden="true">☝</span> 이동</button>
+      <button type="button" class="tool-button tool-mode on" data-tool="pen" aria-pressed="true"><span class="tool-dot pen-dot" aria-hidden="true"></span> 펜</button>
+      <button type="button" class="tool-button tool-mode" data-tool="highlighter" aria-pressed="false"><span class="tool-dot highlighter-dot" aria-hidden="true"></span> 형광펜</button>
+      <button type="button" class="tool-button tool-mode" data-tool="eraser" aria-pressed="false"><span aria-hidden="true">◇</span> 지우개</button>
+    </div>
+    <div class="tool-group compact-tools" aria-label="편집">
+      <button type="button" class="tool-button" id="undoButton" title="되돌리기 (Ctrl+Z)" aria-label="되돌리기">↶</button>
+      <button type="button" class="tool-button" id="redoButton" title="다시 실행 (Ctrl+Shift+Z)" aria-label="다시 실행">↷</button>
+      <button type="button" class="tool-button danger-button" id="clearButton">현재 쪽 지우기</button>
+    </div>
+    <div class="tool-spacer"></div>
+    <label class="finger-toggle"><input id="fingerDraw" type="checkbox" /> 손가락 필기</label>
+    <div class="tool-group zoom-tools" aria-label="확대와 축소">
+      <button type="button" class="tool-button" id="zoomOut" aria-label="축소">−</button>
+      <button type="button" class="tool-button zoom-value" id="zoomFit" title="화면 너비에 맞추기">맞춤</button>
+      <button type="button" class="tool-button" id="zoomIn" aria-label="확대">＋</button>
+    </div>
+  </section>
+
+  <section class="document-area" id="documentArea" aria-label="문제 풀이 영역">
+    <div class="loading-card" id="loadingCard">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <strong id="loadingTitle">문제지를 준비하고 있습니다.</strong>
+      <span id="loadingDetail">PDF를 불러오는 중입니다.</span>
+    </div>
+    <div class="paper" id="paper" hidden>
+      <canvas id="pdfCanvas" aria-label="문제지"></canvas>
+      <canvas id="inkCanvas" aria-label="필기 영역"></canvas>
+    </div>
+  </section>
+
+  <footer class="solve-footer">
+    <div class="timer" aria-label="풀이 시간">
+      <span>풀이 시간</span><strong id="timerValue">00:00:00</strong>
+      <button type="button" id="timerToggle">시작</button>
+      <button type="button" id="timerReset">초기화</button>
+    </div>
+    <div class="solve-footer-actions">
+      <button type="button" id="saveImageButton">현재 쪽 이미지 저장</button>
+      <details class="check-panel">
+        <summary>채점하기</summary>
+        <div class="check-links" id="checkLinks"><span>정답 자료를 준비하고 있습니다.</span></div>
+      </details>
+    </div>
+  </footer>
+</main>
+
+<div class="solve-toast" id="solveToast" role="status" aria-live="polite"></div>
+<script type="module" src="assets/solve.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/assets/hit.js"></script>
+</body>
+</html>

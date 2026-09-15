@@ -1,7 +1,7 @@
 # 수학을 보다
 
 고등학교 수학에서 말로 설명하기 어려운 개념을 학생이 직접 움직여 볼 수 있게 만든 웹 자료실.
-다섯 페이지가 각각 독립되어 있고, 상단 메뉴와 푸터만 공유한다.
+각 학습 화면은 독립되어 있고, 상단 메뉴와 푸터를 공유한다.
 
 인터넷 주소: **https://guns-math.vercel.app**
 (GitHub `main` 에 올리면 Vercel 이 알아서 다시 배포한다)
@@ -12,13 +12,17 @@
 index.html                 홈 (소개 + 공지 한 줄 + 찾기)
 library.html                직접 보는 수학 — 화면에서 움직여 보는 자료 17개
 map.html                    개념 지도 — 개념 19개의 선후 관계, 자료로 가는 또 다른 입구
-files.html                  자료실 — 학습지·프린트 내려받기
+files.html                  자료실 — 최근 3개년 기출 문제·정답·해설
+solve.html                  기출문제 태블릿 풀이 — PDF 위 필기·자동 저장·채점
 ask.html                    질문 — 학생이 묻고 선생님이 답하는 게시판
 escape.html                 수학 탈출 — 15분 문제 풀이와 태블릿 필기 활동
 files/                      위 자료실이 내려주는 PDF 들 (올리는 법은 그 안 README)
 assets/demos.js            자료 목록 (DEMOS) — 홈의 찾기와 library.html 이 함께 씁니다
 assets/concepts.js         개념 목록 (NODES/LAYERS/EDGES) — 홈의 찾기와 map.html
-assets/files.js            파일 목록 (FILES) — 홈의 찾기와 files.html
+assets/exam-catalog.json   최근 3개년 EBSi 기출 목록
+assets/file-library.js     학년·연도·검색 필터와 기출 링크
+assets/solve.js · solve.css 태블릿 풀이 화면과 필기 저장
+assets/files.js            직접 올린 파일 목록 (FILES) — 홈의 찾기와 files.html
 assets/theme.js            어두운 화면 켜고 끄기 — 다섯 페이지가 함께 씁니다
 assets/style.css           사이트 전체 공통 스타일
 assets/state.js            수업용 링크 (조작값 ↔ 주소) — 모든 자료가 함께 씁니다
@@ -32,7 +36,7 @@ api/_push.js               새 질문 알림 보내기 (열쇠는 저장소에 �
 assets/hit.js · api/hit.js 방문 세기 — 페이지별 열린 횟수만 (누가 열었는지는 안 셈).
                            선생님 방 '방문' 칸에서 본다. 새 페이지를 만들면 맨 아래에
                            <script defer src="/assets/hit.js"></script> 한 줄을 붙일 것
-assets/vendor/             three.js · 폰트 (인터넷 없이도 열리도록 함께 보관)
+assets/vendor/             three.js · PDF.js · 폰트 (인터넷 없이도 열리도록 함께 보관)
 폰으로 보기.bat            ← 더블클릭하면 홈페이지가 켜집니다 (아래 "내 컴퓨터·폰에서 보기")
 serve.js                   위 .bat 이 실행하는 것 — 폰에서 볼 주소도 찾아서 알려 줍니다
 ```
@@ -506,8 +510,8 @@ const 폼주소 = "https://formspree.io/f/abcdwxyz";
 
 **이미 올라가 있다.** https://guns-math.vercel.app
 
-- GitHub 저장소 — `myunggun6348-beep/guns-math` (**비공개**)
-- 비공개여도 Vercel 은 배포한다. GitHub Pages 무료 계정과 달리 그 제약이 없다.
+- GitHub 저장소 — myunggun6348-beep/guns-math (**공개**)
+- main 브랜치에 반영하면 Vercel이 자동으로 다시 배포한다.
 
 ### 그 다음부터는 웹에서만 작업하면 된다
 
