@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<script src="assets/theme.js"></script>
+<title>제출한 풀이 보기 · 수학을 보다</title>
+<link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="assets/style.css" />
+<link rel="stylesheet" href="assets/solve.css" />
+<link rel="stylesheet" href="assets/review.css" />
+</head>
+<body class="solve-body review-body">
+<header class="solve-head">
+  <a class="solve-back" href="admin.html#풀이제출">← <span>선생님 방</span></a>
+  <div class="solve-title"><strong id="reviewTitle">제출한 풀이</strong><span id="reviewMeta">확인하는 중입니다.</span></div>
+  <button class="icon-button" id="fullscreenButton" type="button" aria-label="전체 화면">⛶</button>
+</header>
+
+<main class="review-login" id="reviewLogin" hidden>
+  <form id="reviewLoginForm">
+    <span class="eyebrow">Teacher</span><h1>선생님 암호를 입력해 주세요.</h1>
+    <input name="password" type="password" autocomplete="current-password" required />
+    <button type="submit">풀이 보기 →</button><p id="reviewLoginStatus" role="status"></p>
+  </form>
+</main>
+
+<main class="solve-app" id="reviewApp" hidden>
+  <section class="solve-toolbar review-toolbar" aria-label="제출 정보와 페이지 이동">
+    <div class="review-student"><strong id="studentName"></strong><span id="submissionInfo"></span></div>
+    <div class="tool-spacer"></div>
+    <div class="written-pages" id="writtenPages" aria-label="필기한 페이지"></div>
+    <div class="tool-group page-tools">
+      <button type="button" class="tool-button" id="prevPage" aria-label="이전 페이지">←</button>
+      <label class="page-field"><input id="pageNumber" type="number" min="1" value="1" aria-label="현재 페이지" /><span>/ <b id="pageCount">–</b></span></label>
+      <button type="button" class="tool-button" id="nextPage" aria-label="다음 페이지">→</button>
+    </div>
+    <div class="tool-group"><button type="button" class="tool-button" id="zoomOut">−</button><button type="button" class="tool-button" id="zoomFit">맞춤</button><button type="button" class="tool-button" id="zoomIn">＋</button></div>
+  </section>
+  <section class="document-area" id="documentArea">
+    <div class="loading-card" id="loadingCard"><span class="loading-spinner"></span><strong id="loadingTitle">제출본을 불러오는 중입니다.</strong><span id="loadingDetail">잠시만 기다려 주세요.</span></div>
+    <div class="paper review-paper" id="paper" hidden><canvas id="pdfCanvas"></canvas><canvas id="inkCanvas"></canvas></div>
+  </section>
+  <footer class="review-footer"><p id="studentNote"></p><button type="button" id="saveReviewImage">현재 쪽 이미지 저장</button></footer>
+</main>
+<script type="module" src="assets/review.js"></script>
+</body>
+</html>

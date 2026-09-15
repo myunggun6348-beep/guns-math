@@ -25,6 +25,9 @@ const state = {
   timerElapsed: 0,
   timerStartedAt: 0,
   timerId: null,
+  timerLimit: 100,
+  timerEnded: false,
+  timerOvertime: false,
   db: null,
   docKey: ""
 };
@@ -437,35 +440,146 @@ $("#saveImageButton").addEventListener("click", () => {
 });
 
 function timerText(milliseconds) {
-  const total = Math.floor(milliseconds / 1000);
+  const total = Math.max(0, Math.floor(milliseconds / 1000));
   const h = String(Math.floor(total / 3600)).padStart(2, "0");
   const m = String(Math.floor(total % 3600 / 60)).padStart(2, "0");
   const s = String(total % 60).padStart(2, "0");
-  return `${h}:${m}:${s}`;
+  return h + ":" + m + ":" + s;
+}
+function elapsedNow() {
+  return state.timerElapsed + (state.timerStartedAt ? Date.now() - state.timerStartedAt : 0);
+}
+function beep() {
+  try {
+    const audio = new AudioContext(), oscillator = audio.createOscillator(), gain = audio.createGain();
+    oscillator.connect(gain); gain.connect(audio.destination); oscillator.frequency.value = 740;
+    gain.gain.setValueAtTime(.08, audio.currentTime); gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .55);
+    oscillator.start(); oscillator.stop(audio.currentTime + .55);
+  } catch {}
+}
+function timeUp() {
+  const limit = state.timerLimit * 60000;
+  state.timerElapsed = limit; state.timerStartedAt = 0; state.timerEnded = true;
+  clearInterval(state.timerId);
+  $("#timerToggle").textContent = "계속";
+  beep();
+  if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
+  if (!$("#timeUpDialog").open) $("#timeUpDialog").showModal();
 }
 function drawTimer() {
-  const elapsed = state.timerElapsed + (state.timerStartedAt ? Date.now() - state.timerStartedAt : 0);
-  $("#timerValue").textContent = timerText(elapsed);
+  const elapsed = elapsedNow(), value = $("#timerValue"), limit = state.timerLimit * 60000;
+  value.classList.remove("warning", "overtime");
+  if (!state.timerLimit) value.textContent = timerText(elapsed);
+  else if (state.timerOvertime) {
+    value.textContent = "+" + timerText(elapsed - limit);
+    value.classList.add("overtime");
+  } else {
+    const remaining = Math.max(0, limit - elapsed);
+    value.textContent = timerText(remaining);
+    if (remaining <= 5 * 60000) value.classList.add("warning");
+    if (remaining <= 0 && state.timerStartedAt && !state.timerEnded) timeUp();
+  }
 }
+function stopTimer() {
+  if (!state.timerStartedAt) return;
+  state.timerElapsed += Date.now() - state.timerStartedAt;
+  state.timerStartedAt = 0;
+  clearInterval(state.timerId);
+}
+try {
+  const savedLimit = Number(localStorage.getItem("math-solve-timer-limit"));
+  if ([0,10,20,30,40,50,80,100].includes(savedLimit)) state.timerLimit = savedLimit;
+} catch {}
+$("#timerLimit").value = String(state.timerLimit);
+drawTimer();
+$("#timerLimit").addEventListener("change", event => {
+  state.timerLimit = Number(event.target.value) || 0;
+  state.timerElapsed = 0; state.timerEnded = false; state.timerOvertime = false;
+  try { localStorage.setItem("math-solve-timer-limit", String(state.timerLimit)); } catch {}
+  drawTimer();
+});
 $("#timerToggle").addEventListener("click", event => {
   if (state.timerStartedAt) {
-    state.timerElapsed += Date.now() - state.timerStartedAt;
-    state.timerStartedAt = 0;
-    clearInterval(state.timerId);
+    stopTimer();
     event.currentTarget.textContent = "계속";
   } else {
+    if (state.timerEnded) state.timerOvertime = true;
     state.timerStartedAt = Date.now();
     state.timerId = setInterval(drawTimer, 250);
+    $("#timerLimit").disabled = true;
     event.currentTarget.textContent = "멈춤";
   }
   drawTimer();
 });
 $("#timerReset").addEventListener("click", () => {
-  state.timerElapsed = 0;
-  if (state.timerStartedAt) state.timerStartedAt = Date.now();
+  clearInterval(state.timerId);
+  state.timerElapsed = 0; state.timerStartedAt = 0; state.timerEnded = false; state.timerOvertime = false;
+  $("#timerLimit").disabled = false;
+  $("#timerToggle").textContent = "시작";
+  drawTimer();
+});
+$("#continueOvertime").addEventListener("click", () => {
+  $("#timeUpDialog").close();
+  state.timerEnded = false; state.timerOvertime = true; state.timerStartedAt = Date.now();
+  state.timerId = setInterval(drawTimer, 250);
+  $("#timerToggle").textContent = "멈춤";
   drawTimer();
 });
 
+function writtenPageCount() {
+  return Object.values(state.pages).filter(strokes => Array.isArray(strokes) && strokes.length).length;
+}
+function submissionClientId(student) {
+  const key = "math-solve-client:" + state.docKey + ":" + student;
+  let id = "";
+  try { id = localStorage.getItem(key) || ""; } catch {}
+  if (!/^[a-zA-Z0-9-]{20,80}$/.test(id)) {
+    id = crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(20)), x => x.toString(16).padStart(2, "0")).join("");
+    try { localStorage.setItem(key, id); } catch {}
+  }
+  return id;
+}
+function openSubmission() {
+  const count = writtenPageCount();
+  if (!count) return toast("문제지에 풀이를 작성한 뒤 제출해 주세요.");
+  const dialog = $("#submissionDialog"), form = $("#submissionForm");
+  dialog.classList.remove("submitted");
+  $("#submissionStatus").textContent = "";
+  $("#submissionStatus").className = "dialog-status";
+  form.querySelector('button[type="submit"]').disabled = false;
+  try { form.student.value = localStorage.getItem("math-solve-student") || ""; } catch {}
+  $("#submissionSummary").textContent = state.item.title + " · " + state.subjectSet.subject + " · 필기 " + count + "쪽 · 풀이 " + timerText(elapsedNow());
+  if (!dialog.open) dialog.showModal();
+}
+$("#submitSolutionButton").addEventListener("click", openSubmission);
+$("#timeUpSubmit").addEventListener("click", () => { $("#timeUpDialog").close(); openSubmission(); });
+document.querySelectorAll("[data-close-dialog]").forEach(button => button.addEventListener("click", () => button.closest("dialog").close()));
+$("#submissionForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = event.currentTarget, student = form.student.value.trim(), status = $("#submissionStatus"), button = form.querySelector('button[type="submit"]');
+  if (student.length < 2) { status.textContent = "학번이나 이름을 두 글자 이상 입력해 주세요."; return; }
+  if (!writtenPageCount()) { status.textContent = "문제지에 풀이를 작성한 뒤 제출해 주세요."; return; }
+  button.disabled = true; status.textContent = "선생님께 보내는 중…"; status.className = "dialog-status";
+  try {
+    await persistNotes();
+    const response = await fetch("/api/solutions", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "submit", clientId: submissionClientId(student), student, note: form.note.value.trim(),
+        examId: state.item.id, subject: state.subjectSet.subject, pageCount: state.pageCount, pages: clone(state.pages),
+        elapsedMs: elapsedNow(), limitMinutes: state.timerLimit })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "제출하지 못했습니다.");
+    try { localStorage.setItem("math-solve-student", student); } catch {}
+    status.textContent = result.updated ? "기존 제출본을 최신 풀이로 바꿨습니다." : "선생님께 풀이를 제출했습니다.";
+    status.className = "dialog-status success";
+    $("#submissionDialog").classList.add("submitted");
+    toast("풀이를 제출했습니다.");
+  } catch (error) {
+    status.textContent = error.message || "제출하지 못했습니다.";
+    button.disabled = false;
+  }
+});
 document.addEventListener("keydown", event => {
   if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {

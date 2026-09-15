@@ -60,7 +60,7 @@
       <span class="eyebrow">Admin</span>
       <h1 class="display-lg">선생님 방</h1>
       <p class="body-lg" style="margin-top: var(--md); max-width: 30em;">
-        암호를 넣으면 질문에 답을 달고, 자료실에 파일을 올릴 수 있습니다.
+        암호를 넣으면 질문에 답을 달고, 제출한 풀이를 확인하며 자료실을 관리할 수 있습니다.
       </p>
       <form class="adm-login" id="로그인">
         <input type="password" placeholder="암호" autocomplete="current-password" required />
@@ -118,6 +118,19 @@
           <input type="checkbox" id="검토스위치" />
           <span>확인 후 공개 — 켜 두면 내가 공개를 누른 질문만 학생에게 보입니다</span>
         </label>
+      </section>
+
+      <!-- ===== 제출한 풀이 ===== -->
+      <section class="adm-block" id="풀이제출">
+        <div class="adm-section-head">
+          <div>
+            <h2 class="display-sm">제출한 풀이</h2>
+            <p class="body-sm adm-note">학생이 기출문제 위에 작성해 보낸 풀이입니다. 제출본은 90일 동안 보관됩니다.</p>
+          </div>
+          <button type="button" class="adm-del" id="풀이새로고침">새로고침</button>
+        </div>
+        <p class="adm-waiting" id="풀이요약" role="status" aria-live="polite"></p>
+        <div id="풀이목록"><p class="empty">불러오는 중…</p></div>
       </section>
 
       <!-- ===== 공지 =====
@@ -1290,5 +1303,6 @@
 }
 </script>
 
+<script src="assets/admin-solutions.js"></script>
 </body>
 </html>

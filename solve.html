@@ -67,12 +67,19 @@
 
   <footer class="solve-footer">
     <div class="timer" aria-label="풀이 시간">
-      <span>풀이 시간</span><strong id="timerValue">00:00:00</strong>
+      <label for="timerLimit">제한시간</label>
+      <select id="timerLimit" aria-label="제한시간 선택">
+        <option value="0">자유 풀이</option><option value="10">10분</option><option value="20">20분</option>
+        <option value="30">30분</option><option value="40">40분</option><option value="50">50분</option>
+        <option value="80">80분</option><option value="100" selected>100분</option>
+      </select>
+      <strong id="timerValue">01:40:00</strong>
       <button type="button" id="timerToggle">시작</button>
       <button type="button" id="timerReset">초기화</button>
     </div>
     <div class="solve-footer-actions">
       <button type="button" id="saveImageButton">현재 쪽 이미지 저장</button>
+      <button type="button" class="submit-button" id="submitSolutionButton">풀이 제출</button>
       <details class="check-panel">
         <summary>채점하기</summary>
         <div class="check-links" id="checkLinks"><span>정답 자료를 준비하고 있습니다.</span></div>
@@ -80,6 +87,33 @@
     </div>
   </footer>
 </main>
+
+<dialog class="solve-dialog" id="timeUpDialog">
+  <div class="dialog-mark" aria-hidden="true">00:00</div>
+  <h2>제한시간이 끝났습니다.</h2>
+  <p>작성한 내용은 그대로 저장되어 있습니다. 지금 제출하거나 시간을 넘겨 계속 풀 수 있습니다.</p>
+  <div class="dialog-actions">
+    <button type="button" class="primary-dialog-button" id="timeUpSubmit">풀이 제출</button>
+    <button type="button" id="continueOvertime">계속 풀기</button>
+  </div>
+</dialog>
+
+<dialog class="solve-dialog submit-dialog" id="submissionDialog">
+  <form id="submissionForm">
+    <button type="button" class="dialog-close" data-close-dialog aria-label="닫기">×</button>
+    <span class="dialog-kicker">풀이 제출</span>
+    <h2>선생님께 보낼 정보를 적어 주세요.</h2>
+    <label>학번 또는 이름 <input type="text" name="student" maxlength="30" placeholder="예: 20312 홍길동" autocomplete="name" required /></label>
+    <label>선생님께 남길 말 <input type="text" name="note" maxlength="120" placeholder="선택 사항" /></label>
+    <p class="submission-summary" id="submissionSummary"></p>
+    <p class="privacy-note">학번·이름, 필기 내용과 풀이 시간이 선생님 방에 90일 동안 보관됩니다.</p>
+    <p class="dialog-status" id="submissionStatus" role="status" aria-live="polite"></p>
+    <div class="dialog-actions">
+      <button type="submit" class="primary-dialog-button">제출하기</button>
+      <button type="button" data-close-dialog>취소</button>
+    </div>
+  </form>
+</dialog>
 
 <div class="solve-toast" id="solveToast" role="status" aria-live="polite"></div>
 <script type="module" src="assets/solve.js"></script>
