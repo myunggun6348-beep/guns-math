@@ -6,3 +6,7 @@
 @media(max-width:1000px){.game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.game-grid{grid-template-columns:1fr;gap:20px}.game-card-content{padding:20px}}
 @media(prefers-reduced-motion:reduce){.game-card{transition:none}.game-card:hover{transform:none}}
+.game-art{position:relative;display:grid;place-items:center;aspect-ratio:16/10;overflow:hidden;background:var(--art-color);color:#000}
+.game-art span{position:relative;z-index:2;font-family:var(--mono);font-size:clamp(42px,6vw,78px);font-weight:700;letter-spacing:-.04em}
+.game-art i{position:absolute;width:54%;aspect-ratio:1;border:2px solid rgba(0,0,0,.25);border-radius:50%;transform:translate(38%,-24%)}
+.game-art:after{content:"";position:absolute;width:120%;height:2px;background:rgba(0,0,0,.22);transform:rotate(-19deg)}

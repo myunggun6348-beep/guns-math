@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>수학 미니게임 | 수학을 보다</title>
+  <meta name="description" content="3~5분 동안 집중해서 푸는 고등학교 수학 미니게임">
+  <script src="assets/theme.js"></script>
+  <link rel="stylesheet" href="assets/vendor/fonts/pretendard.css">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/quick-games.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13.5" cy="13.5" r="9" fill="#d9f26e"/><path d="M6 16q3.75-8 7.5-2.5t7.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="13.5" cy="13.5" r="9" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M20 20l7.5 7.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      수학을 보다
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html#notice">공지</a><a href="library.html">직접 보는 수학</a><a href="map.html">개념 지도</a><a href="files.html">자료실</a><a href="ask.html">질문</a><a href="games.html" aria-current="page">게임</a>
+    </div>
+    <div class="nav-right">
+      <button type="button" id="themeToggle" class="theme-toggle" aria-pressed="false" aria-label="어두운 화면으로 보기">
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <div class="nav-toggle-wrap"><input type="checkbox" class="nav-toggle-input" id="navToggle"><label class="nav-toggle" for="navToggle" aria-label="메뉴 열기"><span></span><span></span><span></span></label></div>
+    </div>
+  </div>
+</header>
+<main class="quick-main">
+  <div class="wrap">
+    <a class="back-link" href="games.html">← 게임 목록</a>
+    <section id="gameApp" class="quick-shell" aria-live="polite">
+      <div class="quick-loading">게임을 준비하고 있습니다.</div>
+    </section>
+  </div>
+</main>
+<footer class="footer"><div class="wrap"><div class="footer-line"><a class="footer-wordmark" href="index.html">수학을 보다</a><ul><li><a href="library.html">직접 보는 수학</a></li><li><a href="map.html">개념 지도</a></li><li><a href="files.html">자료실</a></li><li><a href="games.html">게임</a></li></ul></div><p class="footer-base body-sm">수업에서 쓰라고 만든 자료입니다. 출처만 밝히면 자유롭게 쓰셔도 됩니다.</p></div></footer>
+<script src="assets/quick-games.js"></script>
+</body>
+</html>
