@@ -3,7 +3,12 @@
   "use strict";
   const KEY="math-wrong-notes-v1",STATS_KEY="math-concept-stats-v1";
   function read(){try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
-  function write(items){try{localStorage.setItem(KEY,JSON.stringify(items.slice(0,200)));window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}catch{return false}}
+  function persist(items){localStorage.setItem(KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
+  function write(items){
+    const saved=items.slice(0,200);try{return persist(saved)}catch{}
+    for(let i=saved.length-1;i>=0;i--){if(saved[i].solutionImage){saved[i]={...saved[i],solutionImage:""};try{return persist(saved)}catch{}}}
+    return false;
+  }
   function statKey(data){return data.conceptId||("name:"+(data.conceptName||"기타"))}
   function readStats(){
     try{
@@ -36,6 +41,7 @@
   }
   function hash(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
   function idFor(data){return hash([data.source||"",data.sourceKey||"",data.prompt||""].join("|"))}
+  function solutionImage(value){const image=String(value||"");return /^data:image\/(?:png|webp|jpeg);base64,/.test(image)&&image.length<350000?image:""}
   function record(data,isCorrect){
     track(data,isCorrect);
     const items=read(),id=idFor(data),index=items.findIndex(x=>x.id===id),now=new Date().toISOString();
@@ -48,6 +54,7 @@
       grade:data.grade||"",subject:data.subject||"",conceptId:data.conceptId||"",conceptName:data.conceptName||"",
       prompt:data.prompt||"",type:data.type||"text",choices:Array.isArray(data.choices)?data.choices:[],
       correctAnswer:String(data.correctAnswer??""),userAnswer:String(data.userAnswer??""),explanation:data.explanation||"",
+      solutionImage:solutionImage(data.solutionImage),
       reviewHref:data.reviewHref||"",mastered:false,lastWrongAt:now,attempts:index>=0?(items[index].attempts||0)+1:1,
       createdAt:index>=0?items[index].createdAt:now
     };

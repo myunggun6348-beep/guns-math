@@ -178,7 +178,7 @@
     locked=true;
     document.querySelectorAll(".choice-btn,.answer-input,#inlineSubmit,#submitBtn").forEach(el=>el.disabled=true);
     if(isCorrect){correct++;streak++;score+=160+(streak-1)*20}else{streak=0}
-    window.WrongNotes?.record({source:"game",sourceKey:key,sourceTitle:"미니게임 · "+game.title,subject:game.kicker,conceptId:wrongConcept[0],conceptName:wrongConcept[1],prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"quick-game.html?game="+key},isCorrect);
+    window.WrongNotes?.record({source:"game",sourceKey:key,sourceTitle:"미니게임 · "+game.title,subject:game.kicker,conceptId:wrongConcept[0],conceptName:wrongConcept[1],prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"quick-game.html?game="+key,solutionImage:isCorrect?"":window.GameScratch.capture(index)},isCorrect);
     const slot=document.getElementById("feedbackSlot");
     slot.innerHTML='<div class="feedback '+(isCorrect?"correct":"wrong")+'" role="status"><strong>'+(isCorrect?"정답입니다!":"한 번 더 개념을 확인해 봅시다.")+'</strong><span>'+q.explanation+'</span></div>';
     const actions=document.querySelector(".quiz-actions");

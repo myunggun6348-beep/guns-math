@@ -6,6 +6,7 @@
   if(!["active","mastered","all"].includes(filter))filter="active";
   const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   const norm=v=>String(v).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"");
+  const solutionImage=v=>/^data:image\/(?:png|webp|jpeg);base64,/.test(String(v||""))?String(v):"";
   const noteKey=n=>n.conceptId||("name:"+(n.conceptName||"기타"));
   function toast(text){const el=document.getElementById("wrongToast");el.textContent=text;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800)}
   function dateText(value){try{return new Intl.DateTimeFormat("ko-KR",{month:"long",day:"numeric"}).format(new Date(value))}catch{return""}}
@@ -37,8 +38,10 @@
   }
   function card(note){
     const concept=note.conceptName?'<span class="wrong-tag">'+esc(note.conceptName)+'</span>':"";
+    const solution=solutionImage(note.solutionImage);
+    const work=solution?'<figure class="wrong-work"><figcaption><b>내 풀이</b><span>오답을 제출했을 때의 풀이판</span></figcaption><img src="'+esc(solution)+'" alt="저장된 문제 풀이"></figure>':"";
     const links=(note.conceptId?'<a class="wrong-link" href="map.html?n='+encodeURIComponent(note.conceptId)+'">개념 복습 →</a>':'')+(note.reviewHref?'<a class="wrong-link" href="'+esc(note.reviewHref)+'">원문 다시 풀기 →</a>':'');
-    return '<article class="wrong-card '+(note.mastered?"mastered":"")+'" data-card="'+note.id+'"><div class="wrong-card-top"><div class="wrong-tags"><span class="wrong-tag source">'+esc(note.sourceTitle)+'</span>'+concept+(note.mastered?'<span class="wrong-tag">복습 완료</span>':'')+'</div><span class="wrong-date">'+dateText(note.lastWrongAt)+'</span></div><h2 class="wrong-question">'+esc(note.prompt)+'</h2><dl class="wrong-answer"><dt>내가 쓴 답</dt><dd>'+esc(note.userAnswer||"답하지 않음")+'</dd></dl><details class="wrong-detail"><summary>정답과 해설 보기</summary><div><b>정답: '+esc(note.correctAnswer)+'</b><br>'+esc(note.explanation)+'</div></details><div class="wrong-card-actions">'+(!note.mastered?'<button class="wrong-button primary" data-retry="'+note.id+'">다시 풀기</button>':'')+links+'<button class="wrong-button remove" data-remove="'+note.id+'">기록 삭제</button></div><div class="retry-slot" id="retry-'+note.id+'"></div></article>';
+    return '<article class="wrong-card '+(note.mastered?"mastered":"")+'" data-card="'+note.id+'"><div class="wrong-card-top"><div class="wrong-tags"><span class="wrong-tag source">'+esc(note.sourceTitle)+'</span>'+concept+(note.mastered?'<span class="wrong-tag">복습 완료</span>':'')+'</div><span class="wrong-date">'+dateText(note.lastWrongAt)+'</span></div><h2 class="wrong-question">'+esc(note.prompt)+'</h2><dl class="wrong-answer"><dt>내가 쓴 답</dt><dd>'+esc(note.userAnswer||"답하지 않음")+'</dd></dl>'+work+'<details class="wrong-detail"><summary>정답과 해설 보기</summary><div><b>정답: '+esc(note.correctAnswer)+'</b><br>'+esc(note.explanation)+'</div></details><div class="wrong-card-actions">'+(!note.mastered?'<button class="wrong-button primary" data-retry="'+note.id+'">다시 풀기</button>':'')+links+'<button class="wrong-button remove" data-remove="'+note.id+'">기록 삭제</button></div><div class="retry-slot" id="retry-'+note.id+'"></div></article>';
   }
   function empty(selected){
     const text=selected?selected.name+"에서 현재 조건에 맞는 오답이 없습니다.":filter==="active"?"지금 복습할 오답이 없습니다. 오늘의 학습을 풀면 틀린 문제가 자동으로 들어옵니다.":filter==="mastered"?"아직 복습 완료한 문제가 없습니다.":"아직 저장된 오답이 없습니다.";
