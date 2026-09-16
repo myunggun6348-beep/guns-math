@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const { 준비됨, 명령 } = require("./_redis");
 const 푸시 = require("./_push");
 const { 한국날짜 } = require("./hit");
+const { del } = require("./_blob");
 
 const 열쇠이름 = "qna";
 const 설정열쇠 = "설정";
@@ -189,6 +190,10 @@ module.exports = async (req, res) => {
 
   try {
     if (받은.작업 === "삭제") {
+      const 원본 = await 명령("HGET", 열쇠이름, id);
+      if (원본) {
+        try { const 항목 = JSON.parse(원본); if (항목.img) await del(항목.img); } catch {}
+      }
       await 명령("HDEL", 열쇠이름, id);
       return res.status(200).json({ 좋음: true });
     }

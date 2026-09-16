@@ -85,6 +85,8 @@
       </div>
     </div>
 
+    <nav class="library-grade-tabs" id="gradeFilter" aria-label="학년 선택"></nav>
+
     <!-- 과목 바로가기(자동 생성) 와 검색을 한 줄에 둔다 -->
     <div class="toolbar">
       <nav class="subject-nav" id="subjectNav" aria-label="과목 바로가기"></nav>
@@ -125,6 +127,18 @@
 const grid = document.getElementById("grid");
 const subjectNav = document.getElementById("subjectNav");
 let query = "";
+const params = new URLSearchParams(location.search);
+let selectedGrade = ["1", "2", "3"].includes(params.get("grade")) ? params.get("grade") : "all";
+const gradeNumbers = d => [...new Set((String(d.year).match(/[123]/g) || []))];
+const gradeMatches = d => selectedGrade === "all" || gradeNumbers(d).includes(selectedGrade);
+
+function renderGradeFilter() {
+  const labels = { all: "전체", 1: "1학년", 2: "2학년", 3: "3학년" };
+  document.getElementById("gradeFilter").innerHTML = ["all", "1", "2", "3"].map(g => {
+    const n = g === "all" ? DEMOS.length : DEMOS.filter(d => gradeNumbers(d).includes(g)).length;
+    return `<button type="button" class="${selectedGrade === g ? "on" : ""}" data-grade="${g}" aria-pressed="${selectedGrade === g}">${labels[g]} <span>${n}</span></button>`;
+  }).join("");
+}
 
 /* 자료가 모두 몇 개인지 — 세어서 씁니다.
    예전에는 이 숫자를 페이지 곳곳에 손으로 적어 두었는데, 자료를 늘려도
@@ -134,11 +148,15 @@ document.getElementById("총개수").textContent = `모두 ${DEMOS.length}개`;
 function render() {
   const list = DEMOS.filter(d => {
     const hay = (d.title + d.subject + d.unit + d.desc + d.use + d.keywords + d.year).toLowerCase();
-    return !query || hay.includes(query);
+    return gradeMatches(d) && (!query || hay.includes(query));
   });
 
   grid.innerHTML = "";
   subjectNav.innerHTML = "";
+  renderGradeFilter();
+  document.getElementById("총개수").textContent = selectedGrade === "all"
+    ? `모두 ${DEMOS.length}개`
+    : `${selectedGrade}학년 자료 ${list.length}개`;
 
   if (!list.length) {
     grid.innerHTML = '<p class="empty">조건에 맞는 자료가 아직 없습니다.</p>';
@@ -177,23 +195,45 @@ function render() {
     grid.appendChild(head);
 
     for (const d of items) {
-      const el = document.createElement(d.ready ? "a" : "div");
+      const el = document.createElement("article");
       el.className = "card" + (d.ready ? "" : " soon");
-      if (d.ready) el.href = d.href;
-      el.innerHTML = `
+      const grade = selectedGrade === "all" ? (gradeNumbers(d)[0] || "common") : selectedGrade;
+      const examSubject = grade === "3"
+        ? (/미적분/.test(d.subject) ? "미적분" : d.subject)
+        : "수학";
+      const related = "files.html?" + new URLSearchParams({ grade, q: examSubject }).toString();
+      const worksheet = "files.html?" + new URLSearchParams({ grade, kind: "학습지", q: d.subject }).toString();
+      const cardBody = `
         <div class="thumb" style="background:${m.color}">${d.fig}</div>
         <div class="card-top">
-          <span class="caption">${d.subject} · ${d.unit}</span>
+          <span class="caption">${d.year} · ${d.subject} · ${d.unit}</span>
           ${d.d3 ? '<span class="tag-3d">3D</span>' : ""}
           ${d.ready ? "" : '<span class="caption">준비 중</span>'}
         </div>
         <h3>${d.title}</h3>
         <p class="use"><b>이럴 때</b><span>${d.use}</span></p>
         ${d.ready ? '<span class="go">열어 보기 →</span>' : ""}`;
+      el.innerHTML = d.ready
+        ? `<a class="card-main" href="${d.href}">${cardBody}</a>
+           <div class="card-related" aria-label="${d.title} 관련 자료">
+             <a href="${related}">관련 기출</a>
+             <a href="${worksheet}">관련 학습지</a>
+           </div>`
+        : cardBody;
       grid.appendChild(el);
     }
   }
 }
+
+document.getElementById("gradeFilter").addEventListener("click", e => {
+  const button = e.target.closest("[data-grade]");
+  if (!button) return;
+  selectedGrade = button.dataset.grade;
+  const next = new URL(location.href);
+  selectedGrade === "all" ? next.searchParams.delete("grade") : next.searchParams.set("grade", selectedGrade);
+  history.replaceState(null, "", next);
+  render();
+});
 
 document.getElementById("q").addEventListener("input", e => {
   query = e.target.value.trim().toLowerCase();

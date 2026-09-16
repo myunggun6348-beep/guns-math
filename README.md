@@ -10,11 +10,11 @@
 
 ```
 index.html                 홈 (소개 + 공지 한 줄 + 찾기)
-library.html                직접 보는 수학 — 화면에서 움직여 보는 자료 17개
+library.html                직접 보는 수학 — 24개 시각화, 학년 필터, 관련 기출·학습지
 map.html                    개념 지도 — 개념 19개의 선후 관계, 자료로 가는 또 다른 입구
 files.html                  자료실 — 최근 3개년 기출 문제·정답·해설
 solve.html                  기출문제 태블릿 풀이 — PDF 위 필기·자동 저장·채점
-ask.html                    질문 — 학생이 묻고 선생님이 답하는 게시판
+ask.html                    질문 — 풀이·공부법·제안 분류, 문제 사진 첨부, 교사 답변
 escape.html                 수학 탈출 — 15분 문제 풀이와 태블릿 필기 활동
 files/                      위 자료실이 내려주는 PDF 들 (올리는 법은 그 안 README)
 assets/demos.js            자료 목록 (DEMOS) — 홈의 찾기와 library.html 이 함께 씁니다

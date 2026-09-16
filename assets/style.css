@@ -2080,3 +2080,26 @@ html.theme-dark .canvas-host {
 .adm-section-head{display:flex;align-items:start;justify-content:space-between;gap:20px}.adm-section-head .adm-note{margin-bottom:var(--lg)}.submission-list{border-top:2px solid var(--ink)}.submission-row{display:grid;grid-template-columns:150px minmax(0,1fr) auto;align-items:center;gap:20px;padding:17px 5px;border-bottom:1px solid var(--hairline)}.submission-student strong,.submission-student span,.submission-main b,.submission-main span{display:block}.submission-student strong{font-size:17px}.submission-student span,.submission-main span{margin-top:3px;font-size:13px;line-height:1.45;opacity:.62}.submission-main b{font-size:15px}.submission-actions{display:flex;align-items:center;gap:10px}.submission-actions a{padding:7px 10px;border-radius:7px;background:var(--block-lime);color:#111;font-size:13px;font-weight:650;text-decoration:none;white-space:nowrap}.submission-actions a:hover{background:var(--ink);color:var(--canvas)}
 @media(max-width:720px){.submission-row{grid-template-columns:1fr auto;gap:10px}.submission-student{grid-column:1/-1;display:flex;align-items:baseline;gap:10px}.submission-main{grid-column:1}.submission-actions{grid-column:2;grid-row:2}.submission-actions .adm-del{display:none}}
 @media(max-width:470px){.submission-row{grid-template-columns:1fr}.submission-main,.submission-actions{grid-column:1}.submission-actions{grid-row:auto}}
+
+.qtype{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 var(--lg);padding:0;border:0}
+.qtype legend{width:100%;margin-bottom:var(--xs);font-size:14px;color:rgba(255,255,255,.62)}
+.qtype label{cursor:pointer}.qtype input{position:absolute;opacity:0;pointer-events:none}
+.qtype span{display:block;padding:8px 13px;border:1px solid rgba(255,255,255,.22);border-radius:var(--r-full);font-size:14px;color:rgba(255,255,255,.75)}
+.qtype input:checked+span{background:var(--block-lime);border-color:var(--block-lime);color:#111;font-weight:650}
+.qtype input:focus-visible+span{outline:2px solid #fff;outline-offset:2px}
+.qform input[type="file"]{padding:8px;font-size:14px}
+.qphoto-preview{position:relative;margin-top:10px;width:min(100%,320px)}
+.qphoto-preview[hidden]{display:none}.qphoto-preview img{display:block;width:100%;max-height:260px;object-fit:contain;border-radius:var(--r-md);background:#fff}
+.qphoto-preview button{position:absolute;right:8px;top:8px;padding:5px 9px;border:0;border-radius:var(--r-full);background:#111;color:#fff;font:600 12px inherit;cursor:pointer}
+.qphoto-help{margin:7px 0 0;color:rgba(255,255,255,.5)}
+.qa-kind{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:var(--r-full);background:rgba(255,255,255,.12);font-size:11px;color:rgba(255,255,255,.8)}
+.qa-photo-link{display:block;width:min(100%,360px);margin-top:12px}.qa-photo-link img{display:block;width:100%;max-height:300px;object-fit:contain;border-radius:var(--r-md);background:#fff}
+.adm-q-image{display:block;width:min(100%,420px);margin:0 0 var(--md)}.adm-q-image img{display:block;width:100%;max-height:360px;object-fit:contain;border:1px solid var(--hairline);border-radius:var(--r-md);background:#fff}
+.library-grade-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 var(--lg)}
+.library-grade-tabs button{padding:9px 15px;border:1px solid var(--hairline);border-radius:var(--r-full);background:var(--canvas);color:var(--ink);font:600 14px inherit;cursor:pointer}
+.library-grade-tabs button:hover{border-color:var(--ink)}.library-grade-tabs button.on{background:var(--block-lime);border-color:var(--block-lime);color:#111}
+.library-grade-tabs button span{margin-left:5px;opacity:.62;font-family:var(--mono);font-size:12px}
+.card-main{display:flex;flex:1;flex-direction:column;color:inherit;text-decoration:none}
+.card-related{display:flex;gap:7px;margin-top:15px;padding-top:13px;border-top:1px solid var(--hairline)}
+.card-related a{flex:1;padding:7px 8px;border-radius:var(--r-sm);background:var(--surface-soft);color:var(--ink);font-size:13px;font-weight:600;text-align:center;text-decoration:none}
+.card-related a:hover{background:var(--block-lilac);color:#111}

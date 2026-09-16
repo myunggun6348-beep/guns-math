@@ -60,6 +60,6 @@
   Promise.allSettled([fetch("/assets/exam-catalog.json").then(r=>r.ok?r.json():{items:[]}),fetch("/api/files").then(r=>r.ok?r.json():[])]).then(([catalogResult,uploadResult])=>{
     const catalog=catalogResult.status==="fulfilled"?(catalogResult.value.items||[]):[];
     const uploads=uploadResult.status==="fulfilled"&&Array.isArray(uploadResult.value)?uploadResult.value:[];
-    files=[...catalog,...uploads];drawFilters();if(/^\d{4}$/.test(params.get("year")||""))year.value=params.get("year");if(params.get("q"))search.value=params.get("q");draw();
+    files=[...catalog,...uploads];drawFilters();if(/^\d{4}$/.test(params.get("year")||""))year.value=params.get("year");if(params.get("kind")&&[...kind.options].some(o=>o.value===params.get("kind")))kind.value=params.get("kind");if(params.get("q"))search.value=params.get("q");draw();
   });
 })();

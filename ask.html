@@ -7,13 +7,13 @@
      검게 바뀌는 깜빡임이 없습니다. 자세한 건 assets/theme.js 참고 -->
 <script src="assets/theme.js"></script>
 <title>질문 · 수학을 보다</title>
-<meta name="description" content="공부 방법에 대한 질문을 남기면 선생님이 직접 답합니다. 이름 없이 완전히 익명입니다." />
+<meta name="description" content="문제 풀이, 수학 공부법, 사이트·수업 제안을 남기면 선생님이 직접 답합니다. 문제 사진도 첨부할 수 있습니다." />
 
 <!-- 카카오톡·문자로 이 페이지 링크를 직접 공유할 때 보이는 미리보기 -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://guns-math.vercel.app/ask.html" />
 <meta property="og:title" content="질문 · 수학을 보다" />
-<meta property="og:description" content="공부 방법에 대한 질문을 남기면 선생님이 직접 답합니다. 이름 없이 완전히 익명입니다." />
+<meta property="og:description" content="문제 풀이, 수학 공부법, 사이트·수업 제안을 남기면 선생님이 직접 답합니다." />
 <meta property="og:locale" content="ko_KR" />
 <meta property="og:image" content="https://guns-math.vercel.app/assets/og.png" />
 <meta property="og:image:width" content="1200" />
@@ -70,11 +70,10 @@
   <div class="wrap">
     <div class="block block-navy">
       <span class="eyebrow">Q &amp; A</span>
-      <h1 class="display-lg">공부 방법, 편하게 물어보세요</h1>
+      <h1 class="display-lg">수학 질문, 편하게 남기세요</h1>
       <p class="subhead" style="margin-top: 24px; max-width: 27em;">
-        문제 풀이가 아니라 <b>공부하는 방법</b>에 대한 질문을 받습니다.
-        오답노트는 언제 다시 봐야 할지, 인강과 학교 수업 중 뭘 먼저 챙겨야
-        할지, 시험 2주 전엔 뭘 해야 할지 — 그런 것들요.
+        <b>문제 풀이</b>, <b>수학 공부법</b>, <b>사이트·수업 제안</b> 중 하나를 골라 남겨 주세요.
+        풀이가 막힌 문제는 사진을 함께 올릴 수 있습니다.
       </p>
       <p class="body-sm" style="margin-top: 12px; max-width: 30em; opacity: .8;">
         이름도, 로그인도 필요 없습니다. 완전히 익명입니다.
@@ -83,6 +82,12 @@
       <!-- 질문 쓰는 곳. 이름을 묻지 않으므로 완전히 익명입니다.
            낸 질문은 곧바로 아래 목록에 올라갑니다. -->
       <form id="askForm" class="qform">
+        <fieldset class="qtype" aria-label="질문 종류">
+          <legend>질문 종류</legend>
+          <label><input type="radio" name="qType" value="문제 풀이" checked><span>문제 풀이</span></label>
+          <label><input type="radio" name="qType" value="수학 공부법"><span>수학 공부법</span></label>
+          <label><input type="radio" name="qType" value="사이트·수업 제안"><span>사이트·수업 제안</span></label>
+        </fieldset>
         <div class="qform-row">
           <label for="qGrade">학년 (선택)</label>
           <input type="text" id="qGrade" name="학년" placeholder="예: 고2 — 안 적어도 됩니다" />
@@ -91,6 +96,15 @@
           <label for="qBody">질문 내용</label>
           <textarea id="qBody" name="질문" rows="5" required
             placeholder="예: 오답노트는 언제 다시 봐야 할까요?"></textarea>
+        </div>
+        <div class="qform-row" id="photoRow">
+          <label for="qPhoto">문제 사진 (선택 · JPG, PNG, WEBP)</label>
+          <input type="file" id="qPhoto" accept="image/jpeg,image/png,image/webp" />
+          <div class="qphoto-preview" id="qPhotoPreview" hidden>
+            <img alt="첨부할 문제 사진 미리보기" />
+            <button type="button" id="qPhotoRemove">사진 빼기</button>
+          </div>
+          <p class="caption qphoto-help">큰 사진은 글자가 읽히는 크기로 자동 압축합니다.</p>
         </div>
         <button type="submit" class="btn btn-secondary">질문 남기기 →</button>
         <p class="qform-status caption" role="status" aria-live="polite"></p>
@@ -202,10 +216,10 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
 
     목록칸.innerHTML = 보일것.map(it => `
       <article data-id="${안전하게(it.id)}"${내것(it) ? ' class="qa-mine"' : ""}>
-        <span class="caption">${안전하게(it.t)}${it.g ? " · " + 안전하게(it.g) : ""}${
+        <span class="caption">${안전하게(it.t)}${it.g ? " · " + 안전하게(it.g) : ""} <span class="qa-kind">${안전하게(it.k || "수학 공부법")}</span>${
           내것(it) ? ` <span class="qa-badge-mine">내 질문</span>` : ""}${
           새답(it) ? ` <span class="qa-new">새 답변</span>` : ""}</span>
-        <h3 class="card-title"><span class="qa-mark">Q</span>${안전하게(it.q)}</h3>
+        <h3 class="card-title"><span class="qa-mark">Q</span><span>${안전하게(it.q)}${it.img ? `<a class="qa-photo-link" href="${안전하게(it.img)}" target="_blank" rel="noopener"><img src="${안전하게(it.img)}" alt="질문에 첨부된 문제 사진" loading="lazy"></a>` : ""}</span></h3>
         <p class="body-sm">${it.a
           ? `<span class="qa-mark">A</span>${안전하게(it.a)}`
           : `<span class="qa-wait">아직 답을 못 달았습니다. 곧 답할게요.</span>`}</p>
@@ -267,13 +281,55 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
   }
 
   /* ---------- 학생: 질문 남기기 ---------- */
+  const 사진칸 = 폼.querySelector("#qPhoto");
+  const 사진미리보기 = 폼.querySelector("#qPhotoPreview");
+  const 사진그림 = 사진미리보기.querySelector("img");
+  function 사진비우기() {
+    사진칸.value = "";
+    사진그림.removeAttribute("src");
+    사진미리보기.hidden = true;
+  }
+  폼.querySelector("#qPhotoRemove").addEventListener("click", 사진비우기);
+  사진칸.addEventListener("change", () => {
+    const 파일 = 사진칸.files[0];
+    if (!파일) return 사진비우기();
+    if (!/^image\/(jpeg|png|webp)$/.test(파일.type)) {
+      상태.textContent = "JPG, PNG, WEBP 사진만 올릴 수 있습니다.";
+      return 사진비우기();
+    }
+    사진그림.src = URL.createObjectURL(파일);
+    사진그림.onload = () => URL.revokeObjectURL(사진그림.src);
+    사진미리보기.hidden = false;
+    상태.textContent = "";
+  });
+
+  async function 사진데이터(파일) {
+    if (!파일) return null;
+    const bitmap = await createImageBitmap(파일);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const data = canvas.toDataURL("image/jpeg", .82);
+    const bytes = Math.ceil((data.length - data.indexOf(",") - 1) * .75);
+    if (bytes > 2 * 1024 * 1024) throw new Error("사진이 너무 큽니다. 사진을 잘라서 다시 올려 주세요.");
+    return { type: "image/jpeg", data };
+  }
+
   폼.addEventListener("submit", async e => {
     e.preventDefault();
     const 버튼 = 폼.querySelector("button");
-    const 내용 = { 학년: 폼.querySelector("#qGrade").value, 질문: 폼.querySelector("#qBody").value };
+    const 내용 = {
+      종류: 폼.querySelector('[name="qType"]:checked').value,
+      학년: 폼.querySelector("#qGrade").value,
+      질문: 폼.querySelector("#qBody").value,
+    };
     버튼.disabled = true;
     상태.textContent = "올리는 중…";
     try {
+      내용.사진 = await 사진데이터(사진칸.files[0]);
       const 응답 = await fetch("/api/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -283,6 +339,7 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
       if (!응답.ok) throw new Error(결과.오류 || "");
 
       폼.reset();
+      사진비우기();
       내질문추가(결과.id);   // 나중에 답이 달렸는지 찾아볼 수 있게
       if (결과.h) {
         /* 선생님이 '확인 후 공개'를 켜 둔 때. 목록에 붙이면 자기 눈에만
@@ -308,9 +365,10 @@ const 폼주소 = "https://formspree.io/f/xrpzeevw";
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({
-            _subject: `[수학을 보다] 새 질문${내용.학년 ? " (" + 내용.학년 + ")" : ""}: ${
+            _subject: `[수학을 보다] ${내용.종류}${내용.학년 ? " (" + 내용.학년 + ")" : ""}: ${
               미리보기.length > 30 ? 미리보기.slice(0, 30) + "…" : 미리보기}`,
             학년: 내용.학년 || "(안 적음)",
+            종류: 내용.종류,
             질문: 내용.질문,
             답하러가기: `${location.origin}/admin.html#q-${결과.id}`,
           }),

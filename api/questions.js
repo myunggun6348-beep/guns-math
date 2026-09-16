@@ -10,12 +10,16 @@
    ========================================================= */
 const { 준비됨, 명령 } = require("./_redis");
 const { 모두에게보내기 } = require("./_push");
+const { 준비됨: blob준비됨, put } = require("./_blob");
 
 const 열쇠이름 = "qna";
 const 설정열쇠 = "설정";
 const 질문최대 = 1000;
 const 학년최대 = 20;
 const 시간당한도 = 5;
+const 사진최대 = 2 * 1024 * 1024;
+const 질문종류 = new Set(["문제 풀이", "수학 공부법", "사이트·수업 제안"]);
+const 사진형식 = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
 // 처음 한 번만 — 화면이 텅 비어 있지 않도록 예시 두 개를 넣어 둡니다.
 // 선생님이 지우면 다시 생기지 않습니다.
@@ -71,12 +75,31 @@ module.exports = async (req, res) => {
       const 받은 = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
       const 질문 = String(받은.질문 || "").trim();
       const 학년 = String(받은.학년 || "").trim();
+      const 종류 = 질문종류.has(String(받은.종류)) ? String(받은.종류) : "수학 공부법";
+      const 사진 = 받은.사진 && typeof 받은.사진 === "object" ? 받은.사진 : null;
 
       if (!질문) return res.status(400).json({ 오류: "질문 내용이 비어 있습니다." });
       if (질문.length > 질문최대) return res.status(400).json({ 오류: "질문이 너무 깁니다." });
 
       if (await 도배인가(req)) {
         return res.status(429).json({ 오류: "질문을 너무 자주 남겼습니다. 잠시 뒤에 다시 시도해 주세요." });
+      }
+
+      let 사진url = "";
+      if (사진 && 사진.data) {
+        if (!blob준비됨) return res.status(503).json({ 오류: "사진 저장소를 준비하고 있습니다. 사진을 빼고 다시 올려 주세요." });
+        const 형식 = String(사진.type || "").toLowerCase();
+        const 확장자 = 사진형식[형식];
+        if (!확장자) return res.status(400).json({ 오류: "사진은 JPG, PNG, WEBP만 올릴 수 있습니다." });
+        const match = String(사진.data).match(/^data:[^;]+;base64,([A-Za-z0-9+/=]+)$/);
+        if (!match) return res.status(400).json({ 오류: "사진을 읽을 수 없습니다." });
+        const 내용 = Buffer.from(match[1], "base64");
+        if (!내용.length || 내용.length > 사진최대) return res.status(400).json({ 오류: "사진은 2MB까지 올릴 수 있습니다." });
+        const 사진id = String(Date.now() * 1000 + Math.floor(Math.random() * 1000));
+        const 올라간것 = await put(`questions/${사진id}.${확장자}`, 내용, {
+          access: "public", contentType: 형식, addRandomSuffix: false,
+        });
+        사진url = 올라간것.url;
       }
 
       await 예시넣기();
@@ -87,9 +110,11 @@ module.exports = async (req, res) => {
       const 항목 = {
         t: new Date().toISOString().slice(0, 10),
         g: 학년.slice(0, 학년최대),
+        k: 종류,
         q: 질문,
         a: "",
       };
+      if (사진url) 항목.img = 사진url;
       if (검토중) 항목.h = 1;
       await 명령("HSET", 열쇠이름, id, JSON.stringify(항목));
 
@@ -99,7 +124,7 @@ module.exports = async (req, res) => {
       try {
         const 미리보기 = 질문.replace(/\s+/g, " ");
         await 모두에게보내기({
-          title: `새 질문${항목.g ? ` (${항목.g})` : ""}`,
+          title: `새 ${종류} 질문${항목.g ? ` (${항목.g})` : ""}`,
           body: 미리보기.length > 80 ? 미리보기.slice(0, 80) + "…" : 미리보기,
           url: `/admin.html#q-${id}`,
           tag: `q-${id}`,
