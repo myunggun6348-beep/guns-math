@@ -16,6 +16,9 @@ const state = {
   highlighterColor: "#ffd928",
   penSize: 2,
   highlighterSize: 3,
+  showGrid: false,
+  showAxes: false,
+  snapToGrid: false,
   pages: {},
   undo: {},
   redo: {},
@@ -42,6 +45,9 @@ try {
   if (/^#[0-9a-f]{6}$/i.test(toolPrefs.highlighterColor || "")) state.highlighterColor = toolPrefs.highlighterColor;
   if ([1,2,3,4,5].includes(toolPrefs.penSize)) state.penSize = toolPrefs.penSize;
   if ([1,2,3,4,5].includes(toolPrefs.highlighterSize)) state.highlighterSize = toolPrefs.highlighterSize;
+  state.showGrid = Boolean(toolPrefs.showGrid);
+  state.showAxes = Boolean(toolPrefs.showAxes);
+  state.snapToGrid = Boolean(toolPrefs.snapToGrid);
 } catch {}
 const paper = $("#paper");
 const area = $("#documentArea");
@@ -146,13 +152,15 @@ function scheduleSave() {
 
 function canvasPoint(event) {
   const rect = inkCanvas.getBoundingClientRect();
-  return {
-    x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)),
-    y: Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height)),
-    p: event.pressure > 0 ? event.pressure : .5
-  };
+  let x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  let y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+  if (state.snapToGrid && ["line", "rect", "ellipse"].includes(state.tool)) {
+    const step = .04;
+    x = Math.max(0, Math.min(1, Math.round(x / step) * step));
+    y = Math.max(0, Math.min(1, Math.round(y / step) * step));
+  }
+  return { x, y, p: event.pressure > 0 ? event.pressure : .5 };
 }
-
 function drawStroke(ctx, stroke, width, height) {
   const points = stroke.points || [];
   if (!points.length) return;
@@ -163,6 +171,16 @@ function drawStroke(ctx, stroke, width, height) {
   ctx.strokeStyle = stroke.color || "#19364a";
   ctx.fillStyle = stroke.color || "#19364a";
   ctx.globalAlpha = stroke.tool === "highlighter" ? .34 : 1;
+  if (["rect", "ellipse"].includes(stroke.tool) && points.length >= 2) {
+    const a = points[0], b = points[points.length - 1];
+    const x = Math.min(a.x, b.x) * width, y = Math.min(a.y, b.y) * height;
+    const w = Math.abs(b.x - a.x) * width, h = Math.abs(b.y - a.y) * height;
+    ctx.lineWidth = baseWidth;
+    ctx.beginPath();
+    if (stroke.tool === "rect") ctx.rect(x, y, w, h);
+    else ctx.ellipse(x + w / 2, y + h / 2, Math.max(.5, w / 2), Math.max(.5, h / 2), 0, 0, Math.PI * 2);
+    ctx.stroke(); ctx.restore(); return;
+  }
   if (points.length === 1) {
     ctx.beginPath();
     ctx.arc(points[0].x * width, points[0].y * height, baseWidth / 2, 0, Math.PI * 2);
@@ -180,12 +198,36 @@ function drawStroke(ctx, stroke, width, height) {
   ctx.restore();
 }
 
+function drawGuides(ctx, width, height) {
+  if (!state.showGrid && !state.showAxes) return;
+  const spacing = Math.max(24, Math.min(42, width / 20));
+  ctx.save();
+  if (state.showGrid) {
+    ctx.strokeStyle = "rgba(33, 112, 190, .16)"; ctx.lineWidth = 1;
+    for (let x = width / 2 % spacing; x < width; x += spacing) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke(); }
+    for (let y = height / 2 % spacing; y < height; y += spacing) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); }
+  }
+  if (state.showAxes) {
+    const cx = width / 2, cy = height / 2;
+    ctx.strokeStyle = "rgba(22, 67, 105, .62)"; ctx.fillStyle = "rgba(22, 67, 105, .72)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(8, cy); ctx.lineTo(width - 9, cy); ctx.moveTo(cx, height - 8); ctx.lineTo(cx, 9); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(width - 9, cy); ctx.lineTo(width - 18, cy - 5); ctx.lineTo(width - 18, cy + 5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx, 9); ctx.lineTo(cx - 5, 18); ctx.lineTo(cx + 5, 18); ctx.closePath(); ctx.fill();
+    ctx.font = "12px sans-serif"; ctx.fillText("x", width - 23, cy - 9); ctx.fillText("y", cx + 9, 22);
+    for (let x = cx + spacing; x < width - 12; x += spacing) { ctx.beginPath(); ctx.moveTo(x, cy - 4); ctx.lineTo(x, cy + 4); ctx.stroke(); }
+    for (let x = cx - spacing; x > 12; x -= spacing) { ctx.beginPath(); ctx.moveTo(x, cy - 4); ctx.lineTo(x, cy + 4); ctx.stroke(); }
+    for (let y = cy + spacing; y < height - 12; y += spacing) { ctx.beginPath(); ctx.moveTo(cx - 4, y); ctx.lineTo(cx + 4, y); ctx.stroke(); }
+    for (let y = cy - spacing; y > 12; y -= spacing) { ctx.beginPath(); ctx.moveTo(cx - 4, y); ctx.lineTo(cx + 4, y); ctx.stroke(); }
+  }
+  ctx.restore();
+}
 function redrawInk() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   const width = inkCanvas.width / ratio;
   const height = inkCanvas.height / ratio;
   inkContext.setTransform(ratio, 0, 0, ratio, 0, 0);
   inkContext.clearRect(0, 0, width, height);
+  drawGuides(inkContext, width, height);
   pageStrokes().forEach(stroke => drawStroke(inkContext, stroke, width, height));
 }
 
@@ -204,6 +246,26 @@ function eraseAt(point) {
   const strokes = pageStrokes();
   state.pages[String(state.page)] = strokes.filter(stroke => {
     const points = stroke.points || [];
+    if (stroke.tool === "rect" && points.length >= 2) {
+      const a = points[0], b = points[points.length - 1];
+      const corners = [{x:a.x,y:a.y},{x:b.x,y:a.y},{x:b.x,y:b.y},{x:a.x,y:b.y},{x:a.x,y:a.y}];
+      for (let i = 1; i < corners.length; i += 1) {
+        if (segmentDistance(point, corners[i - 1], corners[i], rect.width, rect.height) <= radius) return false;
+      }
+      return true;
+    }
+    if (stroke.tool === "ellipse" && points.length >= 2) {
+      const a = points[0], b = points[points.length - 1], cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+      const rx = Math.abs(b.x - a.x) / 2, ry = Math.abs(b.y - a.y) / 2, ring = [];
+      for (let i = 0; i <= 32; i += 1) {
+        const angle = i / 32 * Math.PI * 2;
+        ring.push({x:cx + Math.cos(angle) * rx,y:cy + Math.sin(angle) * ry});
+      }
+      for (let i = 1; i < ring.length; i += 1) {
+        if (segmentDistance(point, ring[i - 1], ring[i], rect.width, rect.height) <= radius) return false;
+      }
+      return true;
+    }
     if (points.length === 1) return segmentDistance(point, points[0], points[0], rect.width, rect.height) > radius;
     for (let i = 1; i < points.length; i += 1) {
       if (segmentDistance(point, points[i - 1], points[i], rect.width, rect.height) <= radius) return false;
@@ -270,7 +332,8 @@ function saveToolPrefs() {
   try {
     localStorage.setItem("math-solve-tool-prefs", JSON.stringify({
       penColor: state.penColor, highlighterColor: state.highlighterColor,
-      penSize: state.penSize, highlighterSize: state.highlighterSize
+      penSize: state.penSize, highlighterSize: state.highlighterSize,
+      showGrid: state.showGrid, showAxes: state.showAxes, snapToGrid: state.snapToGrid
     }));
   } catch {}
 }
@@ -285,7 +348,7 @@ function activeInkWidth() {
 
 function updateInkSettings() {
   const highlighter = state.tool === "highlighter";
-  const editable = ["pen", "line", "highlighter"].includes(state.tool);
+  const editable = ["pen", "line", "rect", "ellipse", "highlighter"].includes(state.tool);
   const color = activeInkColor(), size = highlighter ? state.highlighterSize : state.penSize;
   document.querySelector(".ink-settings")?.classList.toggle("disabled", !editable);
   document.querySelectorAll("[data-ink-color]").forEach(button => {
@@ -327,7 +390,7 @@ inkCanvas.addEventListener("pointermove", event => {
   events.forEach(sample => {
     const point = canvasPoint(sample);
     if (state.tool === "eraser") eraseAt(point);
-    else if (state.activeStroke && state.tool === "line") state.activeStroke.points[1] = point;
+    else if (state.activeStroke && ["line", "rect", "ellipse"].includes(state.tool)) state.activeStroke.points[1] = point;
     else if (state.activeStroke) state.activeStroke.points.push(point);
   });
   redrawInk();
@@ -437,7 +500,7 @@ async function start() {
 
 document.querySelectorAll("[data-tool]").forEach(button => button.addEventListener("click", () => setTool(button.dataset.tool)));
 document.querySelectorAll("[data-ink-color]").forEach(button => button.addEventListener("click", () => {
-  if (!["pen", "line", "highlighter"].includes(state.tool)) return;
+  if (!["pen", "line", "rect", "ellipse", "highlighter"].includes(state.tool)) return;
   if (state.tool === "highlighter") state.highlighterColor = button.dataset.inkColor;
   else state.penColor = button.dataset.inkColor;
   saveToolPrefs(); updateInkSettings();
@@ -448,12 +511,28 @@ $("#strokeSize").addEventListener("input", event => {
   else state.penSize = value;
   saveToolPrefs(); updateInkSettings();
 });
+function updateGuideControls() {
+  const grid = $("#gridToggle"), axes = $("#axesToggle"), snap = $("#snapToGrid");
+  grid.classList.toggle("on", state.showGrid); grid.setAttribute("aria-pressed", String(state.showGrid));
+  axes.classList.toggle("on", state.showAxes); axes.setAttribute("aria-pressed", String(state.showAxes));
+  snap.checked = state.snapToGrid;
+}
 function updateFingerMode() {
   inkCanvas.classList.toggle("finger-draw", $("#fingerDraw").checked);
 }
 $("#fingerDraw").addEventListener("change", updateFingerMode);
 updateFingerMode();
 updateInkSettings();
+updateGuideControls();
+$("#gridToggle").addEventListener("click", () => {
+  state.showGrid = !state.showGrid; saveToolPrefs(); updateGuideControls(); redrawInk();
+});
+$("#axesToggle").addEventListener("click", () => {
+  state.showAxes = !state.showAxes; saveToolPrefs(); updateGuideControls(); redrawInk();
+});
+$("#snapToGrid").addEventListener("change", event => {
+  state.snapToGrid = event.target.checked; saveToolPrefs(); updateGuideControls();
+});
 $("#undoButton").addEventListener("click", undo);
 $("#redoButton").addEventListener("click", redo);
 $("#prevPage").addEventListener("click", () => goToPage(state.page - 1));
