@@ -129,15 +129,15 @@
   function norm(value){return String(value).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"")}
   function best(){return Number(localStorage.getItem("quick-game-best-"+key)||0)}
   function hero(){
-    return '<div class="quick-hero"><span class="quick-kicker">'+game.kicker+'</span><h1 class="quick-title">'+game.title+'</h1><p class="quick-desc">'+game.desc+'</p><div class="quick-meta"><span>4분</span><span>매회 5문제</span><span>문제은행 '+game.questions.length+'</span><span>즉시 해설</span><span>최고 '+best()+'점</span></div></div>'
+    return '<div class="quick-hero"><span class="quick-kicker">'+game.kicker+'</span><h1 class="quick-title">'+game.title+'</h1><p class="quick-desc">'+game.desc+'</p><div class="quick-meta"><span>4분</span><span>매회 5문제</span><span>문제은행 '+game.questions.length+'</span><span>펜 풀이</span><span>즉시 해설</span><span>최고 '+best()+'점</span></div></div>'
   }
   function intro(){
-    app.innerHTML=hero()+'<div class="start-panel"><h2>준비되면 시작하세요</h2><p>문제마다 답을 한 번 제출할 수 있습니다. 빠르고 정확하게 풀수록 점수가 올라갑니다.</p><ul class="start-list"><li>정답 160점 + 연속 정답 보너스</li><li>오답도 바로 해설 확인</li><li>기록은 이 기기에 자동 저장</li></ul><button class="quick-btn" id="startBtn">게임 시작</button></div>';
+    app.innerHTML=hero()+'<div class="start-panel"><h2>준비되면 시작하세요</h2><p>문제마다 답을 한 번 제출할 수 있습니다. 빠르고 정확하게 풀수록 점수가 올라갑니다.</p><ul class="start-list"><li>각 문제에서 태블릿 펜으로 바로 계산</li><li>정답 160점 + 연속 정답 보너스</li><li>오답도 풀이 흔적과 함께 해설 확인</li><li>기록은 이 기기에 자동 저장</li></ul><button class="quick-btn" id="startBtn">게임 시작</button></div>';
     document.getElementById("startBtn").addEventListener("click",start);
   }
   function start(){
     const shuffled=shuffle(game.questions);const mixed=[];const oneChoice=shuffled.find(q=>q.type==="choice");const oneText=shuffled.find(q=>q.type==="text");if(oneChoice)mixed.push(oneChoice);if(oneText)mixed.push(oneText);for(const q of shuffled){if(mixed.length>=5)break;if(!mixed.includes(q))mixed.push(q)}questions=shuffle(mixed);index=0;score=0;streak=0;correct=0;timeLeft=240;startedAt=Date.now();locked=false;
-    clearInterval(timerId);timerId=setInterval(tick,1000);renderQuestion();
+    window.GameScratch.reset();clearInterval(timerId);timerId=setInterval(tick,1000);renderQuestion();
   }
   function tick(){
     timeLeft=Math.max(0,240-Math.floor((Date.now()-startedAt)/1000));
@@ -152,7 +152,8 @@
     const answer=q.type==="choice"
       ? '<div class="choice-list">'+q.choices.map((x,i)=>'<button type="button" class="choice-btn" data-choice="'+i+'"><b>'+(i+1)+'.</b> '+esc(x)+'</button>').join("")+'</div>'
       : '<div class="answer-row"><label class="sr-status" for="answerInput">답 입력</label><input id="answerInput" class="answer-input" inputmode="text" autocomplete="off" placeholder="답을 입력하세요"><button type="button" class="quick-btn" id="inlineSubmit">제출</button></div>';
-    app.innerHTML=hero()+'<section class="quiz-panel"><div class="quiz-top"><span class="progress-label">'+(index+1)+' / '+questions.length+'</span><span class="timer" id="timer">'+formatTime(timeLeft)+'</span></div><div class="progress-track" aria-hidden="true"><div class="progress-bar" style="width:'+((index+1)/questions.length*100)+'%"></div></div><div class="score-line"><span>점수 <b>'+score+'</b></span><span>연속 정답 <b>'+streak+'</b></span></div><span class="question-tag">'+(q.type==="choice"?"선택형":"주관식")+'</span><h2 class="question-text">'+q.prompt+(q.note?'<small class="question-note">'+q.note+'</small>':"")+'</h2>'+answer+'<div id="feedbackSlot"></div><div class="quiz-actions"><button type="button" class="quick-btn" id="submitBtn" '+(q.type==="choice"?"disabled":"style=\"display:none\"")+'>답 제출</button></div></section>';
+    app.innerHTML=hero()+'<section class="quiz-panel"><div class="quiz-top"><span class="progress-label">'+(index+1)+' / '+questions.length+'</span><span class="timer" id="timer">'+formatTime(timeLeft)+'</span></div><div class="progress-track" aria-hidden="true"><div class="progress-bar" style="width:'+((index+1)/questions.length*100)+'%"></div></div><div class="score-line"><span>점수 <b>'+score+'</b></span><span>연속 정답 <b>'+streak+'</b></span></div><span class="question-tag">'+(q.type==="choice"?"선택형":"주관식")+'</span><h2 class="question-text">'+q.prompt+(q.note?'<small class="question-note">'+q.note+'</small>':"")+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="quiz-actions"><button type="button" class="quick-btn" id="submitBtn" '+(q.type==="choice"?"disabled":"style=\"display:none\"")+'>답 제출</button></div></section>';
+    window.GameScratch.mount(index);
     if(q.type==="choice"){
       document.querySelectorAll(".choice-btn").forEach(btn=>btn.addEventListener("click",()=>{
         if(locked)return;selected=Number(btn.dataset.choice);
@@ -175,7 +176,7 @@
       userAnswer=input.value;isCorrect=q.answers.some(a=>norm(a)===norm(input.value));
     }
     locked=true;
-    document.querySelectorAll("button,input").forEach(el=>{if(!el.closest(".nav"))el.disabled=true});
+    document.querySelectorAll(".choice-btn,.answer-input,#inlineSubmit,#submitBtn").forEach(el=>el.disabled=true);
     if(isCorrect){correct++;streak++;score+=160+(streak-1)*20}else{streak=0}
     window.WrongNotes?.record({source:"game",sourceKey:key,sourceTitle:"미니게임 · "+game.title,subject:game.kicker,conceptId:wrongConcept[0],conceptName:wrongConcept[1],prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"quick-game.html?game="+key},isCorrect);
     const slot=document.getElementById("feedbackSlot");
@@ -185,7 +186,7 @@
     const next=document.getElementById("nextBtn");next.disabled=false;next.addEventListener("click",()=>{index++;if(index>=questions.length)finish();else renderQuestion()});next.focus();
   }
   function finish(){
-    clearInterval(timerId);
+    clearInterval(timerId);window.GameScratch.destroy();
     const previous=best();const finalScore=score+Math.floor(timeLeft/4);
     if(finalScore>previous)localStorage.setItem("quick-game-best-"+key,String(finalScore));
     const elapsed=Math.min(240,Math.max(0,Math.floor((Date.now()-startedAt)/1000)));
