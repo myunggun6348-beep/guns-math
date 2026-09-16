@@ -7,7 +7,7 @@
      검게 바뀌는 깜빡임이 없습니다. 자세한 건 assets/theme.js 참고 -->
 <script src="assets/theme.js"></script>
 <title>개념 지도 · 수학을 보다</title>
-<meta name="description" content="고1부터 고3까지 수학 개념이 어디서 왔고 어디로 이어지는지 한 장으로. 개념을 누르면 필요한 것과 이어지는 것, 그리고 직접 볼 수 있는 자료가 나옵니다." />
+<meta name="description" content="학년별로 수학 개념을 찾고 선수 개념과 다음 개념을 한눈에 확인합니다. 개념 검색과 선택 주변 집중 보기를 지원합니다." />
 
 <!-- 카카오톡·문자로 이 페이지 링크를 직접 공유할 때 보이는 미리보기 -->
 <meta property="og:type" content="website" />
@@ -77,6 +77,24 @@
 
     <!-- 지도 위 줄 — 왼쪽은 색 읽는 법, 오른쪽은 '전부 보기' 스위치.
          범례가 없으면 검정·테두리·연두가 무슨 뜻인지 알 길이 없습니다. -->
+    <div class="cmap-controls">
+      <div class="cmap-grade" id="cmapGrade" role="group" aria-label="학년 선택"></div>
+      <label class="cmap-search" for="cmapSearch">
+        <span class="visually-hidden">개념 검색</span>
+        <input type="search" id="cmapSearch" placeholder="개념 검색 (예: 미분)" autocomplete="off" />
+      </label>
+    </div>
+    <p class="cmap-status caption" id="cmapStatus" aria-live="polite"></p>
+
+    <div class="cmap-view-controls" id="cmapViewControls" hidden>
+      <div class="cmap-relation" id="cmapRelation" role="group" aria-label="강조할 연결">
+        <button type="button" class="on" data-relation="both" aria-pressed="true">전체 연결</button>
+        <button type="button" data-relation="pre" aria-pressed="false">선수만</button>
+        <button type="button" data-relation="post" aria-pressed="false">다음만</button>
+      </div>
+      <label class="cmap-focus"><input type="checkbox" id="cmapFocus" /><span>선택 주변만 보기</span></label>
+    </div>
+
     <div class="cmap-bar">
       <p class="cmap-legend caption" id="cmapLegend" hidden>
         <span><i class="k on"></i>고른 개념</span>
@@ -135,7 +153,22 @@ const lines  = document.getElementById("cmapLines");
 const panel  = document.getElementById("cmapPanel");
 const 깊게   = document.getElementById("cmapDeep");
 const 범례   = document.getElementById("cmapLegend");
+const 학년칸 = document.getElementById("cmapGrade");
+const 검색칸 = document.getElementById("cmapSearch");
+const 상태칸 = document.getElementById("cmapStatus");
+const 보기조절 = document.getElementById("cmapViewControls");
+const 관계칸 = document.getElementById("cmapRelation");
+const 집중 = document.getElementById("cmapFocus");
 const NS = "http://www.w3.org/2000/svg";
+const 처음주소 = new URLSearchParams(location.search);
+let 고른학년 = ["1", "2", "3"].includes(처음주소.get("grade")) ? 처음주소.get("grade") : "all";
+let 관계보기 = "both";
+집중.checked = matchMedia("(max-width: 700px)").matches;
+const 주소수정 = (이름, 값) => {
+  const url = new URL(location.href);
+  값 ? url.searchParams.set(이름, 값) : url.searchParams.delete(이름);
+  history.replaceState(null, "", url.pathname + url.search);
+};
 
 const before = id => EDGES.filter(e => e[1] === id).map(e => e[0]);
 const after  = id => EDGES.filter(e => e[0] === id).map(e => e[1]);
@@ -190,6 +223,49 @@ for (const layer of LAYERS) {
 }
 
 const nodeEl = id => cmap.querySelector(`.cmap-node[data-id="${id}"]`);
+const 학년번호 = id => String(NODES[id].year).replace(/\D/g, "");
+const 검색글 = id => {
+  const n = NODES[id];
+  return [n.name, n.subject, n.year, n.about].join(" ").toLowerCase();
+};
+
+function 학년단추그리기() {
+  const 이름 = { all: "전체", 1: "1학년", 2: "2학년", 3: "3학년" };
+  학년칸.innerHTML = ["all", "1", "2", "3"].map(g => {
+    const 수 = g === "all" ? Object.keys(NODES).length : Object.keys(NODES).filter(id => 학년번호(id) === g).length;
+    return `<button type="button" data-grade="${g}" class="${고른학년 === g ? "on" : ""}" aria-pressed="${고른학년 === g}">${이름[g]} <span>${수}</span></button>`;
+  }).join("");
+}
+
+function 현재관계집합() {
+  if (!selected) return null;
+  const ids = new Set([selected]);
+  if (관계보기 !== "post") 앞집합.forEach(id => ids.add(id));
+  if (관계보기 !== "pre") 뒤집합.forEach(id => ids.add(id));
+  return ids;
+}
+
+function 필터적용() {
+  const q = 검색칸.value.trim().toLowerCase();
+  const 관계 = 집중.checked ? 현재관계집합() : null;
+  let 보이는수 = 0;
+  for (const el of cmap.querySelectorAll(".cmap-node")) {
+    const id = el.dataset.id;
+    const 기본 = (고른학년 === "all" || 학년번호(id) === 고른학년) && (!q || 검색글(id).includes(q));
+    const 보임 = 관계 ? 관계.has(id) : 기본;
+    el.hidden = !보임;
+    if (보임) 보이는수++;
+  }
+  for (const layer of cmap.querySelectorAll(".cmap-layer")) {
+    layer.hidden = !layer.querySelector(".cmap-node:not([hidden])");
+  }
+  상태칸.textContent = 보이는수
+    ? `${보이는수}개 개념${관계 ? " · 선택한 개념 주변만 표시 중" : ""}`
+    : "조건에 맞는 개념이 없습니다.";
+  requestAnimationFrame(drawLines);
+}
+
+학년단추그리기();
 
 /* 상자가 실제로 놓인 자리를 재서 잇는 선을 그립니다.
    화면 폭이 바뀌면 상자가 다시 배치되므로 그때마다 다시 그립니다. */
@@ -201,8 +277,11 @@ function drawLines() {
   lines.innerHTML = "";
 
   for (const [from, to] of EDGES) {
-    const a = nodeEl(from).getBoundingClientRect();
-    const b = nodeEl(to).getBoundingClientRect();
+    const fromEl = nodeEl(from);
+    const toEl = nodeEl(to);
+    if (!fromEl || !toEl || fromEl.hidden || toEl.hidden) continue;
+    const a = fromEl.getBoundingClientRect();
+    const b = toEl.getBoundingClientRect();
     let d;
 
     if (Math.abs(a.top - b.top) < 4) {
@@ -243,10 +322,12 @@ function markNodes(id) {
   for (const el of cmap.querySelectorAll(".cmap-node")) {
     const i = el.dataset.id;
     el.classList.toggle("on", i === id);
-    el.classList.toggle("pre", 앞집합.has(i));
-    el.classList.toggle("post", 뒤집합.has(i));
+    el.classList.toggle("pre", 관계보기 !== "post" && 앞집합.has(i));
+    el.classList.toggle("post", 관계보기 !== "pre" && 뒤집합.has(i));
     el.setAttribute("aria-pressed", i === id ? "true" : "false");
   }
+  범례.querySelector(".k.pre").parentElement.hidden = 관계보기 === "post";
+  범례.querySelector(".k.post").parentElement.hidden = 관계보기 === "pre";
   범례.hidden = false;
 }
 
@@ -254,11 +335,12 @@ function markLines(id) {
   for (const p of lines.querySelectorAll(".cmap-line")) {
     const { from, to } = p.dataset;
     // 고른 개념에 바로 닿는 선
-    const 닿음 = from === id || to === id;
+    const 선수선 = 관계보기 !== "post" && to === id && 앞집합.has(from);
+    const 다음선 = 관계보기 !== "pre" && from === id && 뒤집합.has(to);
     /* '전부 보기'일 때는 앞쪽 사슬 안에서 이어지는 선도 길의 일부다.
        (앞 → 앞, 또는 앞 → 고른 것) */
-    const 길 = 앞집합.has(from) && (앞집합.has(to) || to === id);
-    p.classList.toggle("on", 닿음 || 길);
+    const 길 = 관계보기 !== "post" && 앞집합.has(from) && (앞집합.has(to) || to === id);
+    p.classList.toggle("on", 선수선 || 다음선 || 길);
   }
 }
 
@@ -281,6 +363,8 @@ function select(id, push) {
   앞집합 = new Set(pre);
   뒤집합 = new Set(post);
 
+  보기조절.hidden = false;
+  필터적용();
   markNodes(id);
   markLines(id);
 
@@ -325,7 +409,7 @@ function select(id, push) {
       </div>
     </div>`;
 
-  if (push) history.replaceState(null, "", "?n=" + id);
+  if (push) 주소수정("n", id);
 
   /* 폰에서는 설명칸이 개념 상자들 '아래'에 있어서, 상자를 눌러도 화면에
      아무 변화가 없는 것처럼 보인다(설명이 두 화면쯤 밑에 있다). 그래서
@@ -337,6 +421,22 @@ function select(id, push) {
   if (push && panel.getBoundingClientRect().top >= innerHeight) {
     panel.scrollIntoView({ block: "start", behavior: "smooth" });
   }
+}
+
+function clearSelection() {
+  selected = null;
+  앞집합 = new Set();
+  뒤집합 = new Set();
+  cmap.classList.remove("has-selection");
+  범례.hidden = true;
+  보기조절.hidden = true;
+  for (const el of cmap.querySelectorAll(".cmap-node")) {
+    el.classList.remove("on", "pre", "post");
+    el.setAttribute("aria-pressed", "false");
+  }
+  clearPanel();
+  주소수정("n", "");
+  필터적용();
 }
 
 function clearPanel() {
@@ -352,6 +452,36 @@ cmap.addEventListener("click", e => {
 /* 스위치를 켜고 끄면 고른 개념을 그대로 두고 다시 칠합니다.
    (아무것도 안 고른 상태에서 켜면 보여 줄 것이 없으므로 그냥 둡니다) */
 깊게.addEventListener("change", () => { if (selected) select(selected, false); });
+
+학년칸.addEventListener("click", e => {
+  const button = e.target.closest("[data-grade]");
+  if (!button) return;
+  고른학년 = button.dataset.grade;
+  주소수정("grade", 고른학년 === "all" ? "" : 고른학년);
+  학년단추그리기();
+  if (selected && 학년번호(selected) !== 고른학년 && 고른학년 !== "all") clearSelection();
+  else 필터적용();
+});
+
+검색칸.addEventListener("input", () => {
+  if (selected && 검색칸.value.trim() && !검색글(selected).includes(검색칸.value.trim().toLowerCase())) clearSelection();
+  else 필터적용();
+});
+
+관계칸.addEventListener("click", e => {
+  const button = e.target.closest("[data-relation]");
+  if (!button || !selected) return;
+  관계보기 = button.dataset.relation;
+  for (const item of 관계칸.querySelectorAll("button")) {
+    const on = item === button;
+    item.classList.toggle("on", on);
+    item.setAttribute("aria-pressed", String(on));
+  }
+  select(selected, false);
+});
+
+집중.addEventListener("change", 필터적용);
+
 panel.addEventListener("click", e => {
   const chip = e.target.closest(".cmap-chip");
   if (!chip) return;
@@ -368,6 +498,7 @@ panel.addEventListener("click", e => {
 });
 
 clearPanel();
+필터적용();
 drawLines();
 
 /* 자료실에서 학습지 목록을 받아 옵니다. 늦게 도착하므로, 도착하면
@@ -398,7 +529,14 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawLines)
 // ?n=trig 처럼 개념을 지정해 링크를 보낼 수 있습니다
 {
   const want = new URLSearchParams(location.search).get("n");
-  if (want && NODES[want]) select(want, false);
+  if (want && NODES[want]) {
+    if (고른학년 !== "all" && 학년번호(want) !== 고른학년) {
+      고른학년 = 학년번호(want);
+      주소수정("grade", 고른학년);
+      학년단추그리기();
+    }
+    select(want, false);
+  }
 }
 </script>
 

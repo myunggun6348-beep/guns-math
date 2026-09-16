@@ -2103,3 +2103,20 @@ html.theme-dark .canvas-host {
 .card-related{display:flex;gap:7px;margin-top:15px;padding-top:13px;border-top:1px solid var(--hairline)}
 .card-related a{flex:1;padding:7px 8px;border-radius:var(--r-sm);background:var(--surface-soft);color:var(--ink);font-size:13px;font-weight:600;text-align:center;text-decoration:none}
 .card-related a:hover{background:var(--block-lilac);color:#111}
+
+.cmap-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.cmap-grade,.cmap-relation{display:flex;flex-wrap:wrap;gap:7px}
+.cmap-grade button,.cmap-relation button{min-height:40px;padding:8px 13px;border:1px solid var(--hairline);border-radius:var(--r-full);background:var(--canvas);color:var(--ink);font:600 14px inherit;cursor:pointer}
+.cmap-grade button:hover,.cmap-relation button:hover{border-color:var(--ink)}
+.cmap-grade button.on,.cmap-relation button.on{border-color:var(--ink);background:var(--ink);color:var(--canvas)}
+.cmap-grade button span{margin-left:4px;opacity:.6;font-family:var(--mono);font-size:11px}
+.cmap-search{flex:0 1 270px}.cmap-search input{width:100%;min-height:42px;padding:9px 13px;border:1px solid var(--hairline);border-radius:var(--r-md);background:var(--canvas);color:var(--ink);font:15px inherit}
+.cmap-search input:focus{outline:2px solid var(--primary);outline-offset:1px}
+.cmap-status{min-height:20px;margin:0 0 10px;opacity:.62}
+.cmap-view-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;padding:10px 0;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline)}
+.cmap-view-controls[hidden]{display:none}.cmap-focus{display:inline-flex;align-items:center;gap:7px;min-height:40px;font-size:14px;cursor:pointer;white-space:nowrap}.cmap-focus input{width:17px;height:17px;accent-color:var(--ink)}
+.cmap-node[hidden],.cmap-layer[hidden]{display:none}
+@media(max-width:700px){.cmap-controls{align-items:stretch;flex-direction:column}.cmap-search{flex-basis:auto;width:100%}.cmap-grade{display:grid;grid-template-columns:repeat(4,1fr)}.cmap-grade button{padding-inline:7px}.cmap-view-controls{align-items:stretch;flex-direction:column}.cmap-relation{display:grid;grid-template-columns:repeat(3,1fr)}.cmap-relation button{padding-inline:6px}.cmap-focus{justify-content:flex-start}.cmap-bar{margin-top:2px}.cmap-row{gap:7px}.cmap-node{padding:10px 13px 11px;font-size:15px}}
+
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.cmap-legend>span[hidden]{display:none}
