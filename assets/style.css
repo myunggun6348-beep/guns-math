@@ -2124,3 +2124,8 @@ html.theme-dark .canvas-host {
 .cmap-panel-exam{grid-column:1/-1;padding-top:var(--md);border-top:1px solid var(--hairline)}
 .cmap-exam-link{display:inline-flex!important;align-items:center;padding:9px 13px;border-radius:var(--r-md);background:var(--block-lime);color:#111!important;font-weight:650!important;text-decoration:none!important}
 .cmap-exam-link:hover{background:var(--ink);color:var(--canvas)!important}
+
+/* 오늘의 학습 — 홈에서 가장 먼저 시작하는 일일 진단 */
+.portal-card-today{grid-column:1/-1;min-height:200px;background:var(--block-navy);color:#fff}
+.portal-card-today p{color:rgba(255,255,255,.72)}
+.portal-card-today .portal-go b{padding:4px 9px;border-radius:999px;background:var(--block-lime);color:#111}
