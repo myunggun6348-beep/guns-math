@@ -105,6 +105,8 @@
     }
   };
 
+  if(window.expandQuickGameBanks)window.expandQuickGameBanks({games,C,T});
+
   const app=document.getElementById("gameApp");
   const key=new URLSearchParams(location.search).get("game");
   const game=games[key];
@@ -126,14 +128,14 @@
   function norm(value){return String(value).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"")}
   function best(){return Number(localStorage.getItem("quick-game-best-"+key)||0)}
   function hero(){
-    return '<div class="quick-hero"><span class="quick-kicker">'+game.kicker+'</span><h1 class="quick-title">'+game.title+'</h1><p class="quick-desc">'+game.desc+'</p><div class="quick-meta"><span>4분</span><span>5문제</span><span>즉시 해설</span><span>최고 '+best()+'점</span></div></div>'
+    return '<div class="quick-hero"><span class="quick-kicker">'+game.kicker+'</span><h1 class="quick-title">'+game.title+'</h1><p class="quick-desc">'+game.desc+'</p><div class="quick-meta"><span>4분</span><span>매회 5문제</span><span>문제은행 '+game.questions.length+'</span><span>즉시 해설</span><span>최고 '+best()+'점</span></div></div>'
   }
   function intro(){
     app.innerHTML=hero()+'<div class="start-panel"><h2>준비되면 시작하세요</h2><p>문제마다 답을 한 번 제출할 수 있습니다. 빠르고 정확하게 풀수록 점수가 올라갑니다.</p><ul class="start-list"><li>정답 160점 + 연속 정답 보너스</li><li>오답도 바로 해설 확인</li><li>기록은 이 기기에 자동 저장</li></ul><button class="quick-btn" id="startBtn">게임 시작</button></div>';
     document.getElementById("startBtn").addEventListener("click",start);
   }
   function start(){
-    questions=shuffle(game.questions);index=0;score=0;streak=0;correct=0;timeLeft=240;startedAt=Date.now();locked=false;
+    const shuffled=shuffle(game.questions);const mixed=[];const oneChoice=shuffled.find(q=>q.type==="choice");const oneText=shuffled.find(q=>q.type==="text");if(oneChoice)mixed.push(oneChoice);if(oneText)mixed.push(oneText);for(const q of shuffled){if(mixed.length>=5)break;if(!mixed.includes(q))mixed.push(q)}questions=shuffle(mixed);index=0;score=0;streak=0;correct=0;timeLeft=240;startedAt=Date.now();locked=false;
     clearInterval(timerId);timerId=setInterval(tick,1000);renderQuestion();
   }
   function tick(){
