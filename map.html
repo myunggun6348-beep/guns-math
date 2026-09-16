@@ -224,6 +224,12 @@ for (const layer of LAYERS) {
 
 const nodeEl = id => cmap.querySelector(`.cmap-node[data-id="${id}"]`);
 const 학년번호 = id => String(NODES[id].year).replace(/\D/g, "");
+const 기출과목 = id => {
+  const n = NODES[id];
+  if (학년번호(id) !== "3") return "수학";
+  return /미적분/.test(n.subject) ? "미적분" : n.subject;
+};
+const 기출주소 = id => "files.html?" + new URLSearchParams({ grade: 학년번호(id), q: 기출과목(id) }).toString();
 const 검색글 = id => {
   const n = NODES[id];
   return [n.name, n.subject, n.year, n.about].join(" ").toLowerCase();
@@ -406,6 +412,13 @@ function select(id, push) {
               ).join("")
             : `<span class="cmap-none">이 개념은 아직 학습지가 없습니다</span>`
         }</div>
+      </div>
+      <div class="cmap-panel-exam">
+        <h3 class="caption">관련 기출문제</h3>
+        <div class="cmap-links">
+          <a class="cmap-exam-link" href="${기출주소(id)}">${n.year} ${기출과목(id)} 최근 3개년 기출 보기 →</a>
+          <span class="cmap-none">${n.name}과 연결되는 과목 기출을 자료실에서 바로 풉니다.</span>
+        </div>
       </div>
     </div>`;
 

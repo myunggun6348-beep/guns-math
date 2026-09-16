@@ -2120,3 +2120,7 @@ html.theme-dark .canvas-host {
 
 .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .cmap-legend>span[hidden]{display:none}
+
+.cmap-panel-exam{grid-column:1/-1;padding-top:var(--md);border-top:1px solid var(--hairline)}
+.cmap-exam-link{display:inline-flex!important;align-items:center;padding:9px 13px;border-radius:var(--r-md);background:var(--block-lime);color:#111!important;font-weight:650!important;text-decoration:none!important}
+.cmap-exam-link:hover{background:var(--ink);color:var(--canvas)!important}

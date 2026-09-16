@@ -15,7 +15,7 @@ map.html                    개념 지도 — 학년·검색 필터, 선수/다�
 files.html                  자료실 — 최근 3개년 기출 문제·정답·해설
 solve.html                  기출문제 태블릿 풀이 — PDF 위 필기·자동 저장·채점
 ask.html                    질문 — 풀이·공부법·제안 분류, 문제 사진 첨부, 교사 답변
-escape.html                 수학 탈출 — 15분 문제 풀이와 태블릿 필기 활동
+escape.html                 수학 탈출 — 사이트 내부 15분 문제 풀이와 태블릿 필기 활동
 files/                      위 자료실이 내려주는 PDF 들 (올리는 법은 그 안 README)
 assets/demos.js            자료 목록 (DEMOS) — 홈의 찾기와 library.html 이 함께 씁니다
 assets/concepts.js         개념 목록 (NODES/LAYERS/EDGES) — 홈의 찾기와 map.html

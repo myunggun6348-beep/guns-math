@@ -6,8 +6,8 @@ const games = [
     description: "교실 속 단서를 풀고 세 개의 열쇠를 찾으세요.",
     detail: "15분 · 교실 3개",
     image: "assets/escape-classroom.png",
-    url: "https://last-bell-math-escape.gun777.chatgpt.site/",
-    note: "새 탭에서 실행 · ChatGPT 로그인 필요"
+    url: "escape.html",
+    note: "사이트 안에서 바로 실행 · 로그인 불필요"
   }
 ];
 
@@ -16,8 +16,11 @@ for (const game of games) {
   const card = document.createElement("a");
   card.className = "game-card";
   card.href = game.url;
-  card.target = "_blank";
-  card.rel = "noopener noreferrer";
+  const external = /^https?:\/\//.test(game.url) && new URL(game.url, location.href).origin !== location.origin;
+  if (external) {
+    card.target = "_blank";
+    card.rel = "noopener noreferrer";
+  }
   const image = document.createElement("img");
   image.src = game.image; image.alt = ""; image.loading = "lazy";
   const content = document.createElement("div"); content.className = "game-card-content";
@@ -26,7 +29,7 @@ for (const game of games) {
     ["h2", "game-title", game.title],
     ["p", "game-description", game.description],
     ["p", "game-detail", game.detail],
-    ["span", "game-launch", "게임 시작 ↗"],
+    ["span", "game-launch", external ? "게임 시작 ↗" : "게임 시작 →"],
     ["small", "game-note", game.note]
   ]) {
     const element = document.createElement(tag);
