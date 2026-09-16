@@ -36,8 +36,15 @@
     <div class="tool-group" role="group" aria-label="필기 도구">
       <button type="button" class="tool-button tool-mode" data-tool="hand" aria-pressed="false"><span aria-hidden="true">☝</span> 이동</button>
       <button type="button" class="tool-button tool-mode on" data-tool="pen" aria-pressed="true"><span class="tool-dot pen-dot" aria-hidden="true"></span> 펜</button>
+      <button type="button" class="tool-button tool-mode" data-tool="line" aria-pressed="false"><span aria-hidden="true">╱</span> 직선</button>
       <button type="button" class="tool-button tool-mode" data-tool="highlighter" aria-pressed="false"><span class="tool-dot highlighter-dot" aria-hidden="true"></span> 형광펜</button>
       <button type="button" class="tool-button tool-mode" data-tool="eraser" aria-pressed="false"><span aria-hidden="true">◇</span> 지우개</button>
+    </div>
+    <div class="tool-group ink-settings" aria-label="필기 설정">
+      <div class="ink-colors" role="group" aria-label="필기 색상">
+        <button type="button" class="ink-color" data-ink-color="#19364a" aria-label="남색"></button><button type="button" class="ink-color" data-ink-color="#111111" aria-label="검정"></button><button type="button" class="ink-color" data-ink-color="#1769aa" aria-label="파랑"></button><button type="button" class="ink-color" data-ink-color="#c93636" aria-label="빨강"></button><button type="button" class="ink-color" data-ink-color="#198754" aria-label="초록"></button><button type="button" class="ink-color" data-ink-color="#ffd928" aria-label="노랑"></button>
+      </div>
+      <label class="stroke-size">굵기 <input id="strokeSize" type="range" min="1" max="5" step="1" value="2"><output id="strokeSizeValue">2</output></label>
     </div>
     <div class="tool-group compact-tools" aria-label="편집">
       <button type="button" class="tool-button" id="undoButton" title="되돌리기 (Ctrl+Z)" aria-label="되돌리기">↶</button>

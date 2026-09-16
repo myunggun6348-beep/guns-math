@@ -110,6 +110,8 @@
       userAnswer=input.value;isCorrect=q.answers.some(a=>norm(a)===norm(userAnswer));
     }
     locked=true;if(isCorrect)correct++;
+    const track=tracks[trackKey],meta=concepts[q.concept];
+    window.WrongNotes?.record({source:"today",sourceKey:trackKey,sourceTitle:"오늘의 학습 · "+track.title,grade,subject:track.title,conceptId:q.concept,conceptName:meta.name,prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"today.html?grade="+grade+"&subject="+trackKey},isCorrect);
     answers.push({concept:q.concept,correct:isCorrect});
     app.querySelectorAll(".daily-choice,.daily-input,#textSubmit,#choiceSubmit").forEach(el=>el.disabled=true);
     const slot=document.getElementById("feedbackSlot");
@@ -131,7 +133,7 @@
     const weakCards=weak.map(s=>'<article class="weak-card"><h3>'+concepts[s.id].name+'</h3><p>'+concepts[s.id].about+'</p><div class="weak-actions"><a href="map.html?grade='+grade+'&n='+s.id+'">개념 지도에서 복습 →</a><a href="files.html?grade='+grade+'&q='+encodeURIComponent(concepts[s.id].name)+'">관련 기출 찾기 →</a></div></article>').join("");
     const message=correct===5?"오늘의 핵심 개념이 안정적입니다.":correct>=3?"잘 풀었습니다. 놓친 개념만 짧게 복습하면 됩니다.":"지금 확인한 취약 개념부터 하나씩 연결해 봅시다.";
     const run=streak();
-    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">학습 완료</span><div class="result-score">'+correct+'/5</div><h2>'+message+'</h2><p class="result-lead">정답 개수보다 어떤 개념에서 막혔는지가 더 중요합니다. 아래 결과에서 바로 복습할 수 있습니다.</p>'+(run?'<span class="today-streak">연속 학습 '+run+'일</span>':'')+'<div class="concept-results">'+summary+'</div>'+(weak.length?'<h3 class="weak-title">먼저 복습할 개념</h3><div class="weak-list">'+weakCards+'</div>':'<div class="weak-card"><h3>오늘은 취약 개념이 없습니다.</h3><p>관련 기출로 난도를 높여 실력을 확인해 보세요.</p><div class="weak-actions"><a href="files.html?grade='+grade+'&q='+encodeURIComponent(track.title)+'">관련 기출 풀기 →</a></div></div>')+'<div class="result-actions"><button type="button" class="today-primary" id="retryToday">다시 풀기</button><button type="button" class="today-secondary" id="changeToday">과목 바꾸기</button></div></section>';
+    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">학습 완료</span><div class="result-score">'+correct+'/5</div><h2>'+message+'</h2><p class="result-lead">정답 개수보다 어떤 개념에서 막혔는지가 더 중요합니다. 아래 결과에서 바로 복습할 수 있습니다.</p>'+(run?'<span class="today-streak">연속 학습 '+run+'일</span>':'')+'<div class="concept-results">'+summary+'</div>'+(weak.length?'<h3 class="weak-title">먼저 복습할 개념</h3><div class="weak-list">'+weakCards+'</div>':'<div class="weak-card"><h3>오늘은 취약 개념이 없습니다.</h3><p>관련 기출로 난도를 높여 실력을 확인해 보세요.</p><div class="weak-actions"><a href="files.html?grade='+grade+'&q='+encodeURIComponent(track.title)+'">관련 기출 풀기 →</a></div></div>')+'<div class="result-actions"><button type="button" class="today-primary" id="retryToday">다시 풀기</button><button type="button" class="today-secondary" id="changeToday">과목 바꾸기</button><a class="today-secondary" href="wrong-notes.html">오답노트 보기</a></div></section>';
     document.getElementById("retryToday").addEventListener("click",start);
     document.getElementById("changeToday").addEventListener("click",setup);
   }

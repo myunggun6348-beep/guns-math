@@ -110,6 +110,7 @@
   const app=document.getElementById("gameApp");
   const key=new URLSearchParams(location.search).get("game");
   const game=games[key];
+  const wrongConcept={graph:["func","함수와 그래프"],derivative:["diff","미분"],sequence:["seq","수열"],probability:["prob","확률"],counting:["count","경우의 수"],transform:["func","함수와 그래프"],limit:["limit","함수의 극한과 연속"],vector:["vec","평면벡터"],integral:["integ","적분"],error:["","풀이 검산"]}[key]||["",""];
   if(!game){
     app.innerHTML='<div class="result-panel"><h1>게임을 찾을 수 없습니다.</h1><p>게임 목록에서 다시 선택해 주세요.</p><a class="quick-btn" href="games.html">게임 목록으로</a></div>';
     return;
@@ -167,15 +168,16 @@
   }
   function submit(){
     if(locked)return;
-    const q=questions[index];let isCorrect=false;
-    if(q.type==="choice"){if(selected===null)return;isCorrect=selected===q.answer}
+    const q=questions[index];let isCorrect=false,userAnswer="";
+    if(q.type==="choice"){if(selected===null)return;isCorrect=selected===q.answer;userAnswer=q.choices[selected]}
     else{
       const input=document.getElementById("answerInput");if(!input.value.trim()){input.focus();return}
-      isCorrect=q.answers.some(a=>norm(a)===norm(input.value));
+      userAnswer=input.value;isCorrect=q.answers.some(a=>norm(a)===norm(input.value));
     }
     locked=true;
     document.querySelectorAll("button,input").forEach(el=>{if(!el.closest(".nav"))el.disabled=true});
     if(isCorrect){correct++;streak++;score+=160+(streak-1)*20}else{streak=0}
+    window.WrongNotes?.record({source:"game",sourceKey:key,sourceTitle:"미니게임 · "+game.title,subject:game.kicker,conceptId:wrongConcept[0],conceptName:wrongConcept[1],prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"quick-game.html?game="+key},isCorrect);
     const slot=document.getElementById("feedbackSlot");
     slot.innerHTML='<div class="feedback '+(isCorrect?"correct":"wrong")+'" role="status"><strong>'+(isCorrect?"정답입니다!":"한 번 더 개념을 확인해 봅시다.")+'</strong><span>'+q.explanation+'</span></div>';
     const actions=document.querySelector(".quiz-actions");
@@ -188,7 +190,7 @@
     if(finalScore>previous)localStorage.setItem("quick-game-best-"+key,String(finalScore));
     const elapsed=Math.min(240,Math.max(0,Math.floor((Date.now()-startedAt)/1000)));
     let message=correct===5?"완벽합니다. 속도와 정확성을 모두 잡았습니다.":correct>=3?"핵심 개념을 잘 연결했습니다. 틀린 문제의 해설을 떠올리며 한 번 더 도전해 보세요.":"해설에서 판단 기준을 확인했습니다. 다시 풀면 훨씬 빠르게 보일 겁니다.";
-    app.innerHTML=hero()+'<section class="result-panel"><span class="question-tag">게임 완료</span><h2>'+message+'</h2><div class="result-score">'+finalScore+'점</div><div class="result-grid"><div class="result-stat"><b>'+correct+'/5</b><span>정답</span></div><div class="result-stat"><b>'+formatTime(elapsed)+'</b><span>풀이 시간</span></div><div class="result-stat"><b>'+best()+'</b><span>최고 기록</span></div></div><div class="result-actions"><button class="quick-btn" id="retryBtn">다시 도전</button><a class="quick-btn secondary" href="games.html">다른 게임</a></div></section>';
+    app.innerHTML=hero()+'<section class="result-panel"><span class="question-tag">게임 완료</span><h2>'+message+'</h2><div class="result-score">'+finalScore+'점</div><div class="result-grid"><div class="result-stat"><b>'+correct+'/5</b><span>정답</span></div><div class="result-stat"><b>'+formatTime(elapsed)+'</b><span>풀이 시간</span></div><div class="result-stat"><b>'+best()+'</b><span>최고 기록</span></div></div><div class="result-actions"><button class="quick-btn" id="retryBtn">다시 도전</button><a class="quick-btn secondary" href="games.html">다른 게임</a><a class="quick-btn secondary" href="wrong-notes.html">오답노트</a></div></section>';
     document.getElementById("retryBtn").addEventListener("click",start);
   }
   intro();

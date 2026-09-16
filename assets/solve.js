@@ -12,6 +12,10 @@ const state = {
   pageCount: 0,
   zoom: 1,
   tool: "pen",
+  penColor: "#19364a",
+  highlighterColor: "#ffd928",
+  penSize: 2,
+  highlighterSize: 3,
   pages: {},
   undo: {},
   redo: {},
@@ -32,6 +36,13 @@ const state = {
   docKey: ""
 };
 
+try {
+  const toolPrefs = JSON.parse(localStorage.getItem("math-solve-tool-prefs") || "{}");
+  if (/^#[0-9a-f]{6}$/i.test(toolPrefs.penColor || "")) state.penColor = toolPrefs.penColor;
+  if (/^#[0-9a-f]{6}$/i.test(toolPrefs.highlighterColor || "")) state.highlighterColor = toolPrefs.highlighterColor;
+  if ([1,2,3,4,5].includes(toolPrefs.penSize)) state.penSize = toolPrefs.penSize;
+  if ([1,2,3,4,5].includes(toolPrefs.highlighterSize)) state.highlighterSize = toolPrefs.highlighterSize;
+} catch {}
 const paper = $("#paper");
 const area = $("#documentArea");
 const pdfCanvas = $("#pdfCanvas");
@@ -249,8 +260,46 @@ function setTool(tool) {
     button.setAttribute("aria-pressed", String(active));
   });
   inkCanvas.classList.toggle("hand", tool === "hand");
+  updateInkSettings();
 }
 
+const PEN_WIDTHS = [0, .0025, .0034, .0042, .0055, .007];
+const HIGHLIGHT_WIDTHS = [0, .012, .017, .022, .028, .036];
+
+function saveToolPrefs() {
+  try {
+    localStorage.setItem("math-solve-tool-prefs", JSON.stringify({
+      penColor: state.penColor, highlighterColor: state.highlighterColor,
+      penSize: state.penSize, highlighterSize: state.highlighterSize
+    }));
+  } catch {}
+}
+
+function activeInkColor() {
+  return state.tool === "highlighter" ? state.highlighterColor : state.penColor;
+}
+
+function activeInkWidth() {
+  return state.tool === "highlighter" ? HIGHLIGHT_WIDTHS[state.highlighterSize] : PEN_WIDTHS[state.penSize];
+}
+
+function updateInkSettings() {
+  const highlighter = state.tool === "highlighter";
+  const editable = ["pen", "line", "highlighter"].includes(state.tool);
+  const color = activeInkColor(), size = highlighter ? state.highlighterSize : state.penSize;
+  document.querySelector(".ink-settings")?.classList.toggle("disabled", !editable);
+  document.querySelectorAll("[data-ink-color]").forEach(button => {
+    const on = button.dataset.inkColor.toLowerCase() === color.toLowerCase();
+    button.classList.toggle("on", on);
+    button.setAttribute("aria-pressed", String(on));
+  });
+  const slider = $("#strokeSize"), output = $("#strokeSizeValue");
+  if (slider) { slider.value = String(size); slider.disabled = !editable; }
+  if (output) output.textContent = String(size);
+  const penDot = document.querySelector(".pen-dot"), highlighterDot = document.querySelector(".highlighter-dot");
+  if (penDot) penDot.style.background = state.penColor;
+  if (highlighterDot) highlighterDot.style.background = state.highlighterColor;
+}
 inkCanvas.addEventListener("pointerdown", event => {
   if (state.tool === "hand" || (event.pointerType === "touch" && !$("#fingerDraw").checked)) return;
   event.preventDefault();
@@ -262,9 +311,9 @@ inkCanvas.addEventListener("pointerdown", event => {
   else {
     state.activeStroke = {
       tool: state.tool,
-      color: state.tool === "highlighter" ? "#ffd928" : "#19364a",
-      width: state.tool === "highlighter" ? .021 : .0042,
-      points: [point]
+      color: activeInkColor(),
+      width: activeInkWidth(),
+      points: state.tool === "line" ? [point, point] : [point]
     };
     pageStrokes().push(state.activeStroke);
   }
@@ -278,6 +327,7 @@ inkCanvas.addEventListener("pointermove", event => {
   events.forEach(sample => {
     const point = canvasPoint(sample);
     if (state.tool === "eraser") eraseAt(point);
+    else if (state.activeStroke && state.tool === "line") state.activeStroke.points[1] = point;
     else if (state.activeStroke) state.activeStroke.points.push(point);
   });
   redrawInk();
@@ -386,6 +436,24 @@ async function start() {
 }
 
 document.querySelectorAll("[data-tool]").forEach(button => button.addEventListener("click", () => setTool(button.dataset.tool)));
+document.querySelectorAll("[data-ink-color]").forEach(button => button.addEventListener("click", () => {
+  if (!["pen", "line", "highlighter"].includes(state.tool)) return;
+  if (state.tool === "highlighter") state.highlighterColor = button.dataset.inkColor;
+  else state.penColor = button.dataset.inkColor;
+  saveToolPrefs(); updateInkSettings();
+}));
+$("#strokeSize").addEventListener("input", event => {
+  const value = Number(event.target.value);
+  if (state.tool === "highlighter") state.highlighterSize = value;
+  else state.penSize = value;
+  saveToolPrefs(); updateInkSettings();
+});
+function updateFingerMode() {
+  inkCanvas.classList.toggle("finger-draw", $("#fingerDraw").checked);
+}
+$("#fingerDraw").addEventListener("change", updateFingerMode);
+updateFingerMode();
+updateInkSettings();
 $("#undoButton").addEventListener("click", undo);
 $("#redoButton").addEventListener("click", redo);
 $("#prevPage").addEventListener("click", () => goToPage(state.page - 1));

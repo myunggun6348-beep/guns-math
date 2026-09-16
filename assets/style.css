@@ -2129,3 +2129,6 @@ html.theme-dark .canvas-host {
 .portal-card-today{grid-column:1/-1;min-height:200px;background:var(--block-navy);color:#fff}
 .portal-card-today p{color:rgba(255,255,255,.72)}
 .portal-card-today .portal-go b{padding:4px 9px;border-radius:999px;background:var(--block-lime);color:#111}
+.portal-card-wrong{grid-column:span 6;background:var(--block-coral)}
+@media(max-width:960px){.portal-card-wrong{grid-column:span 1}}
+@media(max-width:650px){.portal-card-wrong{grid-column:1}}
