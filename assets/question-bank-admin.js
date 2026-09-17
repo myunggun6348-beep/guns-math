@@ -40,12 +40,20 @@
     $("#previewCard").innerHTML=`<div class="qb-preview-meta"><span class="qb-chip">${esc(SURFACE[item.surface])}</span><span class="qb-chip">${esc(item.surface==="game"?GAMES[item.gameKey]:"고"+item.grade+" · "+track)}</span><span class="qb-chip">${esc(concept)}</span><span class="qb-chip">${esc(DIFFICULTY[item.difficulty])}</span></div><h3 class="qb-preview-question" data-math>${esc(item.prompt||"문제를 입력하면 여기에 표시됩니다.")}</h3>${item.note?`<p data-math>${esc(item.note)}</p>`:""}${answer}<div class="qb-preview-explain" data-math><b>정답과 해설</b><br>${esc(item.explanation||"해설을 입력하면 여기에 표시됩니다.")}</div>`;
     window.MathView?.typeset($("#previewCard"));
   }
-  function reset(){form.reset();form.elements.id.value="";form.elements.published.checked=true;form.elements.difficulty.value="standard";form.querySelector('input[name="correct"][value="0"]').checked=true;$("#editorTitle").textContent="새 문항 만들기";$("#saveBtn").textContent="문항 저장";$("#formStatus").textContent="";tracks();mode()}
+  function updateRecommendation(){
+    const prompt=form.elements.prompt.value.trim(),button=$("#applyRecommendBtn"),title=$("#recommendTitle"),reason=$("#recommendReason");
+    if(!prompt){title.textContent="문제를 입력하면 개념과 난이도를 추천합니다.";reason.textContent="추천 결과를 확인한 뒤 한 번에 적용할 수 있습니다.";button.disabled=true;delete button.dataset.concept;delete button.dataset.difficulty;return}
+    const result=ProblemBankImport.recommend(prompt,form.elements.surface.value==="game"?form.elements.gameKey.value:form.elements.track.value,form.elements.explanation.value);
+    title.textContent=`추천: ${result.conceptName} · ${result.difficultyName}`;
+    reason.textContent=`개념 근거: ${result.conceptReason} · 난이도 근거: ${result.difficultyReason} · 신뢰도: ${result.confidence}`;
+    button.dataset.concept=result.concept;button.dataset.difficulty=result.difficulty;button.disabled=false;
+  }
+  function reset(){form.reset();form.elements.id.value="";form.elements.published.checked=true;form.elements.difficulty.value="standard";form.querySelector('input[name="correct"][value="0"]').checked=true;$("#editorTitle").textContent="새 문항 만들기";$("#saveBtn").textContent="문항 저장";$("#formStatus").textContent="";tracks();mode();updateRecommendation()}
   function fill(item,copy=false){
     reset();form.elements.id.value=copy?"":item.id;for(const name of ["surface","type","difficulty","grade","concept","gameKey","source","prompt","explanation","note"]){if(item[name]!==undefined&&form.elements[name])form.elements[name].value=item[name]}
     tracks();form.elements.track.value=item.track||form.elements.track.value;form.elements.published.checked=copy?false:item.published!==false;
     if(item.type==="choice"){(item.choices||[]).forEach((x,i)=>{if(form.elements["choice"+i])form.elements["choice"+i].value=x});const radio=form.querySelector(`input[name="correct"][value="${item.answer}"]`);if(radio)radio.checked=true}else form.elements.answers.value=(item.answers||[]).join("\n");
-    $("#editorTitle").textContent=copy?"복사한 문항 만들기":"문항 수정";$("#saveBtn").textContent=copy?"복사본 저장":"변경 저장";mode();form.scrollIntoView({behavior:"smooth",block:"start"});
+    $("#editorTitle").textContent=copy?"복사한 문항 만들기":"문항 수정";$("#saveBtn").textContent=copy?"복사본 저장":"변경 저장";mode();updateRecommendation();form.scrollIntoView({behavior:"smooth",block:"start"});
   }
   function stats(){const pub=items.filter(x=>x.published!==false).length,today=items.filter(x=>x.surface!=="game").length,game=items.filter(x=>x.surface!=="today").length,concepts=new Set(items.map(x=>x.concept)).size;$("#stats").innerHTML=[[items.length,"전체 문항"],[pub,"공개 중"],[today,"오늘의 문제"],[game,"미니게임"],[concepts,"연결 개념"]].slice(0,4).map(x=>`<div class="qb-stat"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("")}
   function draw(){
@@ -56,7 +64,8 @@
   }
   async function load(){const data=await request({action:"list"});items=data.items||[];draw();$("#qbLogin").hidden=true;$("#qbApp").hidden=false}
   $("#loginForm").addEventListener("submit",async event=>{event.preventDefault();const f=event.currentTarget;password=f.password.value;$("#loginStatus").textContent="확인 중…";try{await load();try{clearStored();(f.remember.checked?localStorage:sessionStorage).setItem(key,password)}catch{}f.password.value="";$("#loginStatus").textContent=""}catch(error){$("#loginStatus").textContent=error.message}});
-  form.addEventListener("input",preview);form.addEventListener("change",event=>{if(event.target.name==="grade")tracks();if(event.target.name==="surface"||event.target.name==="type")mode();preview()});
+  form.addEventListener("input",()=>{preview();updateRecommendation()});form.addEventListener("change",event=>{if(event.target.name==="grade")tracks();if(event.target.name==="surface"||event.target.name==="type")mode();preview();updateRecommendation()});
+  $("#applyRecommendBtn").addEventListener("click",event=>{const button=event.currentTarget;if(!button.dataset.concept)return;form.elements.concept.value=button.dataset.concept;form.elements.difficulty.value=button.dataset.difficulty;preview();toast("추천 개념과 난이도를 적용했습니다.")});
   form.addEventListener("submit",async event=>{event.preventDefault();const button=$("#saveBtn"),status=$("#formStatus");button.disabled=true;status.textContent="저장 중…";try{const saved=await request({action:"save",id:form.elements.id.value,item:value()});const index=items.findIndex(x=>x.id===saved.id);if(index<0)items.unshift(saved);else items[index]=saved;draw();reset();toast(index<0?"문항을 저장했습니다.":"문항을 수정했습니다.")}catch(error){status.textContent=error.message}finally{button.disabled=false}});
   $("#questionList").addEventListener("click",async event=>{const button=event.target.closest("[data-act]");if(!button)return;const card=button.closest("[data-id]"),item=items.find(x=>x.id===card.dataset.id);if(!item)return;const act=button.dataset.act;if(act==="edit")return fill(item);if(act==="copy")return fill(item,true);if(act==="delete"&&!confirm("이 문항을 삭제할까요?"))return;button.disabled=true;try{if(act==="delete"){await request({action:"delete",id:item.id});items=items.filter(x=>x.id!==item.id);toast("문항을 삭제했습니다.")}else if(act==="publish"){const saved=await request({action:"save",id:item.id,item:{...item,published:item.published===false}});items[items.findIndex(x=>x.id===item.id)]=saved;toast(saved.published?"문항을 공개했습니다.":"문항을 비공개로 바꿨습니다.")}draw()}catch(error){toast(error.message);button.disabled=false}});
   $("#resetBtn").addEventListener("click",reset);["#searchInput","#surfaceFilter","#stateFilter"].forEach(id=>$(id).addEventListener("input",draw));
@@ -79,8 +88,8 @@
       ["학년","1 / 2 / 3"],
       ["과목",Object.values(TRACKS).map(x=>x.name).join(" / ")],
       ["미니게임",Object.values(GAMES).join(" / ")],
-      ["개념",Object.values(CONCEPTS).map(x=>x.name).join(" / ")],
-      ["난이도","기본 / 보통 / 심화"],
+      ["개념","빈칸이면 자동 추천 / "+Object.values(CONCEPTS).map(x=>x.name).join(" / ")],
+      ["난이도","빈칸이면 자동 추천 / 기본 / 보통 / 심화"],
       ["유형","오지선다형 / 주관식"],
       ["정답","오지선다형일 때 1~5"],
       ["주관식정답","여러 정답은 | 로 구분"],
@@ -99,7 +108,7 @@
     const valid=importRows.filter(row=>!row.errors.length),invalid=importRows.length-valid.length;
     $("#importSummary").innerHTML=importRows.length?`<b>전체 ${importRows.length}</b><b>등록 가능 ${valid.length}</b><b>확인 필요 ${invalid}</b><span>오류가 없는 문항만 등록됩니다.</span>`:"파일을 선택하면 등록 전 검사가 시작됩니다.";
     $("#importBtn").disabled=!valid.length;$("#importBtn").textContent=valid.length?`정상 문항 ${valid.length}개 등록`:"정상 문항 등록";
-    $("#importPreview").innerHTML=importRows.length?`<div class="qb-import-table-wrap"><table class="qb-import-table"><thead><tr><th>행</th><th>상태</th><th>문제</th><th>검사 결과</th></tr></thead><tbody>${importRows.map(row=>`<tr><td>${row.row}</td><td class="${row.errors.length?"error":"ok"}">${row.errors.length?"확인 필요":"등록 가능"}</td><td data-math>${esc(row.item.prompt||"(문제 없음)")}</td><td>${esc(row.errors.join(" ")||"이상 없음")}</td></tr>`).join("")}</tbody></table></div>`:"";
+    $("#importPreview").innerHTML=importRows.length?`<div class="qb-import-table-wrap"><table class="qb-import-table"><thead><tr><th>행</th><th>상태</th><th>문제</th><th>검사 결과</th></tr></thead><tbody>${importRows.map(row=>`<tr><td>${row.row}</td><td class="${row.errors.length?"error":"ok"}">${row.errors.length?"확인 필요":"등록 가능"}</td><td data-math>${esc(row.item.prompt||"(문제 없음)")}</td><td class="${!row.errors.length&&row.recommendation?"recommended":""}">${esc(row.errors.join(" ")||(row.recommendation?`자동 추천: ${row.recommendation.labels.join(" · ")} · ${row.recommendation.reason}`:"이상 없음"))}</td></tr>`).join("")}</tbody></table></div>`:"";
     window.MathView?.typeset($("#importPreview"));
   }
   $("#importFile").addEventListener("change",async event=>{
