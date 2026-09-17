@@ -63,7 +63,7 @@
     localStorage.setItem("today-study-pref",JSON.stringify({grade,track:trackKey}));
   }
   function setup(){
-    updateUrl();
+    window.GameScratch.destroy();updateUrl();
     const available=Object.entries(tracks).filter(([,t])=>t.grades.includes(grade));
     const last=latest();
     app.innerHTML=hero()+'<section class="today-panel"><h2>오늘 공부할 과목</h2><p class="today-panel-intro">한 판은 약 5분입니다. 선택한 과목의 주요 개념에서 문제가 고르게 나옵니다.</p><span class="picker-label">학년</span><div class="grade-picks">'+["1","2","3"].map(g=>'<button type="button" class="pick-button '+(g===grade?"on":"")+'" data-grade="'+g+'">고'+g+'</button>').join("")+'</div><span class="picker-label">과목</span><div class="subject-picks">'+available.map(([key,t])=>'<button type="button" class="pick-button '+(key===trackKey?"on":"")+'" data-track="'+key+'"><b>'+t.title+'</b></button>').join("")+'</div>'+(last?'<div class="today-last">오늘 이 과목에서 <b>'+last.correct+'/5</b>점을 받았습니다. 같은 세트를 다시 풀어 취약 개념을 확인할 수 있습니다.</div>':'')+'<button type="button" class="today-primary today-start" id="todayStart">'+(last?"다시 도전하기":"오늘의 5문제 시작")+'</button></section>';
@@ -79,6 +79,7 @@
   function start(){
     const track=tracks[trackKey];
     questions=selectDaily(track,trackKey);index=0;correct=0;answers=[];selected=null;locked=false;
+    window.GameScratch.reset();
     renderQuestion();
   }
   function renderQuestion(){
@@ -87,7 +88,8 @@
     const answer=q.type==="choice"
       ? '<div class="daily-choices">'+q.choices.map((c,i)=>'<button type="button" class="daily-choice" data-choice="'+i+'"><b>'+(i+1)+'.</b> '+esc(c)+'</button>').join("")+'</div>'
       : '<div class="daily-answer"><label class="sr-status" for="dailyInput">답 입력</label><input id="dailyInput" class="daily-input" autocomplete="off" inputmode="text" placeholder="답을 입력하세요"><button type="button" class="today-primary" id="textSubmit">제출</button></div>';
-    app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / 5</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)*20)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question">'+q.prompt+'</h2>'+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
+    app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / 5</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)*20)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question">'+q.prompt+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
+    window.GameScratch.mount(index);
     if(q.type==="choice"){
       app.querySelectorAll(".daily-choice").forEach(btn=>btn.addEventListener("click",()=>{
         if(locked)return;selected=Number(btn.dataset.choice);
@@ -111,7 +113,7 @@
     }
     locked=true;if(isCorrect)correct++;
     const track=tracks[trackKey],meta=concepts[q.concept];
-    window.WrongNotes?.record({source:"today",sourceKey:trackKey,sourceTitle:"오늘의 학습 · "+track.title,grade,subject:track.title,conceptId:q.concept,conceptName:meta.name,prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"today.html?grade="+grade+"&subject="+trackKey},isCorrect);
+    window.WrongNotes?.record({source:"today",sourceKey:trackKey,sourceTitle:"오늘의 학습 · "+track.title,grade,subject:track.title,conceptId:q.concept,conceptName:meta.name,prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"today.html?grade="+grade+"&subject="+trackKey,solutionImage:isCorrect?"":window.GameScratch.capture(index)},isCorrect);
     answers.push({concept:q.concept,correct:isCorrect});
     app.querySelectorAll(".daily-choice,.daily-input,#textSubmit,#choiceSubmit").forEach(el=>el.disabled=true);
     const slot=document.getElementById("feedbackSlot");
@@ -121,7 +123,7 @@
     const next=document.getElementById("dailyNext");next.addEventListener("click",()=>{index++;if(index>=5)finish();else renderQuestion()});next.focus();
   }
   function finish(){
-    saveRecord();
+    window.GameScratch.destroy();saveRecord();
     const track=tracks[trackKey];
     const ids=[...new Set(answers.map(a=>a.concept))];
     const stats=ids.map(id=>{
@@ -130,10 +132,10 @@
     }).sort((a,b)=>(a.correct/a.total)-(b.correct/b.total));
     const weak=stats.filter(s=>s.correct<s.total);
     const summary=stats.map(s=>'<div class="concept-result"><div><b>'+concepts[s.id].name+'</b><span>'+concepts[s.id].about+'</span></div><em>'+s.correct+'/'+s.total+'</em></div>').join("");
-    const weakCards=weak.map(s=>'<article class="weak-card"><h3>'+concepts[s.id].name+'</h3><p>'+concepts[s.id].about+'</p><div class="weak-actions"><a href="map.html?grade='+grade+'&n='+s.id+'">개념 지도에서 복습 →</a><a href="files.html?grade='+grade+'&q='+encodeURIComponent(concepts[s.id].name)+'">관련 기출 찾기 →</a></div></article>').join("");
+    const weakCards=weak.map(s=>'<article class="weak-card"><h3>'+concepts[s.id].name+'</h3><p>'+concepts[s.id].about+'</p><div class="weak-actions"><a href="map.html?grade='+grade+'&n='+s.id+'">개념 지도에서 복습 →</a><a href="past-practice.html?grade='+grade+'&concept='+s.id+'">자동 선별 기출 풀기 →</a></div></article>').join("");
     const message=correct===5?"오늘의 핵심 개념이 안정적입니다.":correct>=3?"잘 풀었습니다. 놓친 개념만 짧게 복습하면 됩니다.":"지금 확인한 취약 개념부터 하나씩 연결해 봅시다.";
     const run=streak();
-    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">학습 완료</span><div class="result-score">'+correct+'/5</div><h2>'+message+'</h2><p class="result-lead">정답 개수보다 어떤 개념에서 막혔는지가 더 중요합니다. 아래 결과에서 바로 복습할 수 있습니다.</p>'+(run?'<span class="today-streak">연속 학습 '+run+'일</span>':'')+'<div class="concept-results">'+summary+'</div>'+(weak.length?'<h3 class="weak-title">먼저 복습할 개념</h3><div class="weak-list">'+weakCards+'</div>':'<div class="weak-card"><h3>오늘은 취약 개념이 없습니다.</h3><p>관련 기출로 난도를 높여 실력을 확인해 보세요.</p><div class="weak-actions"><a href="files.html?grade='+grade+'&q='+encodeURIComponent(track.title)+'">관련 기출 풀기 →</a></div></div>')+'<div class="result-actions"><button type="button" class="today-primary" id="retryToday">다시 풀기</button><button type="button" class="today-secondary" id="changeToday">과목 바꾸기</button><a class="today-secondary" href="wrong-notes.html">오답노트 보기</a></div></section>';
+    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">학습 완료</span><div class="result-score">'+correct+'/5</div><h2>'+message+'</h2><p class="result-lead">정답 개수보다 어떤 개념에서 막혔는지가 더 중요합니다. 아래 결과에서 바로 복습할 수 있습니다.</p>'+(run?'<span class="today-streak">연속 학습 '+run+'일</span>':'')+'<div class="concept-results">'+summary+'</div>'+(weak.length?'<h3 class="weak-title">먼저 복습할 개념</h3><div class="weak-list">'+weakCards+'</div>':'<div class="weak-card"><h3>오늘은 취약 개념이 없습니다.</h3><p>관련 기출로 난도를 높여 실력을 확인해 보세요.</p><div class="weak-actions"><a href="past-practice.html?grade='+grade+'&concept='+stats[0].id+'">관련 기출 난도 높이기 →</a></div></div>')+'<div class="result-actions"><button type="button" class="today-primary" id="retryToday">다시 풀기</button><button type="button" class="today-secondary" id="changeToday">과목 바꾸기</button><a class="today-secondary" href="wrong-notes.html">오답노트 보기</a></div></section>';
     document.getElementById("retryToday").addEventListener("click",start);
     document.getElementById("changeToday").addEventListener("click",setup);
   }

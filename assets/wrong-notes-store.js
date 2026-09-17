@@ -6,7 +6,7 @@
   function persist(items){localStorage.setItem(KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
   function write(items){
     const saved=items.slice(0,200);try{return persist(saved)}catch{}
-    for(let i=saved.length-1;i>=0;i--){if(saved[i].solutionImage){saved[i]={...saved[i],solutionImage:""};try{return persist(saved)}catch{}}}
+    for(let i=saved.length-1;i>=0;i--){if(saved[i].feedbackImage||saved[i].solutionImage){saved[i]={...saved[i],feedbackImage:"",solutionImage:""};try{return persist(saved)}catch{}}}
     return false;
   }
   function statKey(data){return data.conceptId||("name:"+(data.conceptName||"기타"))}
@@ -69,8 +69,12 @@
       mastered:Boolean(isCorrect),masteredAt:isCorrect?now:"",lastWrongAt:isCorrect?items[index].lastWrongAt:now};
     write(items);return true;
   }
+  function updateSolution(id,value){
+    const image=solutionImage(value),items=read(),index=items.findIndex(x=>x.id===id);if(!image||index<0)return false;
+    items[index]={...items[index],feedbackImage:image,feedbackAt:new Date().toISOString()};return write(items);
+  }
   function remove(id){write(read().filter(x=>x.id!==id))}
   function clearMastered(){write(read().filter(x=>!x.mastered))}
   function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,mastered:items.filter(x=>x.mastered).length}}
-  window.WrongNotes={all:read,record,attempt,remove,clearMastered,count,idFor,stats,performance};
+  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,idFor,stats,performance};
 })();

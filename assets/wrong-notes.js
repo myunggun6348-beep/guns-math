@@ -32,14 +32,17 @@
     app.querySelectorAll("[data-concept]").forEach(btn=>btn.addEventListener("click",()=>{conceptFilter=conceptFilter===btn.dataset.concept?"":btn.dataset.concept;draw()}));
     app.querySelectorAll("[data-filter]").forEach(btn=>btn.addEventListener("click",()=>{filter=btn.dataset.filter;draw()}));
     app.querySelectorAll("[data-retry]").forEach(btn=>btn.addEventListener("click",()=>openRetry(btn.dataset.retry)));
+    app.querySelectorAll("[data-annotate]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.open(btn.dataset.annotate,draw)));
+    app.querySelectorAll("[data-download]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.download(btn.dataset.download)));
+    app.querySelectorAll("[data-share]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.share(btn.dataset.share)));
     app.querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click",()=>{store.remove(btn.dataset.remove);toast("오답 기록을 지웠습니다.");draw()}));
     document.getElementById("clearConcept")?.addEventListener("click",()=>{conceptFilter="";draw()});
     document.getElementById("clearMastered")?.addEventListener("click",()=>{store.clearMastered();toast("완료한 기록을 정리했습니다.");draw()});
   }
   function card(note){
     const concept=note.conceptName?'<span class="wrong-tag">'+esc(note.conceptName)+'</span>':"";
-    const solution=solutionImage(note.solutionImage);
-    const work=solution?'<figure class="wrong-work"><figcaption><b>내 풀이</b><span>오답을 제출했을 때의 풀이판</span></figcaption><img src="'+esc(solution)+'" alt="저장된 문제 풀이"></figure>':"";
+    const feedback=solutionImage(note.feedbackImage),solution=feedback||solutionImage(note.solutionImage);
+    const work=solution?'<figure class="wrong-work"><figcaption><b>내 풀이</b><span>'+(feedback?'첨삭이 저장된 풀이':'오답을 제출했을 때의 풀이판')+'</span></figcaption><img src="'+esc(solution)+'" alt="저장된 문제 풀이"><div class="wrong-work-actions"><button type="button" class="wrong-button" data-annotate="'+note.id+'">✎ 풀이 첨삭</button><button type="button" class="wrong-button" data-download="'+note.id+'">PNG 저장</button><button type="button" class="wrong-button primary" data-share="'+note.id+'">선생님께 제출</button></div></figure>':"";
     const links=(note.conceptId?'<a class="wrong-link" href="map.html?n='+encodeURIComponent(note.conceptId)+'">개념 복습 →</a>':'')+(note.reviewHref?'<a class="wrong-link" href="'+esc(note.reviewHref)+'">원문 다시 풀기 →</a>':'');
     return '<article class="wrong-card '+(note.mastered?"mastered":"")+'" data-card="'+note.id+'"><div class="wrong-card-top"><div class="wrong-tags"><span class="wrong-tag source">'+esc(note.sourceTitle)+'</span>'+concept+(note.mastered?'<span class="wrong-tag">복습 완료</span>':'')+'</div><span class="wrong-date">'+dateText(note.lastWrongAt)+'</span></div><h2 class="wrong-question">'+esc(note.prompt)+'</h2><dl class="wrong-answer"><dt>내가 쓴 답</dt><dd>'+esc(note.userAnswer||"답하지 않음")+'</dd></dl>'+work+'<details class="wrong-detail"><summary>정답과 해설 보기</summary><div><b>정답: '+esc(note.correctAnswer)+'</b><br>'+esc(note.explanation)+'</div></details><div class="wrong-card-actions">'+(!note.mastered?'<button class="wrong-button primary" data-retry="'+note.id+'">다시 풀기</button>':'')+links+'<button class="wrong-button remove" data-remove="'+note.id+'">기록 삭제</button></div><div class="retry-slot" id="retry-'+note.id+'"></div></article>';
   }
@@ -65,5 +68,6 @@
       else{status.textContent="아직 다릅니다. 정답과 해설을 확인하고 다시 도전하세요.";status.className="retry-status wrong"}
     });
   }
+  window.addEventListener("wrong-work-message",event=>toast(event.detail));
   draw();
 })();
