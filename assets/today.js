@@ -86,9 +86,10 @@
     const track=tracks[trackKey],q=questions[index],meta=concepts[q.concept];
     selected=null;locked=false;
     const answer=q.type==="choice"
-      ? '<div class="daily-choices">'+q.choices.map((c,i)=>'<button type="button" class="daily-choice" data-choice="'+i+'"><b>'+(i+1)+'.</b> '+esc(c)+'</button>').join("")+'</div>'
+      ? '<div class="daily-choices">'+q.choices.map((c,i)=>'<button type="button" class="daily-choice" data-choice="'+i+'"><b>'+(i+1)+'.</b> <span data-math>'+esc(c)+'</span></button>').join("")+'</div>'
       : '<div class="daily-answer"><label class="sr-status" for="dailyInput">답 입력</label><input id="dailyInput" class="daily-input" autocomplete="off" inputmode="text" placeholder="답을 입력하세요"><button type="button" class="today-primary" id="textSubmit">제출</button></div>';
-    app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / 5</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)*20)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question">'+q.prompt+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
+    app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / 5</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)*20)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question" data-math>'+q.prompt+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
+    window.MathView?.typeset(app);
     window.GameScratch.mount(index);
     if(q.type==="choice"){
       app.querySelectorAll(".daily-choice").forEach(btn=>btn.addEventListener("click",()=>{
@@ -117,7 +118,8 @@
     answers.push({concept:q.concept,correct:isCorrect});
     app.querySelectorAll(".daily-choice,.daily-input,#textSubmit,#choiceSubmit").forEach(el=>el.disabled=true);
     const slot=document.getElementById("feedbackSlot");
-    slot.innerHTML='<div class="daily-feedback '+(isCorrect?"":"wrong")+'" role="status"><strong>'+(isCorrect?"정답입니다.":"이 개념을 결과에서 다시 연결해 드릴게요.")+'</strong>'+q.explanation+'</div>';
+    slot.innerHTML='<div class="daily-feedback '+(isCorrect?"":"wrong")+'" role="status" data-math><strong>'+(isCorrect?"정답입니다.":"이 개념을 결과에서 다시 연결해 드릴게요.")+'</strong>'+q.explanation+'</div>';
+    window.MathView?.typeset(slot);
     const actions=app.querySelector(".daily-actions");
     actions.innerHTML='<button type="button" class="today-primary" id="dailyNext">'+(index===4?"결과 확인":"다음 문제")+'</button>';
     const next=document.getElementById("dailyNext");next.addEventListener("click",()=>{index++;if(index>=5)finish();else renderQuestion()});next.focus();

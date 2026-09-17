@@ -1,0 +1,5 @@
+.math-expression{display:inline-block;max-width:100%;margin:0 .06em;vertical-align:-.12em;color:inherit}.math-expression .katex{font-size:1.08em}.math-expression .katex-mathml{user-select:text}.math-fallback{font-family:var(--mono)}
+[data-math]{overflow-wrap:anywhere}.daily-question .katex,.question-text .katex,#questionPrompt .katex{font-size:1.17em}.daily-choice .katex,.choice-btn .katex,.choice-list label .katex,.retry-choice .katex{font-size:1.08em}.daily-feedback .katex,.feedback .katex,.wrong-detail .katex{font-size:1.04em}
+.daily-choice,.choice-btn,.choice-list label,.retry-choice{line-height:1.7}.daily-choice .math-expression,.choice-btn .math-expression,.choice-list label .math-expression,.retry-choice .math-expression{padding:.12em 0}
+#questionPrompt{font-family:var(--sans);line-height:1.85}.question-dialog #questionPrompt .math-expression{margin:.08em}.wrong-question{line-height:1.7}
+@media(max-width:600px){.daily-question .katex,.question-text .katex,#questionPrompt .katex{font-size:1.08em}.math-expression{max-width:calc(100vw - 78px);overflow-x:auto;overflow-y:hidden}}

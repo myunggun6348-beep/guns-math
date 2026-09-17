@@ -150,9 +150,10 @@
     selected=null;locked=false;
     const q=questions[index];
     const answer=q.type==="choice"
-      ? '<div class="choice-list">'+q.choices.map((x,i)=>'<button type="button" class="choice-btn" data-choice="'+i+'"><b>'+(i+1)+'.</b> '+esc(x)+'</button>').join("")+'</div>'
+      ? '<div class="choice-list">'+q.choices.map((x,i)=>'<button type="button" class="choice-btn" data-choice="'+i+'"><b>'+(i+1)+'.</b> <span data-math>'+esc(x)+'</span></button>').join("")+'</div>'
       : '<div class="answer-row"><label class="sr-status" for="answerInput">답 입력</label><input id="answerInput" class="answer-input" inputmode="text" autocomplete="off" placeholder="답을 입력하세요"><button type="button" class="quick-btn" id="inlineSubmit">제출</button></div>';
-    app.innerHTML=hero()+'<section class="quiz-panel"><div class="quiz-top"><span class="progress-label">'+(index+1)+' / '+questions.length+'</span><span class="timer" id="timer">'+formatTime(timeLeft)+'</span></div><div class="progress-track" aria-hidden="true"><div class="progress-bar" style="width:'+((index+1)/questions.length*100)+'%"></div></div><div class="score-line"><span>점수 <b>'+score+'</b></span><span>연속 정답 <b>'+streak+'</b></span></div><span class="question-tag">'+(q.type==="choice"?"선택형":"주관식")+'</span><h2 class="question-text">'+q.prompt+(q.note?'<small class="question-note">'+q.note+'</small>':"")+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="quiz-actions"><button type="button" class="quick-btn" id="submitBtn" '+(q.type==="choice"?"disabled":"style=\"display:none\"")+'>답 제출</button></div></section>';
+    app.innerHTML=hero()+'<section class="quiz-panel"><div class="quiz-top"><span class="progress-label">'+(index+1)+' / '+questions.length+'</span><span class="timer" id="timer">'+formatTime(timeLeft)+'</span></div><div class="progress-track" aria-hidden="true"><div class="progress-bar" style="width:'+((index+1)/questions.length*100)+'%"></div></div><div class="score-line"><span>점수 <b>'+score+'</b></span><span>연속 정답 <b>'+streak+'</b></span></div><span class="question-tag">'+(q.type==="choice"?"선택형":"주관식")+'</span><h2 class="question-text" data-math>'+q.prompt+(q.note?'<small class="question-note">'+q.note+'</small>':"")+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="quiz-actions"><button type="button" class="quick-btn" id="submitBtn" '+(q.type==="choice"?"disabled":"style=\"display:none\"")+'>답 제출</button></div></section>';
+    window.MathView?.typeset(app);
     window.GameScratch.mount(index);
     if(q.type==="choice"){
       document.querySelectorAll(".choice-btn").forEach(btn=>btn.addEventListener("click",()=>{
@@ -180,7 +181,8 @@
     if(isCorrect){correct++;streak++;score+=160+(streak-1)*20}else{streak=0}
     window.WrongNotes?.record({source:"game",sourceKey:key,sourceTitle:"미니게임 · "+game.title,subject:game.kicker,conceptId:wrongConcept[0],conceptName:wrongConcept[1],prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"quick-game.html?game="+key,solutionImage:isCorrect?"":window.GameScratch.capture(index)},isCorrect);
     const slot=document.getElementById("feedbackSlot");
-    slot.innerHTML='<div class="feedback '+(isCorrect?"correct":"wrong")+'" role="status"><strong>'+(isCorrect?"정답입니다!":"한 번 더 개념을 확인해 봅시다.")+'</strong><span>'+q.explanation+'</span></div>';
+    slot.innerHTML='<div class="feedback '+(isCorrect?"correct":"wrong")+'" role="status" data-math><strong>'+(isCorrect?"정답입니다!":"한 번 더 개념을 확인해 봅시다.")+'</strong><span>'+q.explanation+'</span></div>';
+    window.MathView?.typeset(slot);
     const actions=document.querySelector(".quiz-actions");
     actions.innerHTML='<button type="button" class="quick-btn" id="nextBtn">'+(index===questions.length-1?"결과 보기":"다음 문제")+'</button>';
     const next=document.getElementById("nextBtn");next.disabled=false;next.addEventListener("click",()=>{index++;if(index>=questions.length)finish();else renderQuestion()});next.focus();

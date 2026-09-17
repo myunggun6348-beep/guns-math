@@ -29,6 +29,7 @@
     const summary='<div class="wrong-summary"><div class="wrong-stat"><b>'+counts.active+'</b><span>복습 필요</span></div><div class="wrong-stat"><b>'+counts.mastered+'</b><span>복습 완료</span></div><div class="wrong-stat"><b>'+counts.all+'</b><span>전체 기록</span></div></div>';
     const tools='<div class="wrong-tools"><div><div class="wrong-tabs"><button class="wrong-tab '+(filter==="active"?"on":"")+'" data-filter="active">복습 필요</button><button class="wrong-tab '+(filter==="mastered"?"on":"")+'" data-filter="mastered">복습 완료</button><button class="wrong-tab '+(filter==="all"?"on":"")+'" data-filter="all">전체</button></div>'+(selected?'<button class="concept-filter-clear" id="clearConcept">'+esc(selected.name)+'만 보는 중 ×</button>':'')+'</div>'+(counts.mastered?'<button class="wrong-clear" id="clearMastered">완료 기록 정리</button>':'')+'</div>';
     app.innerHTML=dashboard()+summary+tools+(items.length?'<div class="wrong-list">'+items.map(card).join("")+'</div>':empty(selected));
+    window.MathView?.typeset(app);
     app.querySelectorAll("[data-concept]").forEach(btn=>btn.addEventListener("click",()=>{conceptFilter=conceptFilter===btn.dataset.concept?"":btn.dataset.concept;draw()}));
     app.querySelectorAll("[data-filter]").forEach(btn=>btn.addEventListener("click",()=>{filter=btn.dataset.filter;draw()}));
     app.querySelectorAll("[data-retry]").forEach(btn=>btn.addEventListener("click",()=>openRetry(btn.dataset.retry)));
@@ -44,7 +45,7 @@
     const feedback=solutionImage(note.feedbackImage),solution=feedback||solutionImage(note.solutionImage);
     const work=solution?'<figure class="wrong-work"><figcaption><b>내 풀이</b><span>'+(feedback?'첨삭이 저장된 풀이':'오답을 제출했을 때의 풀이판')+'</span></figcaption><img src="'+esc(solution)+'" alt="저장된 문제 풀이"><div class="wrong-work-actions"><button type="button" class="wrong-button" data-annotate="'+note.id+'">✎ 풀이 첨삭</button><button type="button" class="wrong-button" data-download="'+note.id+'">PNG 저장</button><button type="button" class="wrong-button primary" data-share="'+note.id+'">선생님께 제출</button></div></figure>':"";
     const links=(note.conceptId?'<a class="wrong-link" href="map.html?n='+encodeURIComponent(note.conceptId)+'">개념 복습 →</a>':'')+(note.reviewHref?'<a class="wrong-link" href="'+esc(note.reviewHref)+'">원문 다시 풀기 →</a>':'');
-    return '<article class="wrong-card '+(note.mastered?"mastered":"")+'" data-card="'+note.id+'"><div class="wrong-card-top"><div class="wrong-tags"><span class="wrong-tag source">'+esc(note.sourceTitle)+'</span>'+concept+(note.mastered?'<span class="wrong-tag">복습 완료</span>':'')+'</div><span class="wrong-date">'+dateText(note.lastWrongAt)+'</span></div><h2 class="wrong-question">'+esc(note.prompt)+'</h2><dl class="wrong-answer"><dt>내가 쓴 답</dt><dd>'+esc(note.userAnswer||"답하지 않음")+'</dd></dl>'+work+'<details class="wrong-detail"><summary>정답과 해설 보기</summary><div><b>정답: '+esc(note.correctAnswer)+'</b><br>'+esc(note.explanation)+'</div></details><div class="wrong-card-actions">'+(!note.mastered?'<button class="wrong-button primary" data-retry="'+note.id+'">다시 풀기</button>':'')+links+'<button class="wrong-button remove" data-remove="'+note.id+'">기록 삭제</button></div><div class="retry-slot" id="retry-'+note.id+'"></div></article>';
+    return '<article class="wrong-card '+(note.mastered?"mastered":"")+'" data-card="'+note.id+'"><div class="wrong-card-top"><div class="wrong-tags"><span class="wrong-tag source">'+esc(note.sourceTitle)+'</span>'+concept+(note.mastered?'<span class="wrong-tag">복습 완료</span>':'')+'</div><span class="wrong-date">'+dateText(note.lastWrongAt)+'</span></div><h2 class="wrong-question" data-math>'+esc(note.prompt)+'</h2><dl class="wrong-answer"><dt>내가 쓴 답</dt><dd data-math>'+esc(note.userAnswer||"답하지 않음")+'</dd></dl>'+work+'<details class="wrong-detail"><summary>정답과 해설 보기</summary><div data-math><b>정답: '+esc(note.correctAnswer)+'</b><br>'+esc(note.explanation)+'</div></details><div class="wrong-card-actions">'+(!note.mastered?'<button class="wrong-button primary" data-retry="'+note.id+'">다시 풀기</button>':'')+links+'<button class="wrong-button remove" data-remove="'+note.id+'">기록 삭제</button></div><div class="retry-slot" id="retry-'+note.id+'"></div></article>';
   }
   function empty(selected){
     const text=selected?selected.name+"에서 현재 조건에 맞는 오답이 없습니다.":filter==="active"?"지금 복습할 오답이 없습니다. 오늘의 학습을 풀면 틀린 문제가 자동으로 들어옵니다.":filter==="mastered"?"아직 복습 완료한 문제가 없습니다.":"아직 저장된 오답이 없습니다.";
@@ -53,9 +54,10 @@
   function openRetry(id){
     const note=store.all().find(x=>x.id===id),slot=document.getElementById("retry-"+id);if(!note||!slot)return;
     const answer=note.type==="choice"
-      ? '<div class="retry-choices">'+note.choices.map((x,i)=>'<button class="retry-choice" data-value="'+esc(x)+'"><b>'+(i+1)+'.</b> '+esc(x)+'</button>').join("")+'</div>'
+      ? '<div class="retry-choices">'+note.choices.map((x,i)=>'<button class="retry-choice" data-value="'+esc(x)+'"><b>'+(i+1)+'.</b> <span data-math>'+esc(x)+'</span></button>').join("")+'</div>'
       : '<div class="retry-answer"><input class="retry-input" aria-label="답 입력" placeholder="답을 입력하세요"></div>';
     slot.innerHTML='<div class="retry-box"><h3>정답을 보지 않고 다시 풀어 보세요.</h3>'+answer+'<button class="wrong-button primary retry-submit">채점하기</button><p class="retry-status" role="status"></p></div>';
+    window.MathView?.typeset(slot);
     let value="";
     slot.querySelectorAll(".retry-choice").forEach(btn=>btn.addEventListener("click",()=>{value=btn.dataset.value;slot.querySelectorAll(".retry-choice").forEach(x=>x.classList.toggle("on",x===btn))}));
     const input=slot.querySelector(".retry-input");if(input)input.focus();

@@ -9,7 +9,9 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
 <link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
+<link rel="stylesheet" href="assets/vendor/katex/katex.min.css" />
 <link rel="stylesheet" href="assets/style.css" />
+<link rel="stylesheet" href="assets/math-render.css" />
 <link rel="stylesheet" href="assets/escape.css" />
 </head>
 <body>
@@ -68,16 +70,18 @@
 <dialog id="questionDialog" class="question-dialog">
   <form method="dialog"><button class="dialog-close" aria-label="문제 닫기">×</button></form>
   <div class="question-meta"><span id="questionSubject"></span><span id="questionType"></span></div>
-  <h2 id="questionTitle"></h2><pre id="questionPrompt"></pre>
+  <h2 id="questionTitle"></h2><pre id="questionPrompt" data-math></pre>
   <div id="answerArea"></div>
-  <div class="hint-line"><button class="text-btn" id="hintButton" type="button">힌트 보기 · 첫 시도 보너스 없음</button><span id="hintText"></span></div>
+  <div class="hint-line"><button class="text-btn" id="hintButton" type="button">힌트 보기 · 첫 시도 보너스 없음</button><span id="hintText" data-math></span></div>
   <section class="scratch"><div class="scratch-head"><div><strong>풀이 노트</strong><small>태블릿 펜·터치·마우스 지원</small></div><div class="tools"><button type="button" data-tool="pen" class="on">펜</button><button type="button" data-tool="eraser">지우개</button><button type="button" id="undoInk">↶</button><button type="button" id="redoInk">↷</button><button type="button" id="clearInk">비우기</button></div></div><canvas id="scratchCanvas" aria-label="손글씨 풀이판"></canvas><label class="finger"><input id="fingerDraw" type="checkbox"/> 손가락으로도 쓰기</label></section>
   <div class="submit-row"><span id="inkStatus"></span><button class="escape-btn" id="saveInk" type="button">풀이 제출</button><button class="escape-btn primary" id="submitAnswer" type="button">정답 확인</button></div>
-  <p id="answerMessage" class="answer-message" aria-live="polite"></p>
+  <p id="answerMessage" class="answer-message" aria-live="polite" data-math></p>
 </dialog>
 
 <dialog id="reviewDialog" class="review-dialog"><form method="dialog"><button class="dialog-close" aria-label="풀이 닫기">×</button></form><h2 id="reviewTitle">학생 풀이</h2><div id="reviewPages"></div></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="assets/vendor/katex/katex.min.js"></script>
+<script src="assets/math-render.js"></script>
 <script src="assets/escape.js"></script>
 </body>
 </html>
