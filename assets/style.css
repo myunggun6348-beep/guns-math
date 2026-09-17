@@ -2132,3 +2132,8 @@ html.theme-dark .canvas-host {
 .portal-card-wrong{grid-column:span 6;background:var(--block-coral)}
 @media(max-width:960px){.portal-card-wrong{grid-column:span 1}}
 @media(max-width:650px){.portal-card-wrong{grid-column:1}}
+
+/* 학생용 어느 페이지에서든 선생님 전용 관리 화면으로 바로 이동한다. */
+.teacher-entry{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;height:40px;padding:0 13px;border:1px solid var(--ink);border-radius:var(--r-full);background:var(--ink);color:var(--canvas);font-size:13px;font-weight:650;text-decoration:none;white-space:nowrap}.teacher-entry:hover{transform:translateY(-1px)}.teacher-entry svg{width:15px;height:15px}.teacher-entry-short{display:none}.footer-admin-link{padding-left:14px;border-left:1px solid rgba(255,255,255,.28);font-weight:650!important}
+@media(max-width:600px){.teacher-entry{padding:0 9px}.teacher-entry-full{display:none}.teacher-entry-short{display:inline}.footer-admin-link{padding-left:0;border-left:0}}
+@media(max-width:360px){.teacher-entry-short{display:none}.teacher-entry{width:40px;padding:0}}

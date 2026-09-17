@@ -16,6 +16,18 @@
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
+  const page = location.pathname.split("/").pop();
+  if (!["admin.html", "question-bank.html"].includes(page)) {
+    const navRight = document.querySelector(".nav-right");
+    if (navRight && !navRight.querySelector(".teacher-entry")) {
+      const link = document.createElement("a");
+      link.className = "teacher-entry";
+      link.href = "admin.html";
+      link.setAttribute("aria-label", "선생님 방으로 들어가기");
+      link.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="teacher-entry-full">선생님 방</span><span class="teacher-entry-short">교사</span>';
+      navRight.insertBefore(link, navRight.firstChild);
+    }
+  }
   const btn = document.getElementById("themeToggle");
   if (!btn) return;
   const root = document.documentElement;
