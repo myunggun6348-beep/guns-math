@@ -20,7 +20,7 @@ const server=http.createServer((req,res)=>{
       const errors=[];page.on("pageerror",e=>errors.push(e.message));
       await page.goto("http://127.0.0.1:5198/index.html",{waitUntil:"networkidle"});
       assert.equal(await page.locator(".grade-entry a").count(),3);
-      assert.equal(await page.locator(".portal-card").count(),5);
+      assert.equal(await page.locator(".portal-card").count(),7);
       assert.equal(await page.locator("#examCount").textContent(),"39개 시험");
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
       assert.equal(errors.length,0,errors.join("\n"));
@@ -35,6 +35,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 학년 3개, 활동 5개, 기출 39회, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
+    console.log("메인 검사 통과: 학년 3개, 활동 7개, 기출 39회, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});
