@@ -85,6 +85,7 @@
         <div class="adm-top-tools">
           <!-- 저장소가 사라져도 글이 남도록, 질문·답과 자료 목록을
                파일 하나로 내려받아 둘 수 있습니다 -->
+          <a class="btn btn-primary" href="question-bank.html">문항 제작·관리 →</a>
           <button type="button" id="내려받기">전부 내보내기</button>
           <button type="button" id="나가기">나가기</button>
         </div>
@@ -1225,11 +1226,20 @@
     const 원래글 = 버튼.textContent;
     버튼.textContent = "모으는 중…";
     try {
+      let 문항들 = [];
+      try {
+        const 응답 = await fetch("/api/problem-bank", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: 암호, action: "list" }),
+        });
+        if (응답.ok) 문항들 = (await 응답.json()).items || [];
+      } catch {}
       const 꾸러미 = {
         내려받은날: new Date().toISOString(),
         공지: 공지들,
         질문: 질문들,
         자료: 파일들,
+        문항: 문항들,
       };
       const 주소 = URL.createObjectURL(
         new Blob([JSON.stringify(꾸러미, null, 2)], { type: "application/json" }));
