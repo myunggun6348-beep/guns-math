@@ -9,13 +9,25 @@
 ## 구조
 
 ```
-index.html                 홈 (소개 + 공지 한 줄 + 찾기)
+--- 학생이 보는 페이지 ---
+index.html                 홈 (학년 입구 + 오늘 할 것 + 공지 + 새 소식 + 찾기)
+today.html                  오늘의 학습 — 학년·과목을 고르면 5문제, 결과에서 약한 개념으로
+wrong-notes.html            자동 오답노트 — 오늘의 학습·게임에서 틀린 문제를 모아 다시 풀기
 library.html                직접 보는 수학 — 24개 시각화, 학년 필터, 관련 기출·학습지
 map.html                    개념 지도 — 학년·검색 필터, 선수/다음 강조, 주변 집중 보기
-files.html                  자료실 — 최근 3개년 기출 문제·정답·해설
+files.html                  자료실 — 최근 3개년 기출 문제·정답·해설 (+ 선생님이 올린 학습지)
 solve.html                  기출문제 태블릿 풀이 — PDF 위 필기·자동 저장·채점
-ask.html                    질문 — 풀이·공부법·제안 분류, 문제 사진 첨부, 교사 답변
+past-practice.html          개념별 기출 연습 — 오늘의 학습 결과에 맞는 기출 골라 주기
+games.html                  게임 고르기 (방탈출 · 미니게임)
+quick-game.html             3~5분 수학 미니게임
 escape.html                 수학 탈출 — 사이트 내부 15분 문제 풀이와 태블릿 필기 활동
+ask.html                    질문 — 풀이·공부법·제안 분류, 문제 사진 첨부, 교사 답변
+
+--- 선생님만 보는 페이지 (암호 · 검색에 안 잡히게 noindex) ---
+admin.html                  선생님 방 — 질문 답하기 · 공지 · 자료 올리기 · 알림 · 방문
+question-bank.html          문항 관리 — 문항 만들기·엑셀 일괄 등록·개념/난이도 추천
+review.html                 제출한 풀이 보기 — 학생이 낸 태블릿 풀이 확인
+
 files/                      위 자료실이 내려주는 PDF 들 (올리는 법은 그 안 README)
 assets/demos.js            자료 목록 (DEMOS) — 홈의 찾기와 library.html 이 함께 씁니다
 assets/concepts.js         개념 목록 (NODES/LAYERS/EDGES) — 홈의 찾기와 map.html
@@ -37,13 +49,40 @@ assets/hit.js · api/hit.js 방문 세기 — 페이지별 열린 횟수만 (누
                            선생님 방 '방문' 칸에서 본다. 새 페이지를 만들면 맨 아래에
                            <script defer src="/assets/hit.js"></script> 한 줄을 붙일 것
 assets/vendor/             three.js · PDF.js · 폰트 (인터넷 없이도 열리도록 함께 보관)
+scripts/                   검사·갱신 도구 (아래 "도구" 참고)
 폰으로 보기.bat            ← 더블클릭하면 홈페이지가 켜집니다 (아래 "내 컴퓨터·폰에서 보기")
+기출 목록 새로 받기.bat    ← 더블클릭하면 EBSi 기출 목록을 다시 받아 옵니다
 serve.js                   위 .bat 이 실행하는 것 — 폰에서 볼 주소도 찾아서 알려 줍니다
 ```
 
 **"직접 보는 수학"과 "자료실"은 다른 것이다.** 앞엣것(`library.html`)은 화면에서
 직접 움직여 보는 것, 뒤엣것(`files.html`)은 내려받아 인쇄하는 것. 이름이 헷갈리기
 쉬우니 새 항목을 어디에 넣을지 먼저 정하고 손대는 편이 좋다.
+
+### 도구 (`scripts/`)
+
+**기출 목록 새로 받기** — 새 모의고사가 나왔을 때. `기출 목록 새로 받기.bat` 을
+더블클릭하면 EBSi 를 다시 훑어 `assets/exam-catalog.json` 을 새로 쓴다. 파일이
+실제로 열리는지(크기·형식·지문)까지 확인하느라 몇 분 걸린다. 목록만 빨리 받으려면:
+
+```
+node scripts\update-exam-catalog.js --skip-verify
+node scripts\update-exam-catalog.js --years 2024-2026
+```
+
+> `scripts/update-exam-catalog.py` 는 같은 일을 하는 예전 판이다. **이 컴퓨터에는
+> 파이썬이 없어서 돌지 않으므로** 위 `.js`(또는 `.bat`)를 쓸 것. 둘은 같은 결과를
+> 낸다 — 옮긴 뒤 39회·파일 219개의 주소와 지문(sha256)이 하나도 다르지 않은 것을
+> 확인했다.
+
+**검사** — 고친 뒤 확인할 때. 모두 Node 로 돌린다(설치할 것 없음).
+
+| 명령 | 보는 것 |
+| --- | --- |
+| `node scripts\check-home-portal.cjs` | 홈의 학년 입구·활동 카드·기출 회차·검색 |
+| `node scripts\check-file-archive.cjs` | 자료실의 학년 저장·필터·모바일 배치 |
+| `node scripts\check-escape.js` | 수학 탈출의 문항 조합·채점·기록 |
+| `node scripts\verify-exam-library.cjs` | 진짜 브라우저로 자료실을 열어 확인 (먼저 `폰으로 보기.bat` 으로 서버를 켜 둘 것) |
 
 ### 이름과 로고
 
