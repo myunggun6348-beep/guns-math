@@ -24,7 +24,7 @@ escape.html                 수학 탈출 — 사이트 내부 15분 문제 풀�
 ask.html                    질문 — 풀이·공부법·제안 분류, 문제 사진 첨부, 교사 답변
 
 --- 선생님만 보는 페이지 (암호 · 검색에 안 잡히게 noindex) ---
-admin.html                  선생님 방 — 질문 답하기 · 공지 · 자료 올리기 · 알림 · 방문
+admin.html                  선생님 방 — 질문 답하기 · 공지 · 자료 올리기 · 알림 · 방문 · 암호 바꾸기
 question-bank.html          문항 관리 — 문항 만들기·엑셀 일괄 등록·개념/난이도 추천
 review.html                 제출한 풀이 보기 — 학생이 낸 태블릿 풀이 확인
 
@@ -82,6 +82,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-home-portal.cjs` | 홈의 학년 입구·활동 카드·기출 회차·검색 |
 | `node scripts\check-file-archive.cjs` | 자료실의 학년 저장·필터·모바일 배치 |
 | `node scripts\check-escape.js` | 수학 탈출의 문항 조합·채점·기록 |
+| `node scripts\check-admin-password.cjs` | 선생님 방 암호 — 바꾸기·여벌 열쇠·되돌리기 (인터넷 필요 없음) |
 | `node scripts\verify-exam-library.cjs` | 진짜 브라우저로 자료실을 열어 확인 (먼저 `폰으로 보기.bat` 으로 서버를 켜 둘 것) |
 
 ### 이름과 로고
@@ -551,6 +552,15 @@ const 폼주소 = "https://formspree.io/f/abcdwxyz";
 
 - GitHub 저장소 — myunggun6348-beep/guns-math (**공개**)
 - main 브랜치에 반영하면 Vercel이 자동으로 다시 배포한다.
+
+### 선생님 방 암호
+
+**바꾸는 곳: 선생님 방 맨 아래 "암호 바꾸기".** Vercel 설정에 들어갈 필요 없다.
+암호는 저장소에 글자 그대로 남지 않고 알아볼 수 없게 뭉갠 지문만 남는다.
+
+Vercel 환경 변수 `ADMIN_PASSWORD` 에 넣어 둔 처음 암호는 **여벌 열쇠로 계속
+통한다** — 바꾼 암호를 잊어버려도 잠기지 않게 하려는 것이다. 그것까지 막으려면
+Vercel 에서 그 값을 바꾼다. 암호는 코드에 없으므로 이 저장소가 공개여도 새지 않는다.
 
 ### 그 다음부터는 웹에서만 작업하면 된다
 

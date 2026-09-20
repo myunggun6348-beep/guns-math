@@ -220,6 +220,34 @@
         <div id="방문내용" aria-live="polite"></div>
       </section>
 
+      <!-- ===== 암호 =====
+           예전에는 암호를 바꾸려면 Vercel 설정에 들어가야 했습니다.
+           자주 할 일이 아니라서 접어 둡니다. -->
+      <section class="adm-block">
+        <details class="adm-pass">
+          <summary><h2 class="display-sm">암호 바꾸기</h2></summary>
+          <p class="body-sm adm-note">
+            새 암호는 이 저장소에 글자 그대로 남지 않습니다(알아볼 수 없게 뭉갠
+            지문만 남습니다). <b>Vercel 에 넣어 둔 처음 암호는 여벌 열쇠로 계속
+            됩니다</b> — 새 암호를 잊어버려도 잠기지 않게 하려는 것입니다.
+            그것까지 막으려면 Vercel 에서 ADMIN_PASSWORD 값을 바꾸세요.
+          </p>
+          <form class="adm-upload" id="암호바꾸기">
+            <div class="adm-row">
+              <input type="password" name="새암호" placeholder="새 암호 (8자 이상)"
+                     autocomplete="new-password" minlength="8" required />
+              <input type="password" name="다시" placeholder="새 암호 다시"
+                     autocomplete="new-password" minlength="8" required />
+            </div>
+            <div class="adm-row">
+              <button type="submit" class="btn btn-primary">암호 바꾸기</button>
+              <button type="button" class="btn btn-secondary" id="암호되돌리기" hidden>처음 암호로 되돌리기</button>
+              <span class="caption adm-status" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+        </details>
+      </section>
+
     </div>
 
   </div>
@@ -1258,6 +1286,72 @@
     }
   };
 
+  /* ---------- 암호 바꾸기 ----------
+     여기까지 들어와 있다는 건 지금 암호를 이미 맞혔다는 뜻이라, '지금 암호'를
+     또 묻지 않습니다. 바꾼 뒤에는 기억해 둔 암호도 같이 갈아 끼웁니다 —
+     안 그러면 다음에 이 기기에서 들어올 때 옛 암호로 막힙니다. */
+  const 암호바꾸기 = document.getElementById("암호바꾸기");
+  const 되돌리기단추 = document.getElementById("암호되돌리기");
+  const 암호상태보이기 = 결과 => { 되돌리기단추.hidden = !결과?.바꾼암호; };
+
+  // 기억해 둔 자리(이 기기에 계속 / 이번 창만)를 그대로 두고 값만 바꿉니다
+  function 암호갈아끼우기(새것) {
+    암호 = 새것;
+    for (const 함 of [localStorage, sessionStorage]) {
+      try { if (함.getItem(암호열쇠)) 함.setItem(암호열쇠, 새것); } catch {}
+    }
+  }
+
+  async function 암호보내기(몸, 쪽지, 버튼) {
+    버튼.disabled = true;
+    try {
+      const 응답 = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 암호, ...몸 }),
+      });
+      const 결과 = await 응답.json().catch(() => ({}));
+      if (!응답.ok) { 쪽지.textContent = 결과.오류 || "바꾸지 못했습니다."; return null; }
+      암호상태보이기(결과);
+      return 결과;
+    } catch {
+      쪽지.textContent = "지금은 바꿀 수 없습니다. 잠시 뒤 다시 시도해 주세요.";
+      return null;
+    } finally {
+      버튼.disabled = false;
+    }
+  }
+
+  암호바꾸기.addEventListener("submit", async e => {
+    e.preventDefault();
+    const 쪽지 = 암호바꾸기.querySelector(".adm-status");
+    const 버튼 = 암호바꾸기.querySelector('button[type="submit"]');
+    const 새암호 = 암호바꾸기.새암호.value;
+
+    if (새암호 !== 암호바꾸기.다시.value) {
+      쪽지.textContent = "두 번 적은 새 암호가 서로 다릅니다.";
+      return;
+    }
+    쪽지.textContent = "바꾸는 중…";
+
+    if (await 암호보내기({ 작업: "암호바꾸기", 새암호 }, 쪽지, 버튼)) {
+      암호갈아끼우기(새암호);
+      암호바꾸기.reset();
+      쪽지.textContent = "바꿨습니다.";
+      setTimeout(() => (쪽지.textContent = ""), 4000);
+    }
+  });
+
+  되돌리기단추.addEventListener("click", async () => {
+    if (!confirm("바꾼 암호를 지우고 Vercel 에 넣어 둔 처음 암호만 쓰게 할까요?")) return;
+    const 쪽지 = 암호바꾸기.querySelector(".adm-status");
+    쪽지.textContent = "되돌리는 중…";
+    if (await 암호보내기({ 작업: "암호되돌리기" }, 쪽지, 되돌리기단추)) {
+      쪽지.textContent = "처음 암호로 되돌렸습니다. 이 기기에 기억해 둔 암호는 지웁니다.";
+      보관함지우기();   // 지금 기억하고 있는 건 방금 지운 암호일 수 있습니다
+    }
+  });
+
   document.getElementById("나가기").onclick = () => {
     암호 = "";
     보관함지우기();          // '이 기기에서 기억하기'로 남겨 둔 것까지
@@ -1284,6 +1378,7 @@
         return;
       }
       암호 = 칸.value;
+      암호상태보이기(await 응답.json().catch(() => ({})));
       보관함지우기();
       try {
         (document.getElementById("암호기억").checked ? localStorage : sessionStorage).setItem(암호열쇠, 암호);
@@ -1301,8 +1396,11 @@
      안에 들어가서 답을 쓰고 저장을 누를 때에야 "암호가 틀렸다"고 나옵니다. */
   if (암호) {
     암호확인(암호)
-      .then(응답 => {
-        if (응답.ok) return 들어가기();
+      .then(async 응답 => {
+        if (응답.ok) {
+          암호상태보이기(await 응답.json().catch(() => ({})));
+          return 들어가기();
+        }
         if (응답.status === 401) {
           보관함지우기();
           암호 = "";

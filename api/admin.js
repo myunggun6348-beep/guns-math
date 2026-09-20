@@ -2,9 +2,9 @@
    선생님 쪽 창구입니다. 손댈 일 없습니다.
 
    답을 달거나 질문을 지울 때 페이지가 여기로 옵니다. 아무나 못 하도록
-   암호를 함께 보내야 하고, 그 암호는 Vercel에 넣어 둔 ADMIN_PASSWORD 와
-   맞아야 합니다. 암호는 이 파일이 아니라 Vercel 쪽에 있으니, 이 코드가
-   GitHub에 공개돼도 암호는 새어 나가지 않습니다.
+   암호를 함께 보내야 합니다. 암호는 이 파일에 없습니다 — Vercel에 넣어 둔
+   ADMIN_PASSWORD 이거나, 선생님 방에서 바꾼 암호(저장소에 지문만)입니다.
+   그래서 이 코드가 GitHub에 공개돼도 암호는 새어 나가지 않습니다.
    ========================================================= */
 const crypto = require("crypto");
 const { 준비됨, 명령 } = require("./_redis");
@@ -15,19 +15,46 @@ const { del } = require("./_blob");
 const 열쇠이름 = "qna";
 const 설정열쇠 = "설정";
 const 공지열쇠 = "notices";
+const 암호열쇠 = "암호";       // 설정 해시 안. 선생님 방에서 바꾼 암호의 지문이 들어갑니다
+const 암호최소 = 8;
 const 답변최대 = 2000;
 const 공지제목최대 = 120;
 const 공지내용최대 = 1000;
 
 // 글자를 하나씩 비교하면 '몇 글자까지 맞았는지'가 걸린 시간으로 새어 나갑니다.
 // timingSafeEqual 은 어디서 틀렸든 늘 같은 시간이 걸리게 비교해 줍니다.
-function 암호맞나(보낸것) {
-  const 진짜 = process.env.ADMIN_PASSWORD || "";
-  if (!진짜) return false;
-  const a = Buffer.from(String(보낸것 || ""));
-  const b = Buffer.from(진짜);
+function 같나(이것, 저것) {
+  const a = Buffer.from(String(이것 || ""));
+  const b = Buffer.from(String(저것 || ""));
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
+}
+
+/* 바꾼 암호는 글자 그대로 저장하지 않습니다. 소금(아무 글자)을 섞어 한 방향으로
+   뭉갠 지문만 남깁니다 — 저장소를 누가 들여다봐도 암호를 되돌릴 수 없습니다. */
+const 지문만들기 = (암호, 소금) => crypto.scryptSync(String(암호), 소금, 32).toString("hex");
+
+async function 바꾼암호읽기() {
+  try { return (await 명령("HGET", 설정열쇠, 암호열쇠)) || ""; } catch { return ""; }
+}
+
+/* 두 개를 다 받아 줍니다.
+   1) 선생님 방에서 바꾼 암호
+   2) Vercel 에 넣어 둔 처음 암호 — 여벌 열쇠. 바꾼 암호를 잊어버려도
+      잠겨 버리지 않게 늘 열어 둡니다. 여벌까지 막으려면 Vercel 에서
+      ADMIN_PASSWORD 값을 바꾸면 됩니다. */
+async function 암호맞나(보낸것) {
+  const 보낸 = String(보낸것 || "");
+  if (!보낸) return false;
+
+  const 적힌 = await 바꾼암호읽기();
+  if (적힌) {
+    const [소금, 지문] = 적힌.split(":");
+    if (소금 && 지문 && 같나(지문만들기(보낸, 소금), 지문)) return true;
+  }
+
+  const 여벌 = process.env.ADMIN_PASSWORD || "";
+  return Boolean(여벌) && 같나(보낸, 여벌);
 }
 
 module.exports = async (req, res) => {
@@ -41,14 +68,39 @@ module.exports = async (req, res) => {
 
   const 받은 = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
 
-  if (!암호맞나(받은.암호)) {
+  if (!(await 암호맞나(받은.암호))) {
     return res.status(401).json({ 오류: "암호가 맞지 않습니다." });
   }
 
   /* ---- 질문 하나를 고르지 않는 작업들 — id 를 따지기 전에 먼저 처리 ---- */
   try {
-    // 암호만 확인하는 용도 — 로그인 단추가 이걸 씁니다
-    if (받은.작업 === "확인") return res.status(200).json({ 좋음: true });
+    // 암호만 확인하는 용도 — 로그인 단추가 이걸 씁니다.
+    // '바꾼암호' 는 암호 칸에 무엇을 보여 줄지 정하는 데 씁니다.
+    if (받은.작업 === "확인") {
+      return res.status(200).json({ 좋음: true, 바꾼암호: Boolean(await 바꾼암호읽기()) });
+    }
+
+    /* ---- 암호 바꾸기 ----
+       여기까지 왔다는 건 지금 암호를 이미 맞혔다는 뜻입니다(위 관문).
+       그래서 '지금 암호'를 또 묻지 않습니다. */
+    if (받은.작업 === "암호바꾸기") {
+      const 새암호 = String(받은.새암호 || "");
+      if (새암호.length < 암호최소) {
+        return res.status(400).json({ 오류: `새 암호는 ${암호최소}자 이상이어야 합니다.` });
+      }
+      if (새암호.length > 200) {
+        return res.status(400).json({ 오류: "새 암호가 너무 깁니다." });
+      }
+      const 소금 = crypto.randomBytes(16).toString("hex");
+      await 명령("HSET", 설정열쇠, 암호열쇠, `${소금}:${지문만들기(새암호, 소금)}`);
+      return res.status(200).json({ 좋음: true, 바꾼암호: true });
+    }
+
+    // 바꾼 암호를 지웁니다 — Vercel 에 넣어 둔 처음 암호만 남습니다
+    if (받은.작업 === "암호되돌리기") {
+      await 명령("HDEL", 설정열쇠, 암호열쇠);
+      return res.status(200).json({ 좋음: true, 바꾼암호: false });
+    }
 
     // 선생님 방의 질문 목록. 학생용(/api/questions)과 달리 '확인 대기 중'인
     // 것까지 전부 돌려줍니다 — 선생님은 그걸 봐야 공개할지 정할 수 있습니다.

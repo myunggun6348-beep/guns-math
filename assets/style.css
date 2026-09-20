@@ -1018,9 +1018,12 @@ html.theme-dark .demo-next-head { color: rgba(255, 255, 255, 0.55); }
   gap: var(--sm) var(--md);
   margin-bottom: var(--sm);
 }
+/* 입력 칸 생김새. type 을 하나하나 적어 두면 새 칸(암호·숫자…)을 만들 때마다
+   조용히 빠집니다 — 실제로 '시행 연도' 칸이 그렇게 브라우저 기본 모양으로
+   남아 있었습니다. 그래서 '글 쓰는 칸이 아닌 것'만 빼는 쪽으로 적습니다. */
 .adm-login input,
-.adm-upload input[type="text"],
-.adm-edit-row input[type="text"],
+.adm-upload input:not([type="checkbox"]):not([type="file"]),
+.adm-edit-row input:not([type="checkbox"]):not([type="file"]),
 .adm-upload textarea,
 .adm-edit-row textarea,
 .adm-q textarea {
@@ -1032,7 +1035,8 @@ html.theme-dark .demo-next-head { color: rgba(255, 255, 255, 0.55); }
   border-radius: var(--r-md);
   padding: 9px 12px;
 }
-.adm-upload input[type="text"],
+/* 한 줄을 나눠 쓰는 칸들. 숫자 칸(시행 연도·월)은 짧아서 늘리지 않습니다. */
+.adm-upload input[type="text"], .adm-upload input[type="password"],
 .adm-edit-row input[type="text"] { flex: 1; min-width: 170px; }
 /* 공지 내용 칸 — 제목과 달리 여러 줄이라 한 줄을 다 쓴다 */
 .adm-upload textarea,
@@ -1179,6 +1183,15 @@ html.theme-dark { --adm-bar: #7b79f0; }
 
 #방문내용 { transition: opacity 0.15s ease; }
 #방문내용.adm-loading { opacity: 0.45; }
+
+/* 암호 바꾸기 — 자주 할 일이 아니라 접어 둡니다.
+   summary 안에 제목을 넣으면 기본 화살표가 제목 아래로 떨어지므로 직접 그립니다. */
+.adm-pass > summary { display: flex; align-items: center; gap: var(--xs); cursor: pointer; list-style: none; }
+.adm-pass > summary::-webkit-details-marker { display: none; }
+.adm-pass > summary::after { content: "＋"; opacity: 0.5; font-size: 20px; }
+.adm-pass[open] > summary::after { content: "－"; }
+.adm-pass > summary > h2 { display: inline; }
+.adm-pass > summary:hover > h2 { text-decoration: underline; }
 
 /* 숫자 타일 — 이름은 조용히, 숫자는 굵게 */
 .adm-stats { display: flex; flex-wrap: wrap; gap: var(--md); margin-bottom: var(--sm); }
