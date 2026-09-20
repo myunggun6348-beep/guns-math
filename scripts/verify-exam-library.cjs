@@ -16,13 +16,15 @@ const {chromium}=require("C:/Users/User/.cache/codex-runtimes/codex-primary-runt
       assert.equal(await page.locator('[data-grade="3"] span').textContent(),"17개");
       await page.click('[data-grade="3"]');
       assert.equal(await page.locator(".exam-bundle").count(),17);
-      assert.equal(await page.locator(".exam-file-button").count(),153);
+      // 파일 버튼 개수는 시험·과목이 늘 때마다 바뀌므로 숫자를 적어 두지 않는다(153 이라 적힌 채 204 가 됐었다)
+      const bundles=await page.locator(".exam-bundle").count(),buttons=await page.locator(".exam-file-button").count();
+      assert.ok(buttons>=bundles*4&&buttons%bundles===0,"시험마다 파일 버튼 수가 같아야 합니다: 버튼 "+buttons+" / 시험 "+bundles);
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
       assert.equal(pageErrors.length,0,pageErrors.join("\n"));
       assert.equal(badResponses.length,0,badResponses.join("\n"));
       await page.screenshot({path:"artifacts/files-"+test.name+".png",fullPage:true});
       await page.close();
     }
-    console.log("브라우저 검사 통과: 39회, 학년별 11·11·17회, 3학년 153개 파일 버튼, 가로 넘침·콘솔 오류 없음");
+    console.log("브라우저 검사 통과: 39회, 학년별 11·11·17회, 시험마다 파일 버튼 고르게, 가로 넘침·콘솔 오류 없음");
   }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});
