@@ -13,8 +13,12 @@ const { 준비됨, 명령 } = require("./_redis");
 
 const 보관일수 = 100;
 
-// 이 사이트에 실제로 있는 모양의 주소만 셉니다 (아무 글자나 보내 저장소를 채우지 못하게)
-const 셀주소 = /^\/(?:index|library|map|files|ask)\.html$|^\/demos\/[a-z0-9-]{1,60}\.html$/;
+/* 이 사이트에 실제로 있는 모양의 주소만 셉니다 (아무 글자나 보내 저장소를 채우지 못하게).
+   페이지 이름을 하나하나 적어 두었더니, 새 페이지(오늘의 학습·게임·오답노트…)가
+   생길 때마다 세는 줄은 붙어 있는데 여기서 조용히 버려졌습니다. 그래서 모양만 봅니다. */
+const 셀주소 = /^\/[a-z0-9-]{1,40}\.html$|^\/demos\/[a-z0-9-]{1,60}\.html$/;
+// 선생님만 쓰는 페이지는 학생 방문에 섞이지 않게 뺍니다
+const 선생님것 = /^\/(?:admin|question-bank|review)\.html$/;
 
 // 검색엔진·미리보기 로봇이 연 것은 학생 방문이 아니므로 뺍니다
 // (다음 앱 안 브라우저는 'DaumApps' 라서 'daum' 으로 거르면 학생까지 빠집니다 — 로봇 이름 daumoa 만)
@@ -35,7 +39,7 @@ module.exports = async (req, res) => {
     if (typeof 받은 === "string") { try { 받은 = JSON.parse(받은); } catch { 받은 = {}; } }
     if (Buffer.isBuffer(받은)) { try { 받은 = JSON.parse(받은.toString("utf8")); } catch { 받은 = {}; } }
     const 경로 = String((받은 && 받은.p) || "");
-    if (!셀주소.test(경로)) return res.status(204).end();
+    if (!셀주소.test(경로) || 선생님것.test(경로)) return res.status(204).end();
 
     const 열쇠 = `views:${한국날짜()}`;
     const 지금수 = await 명령("HINCRBY", 열쇠, 경로, 1);
