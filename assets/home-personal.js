@@ -36,14 +36,15 @@
     if(!profile||!valid(profile.grade,profile.track)){setup();return}
     const track=tracks[profile.track],all=records().filter(row=>String(row.grade)===profile.grade&&row.track===profile.track),recent=all.slice(0,7);
     const today=all.find(row=>row.date===dateKey(new Date())),average=recent.length?Math.round(recent.reduce((sum,row)=>sum+(Number(row.correct)||0)/(Number(row.total)||5)*100,0)/recent.length):0,run=streak(all);
-    const wrong=window.WrongNotes?.count?.()||{active:0,mastered:0},performance=window.WrongNotes?.performance?.()||{},weak=performance.weakest;
-    const greeting=profile.name?esc(profile.name)+"의 수학 홈":"고"+profile.grade+" 학습 홈";
-    root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">MY HOME</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+' 기준으로 오늘 필요한 학습을 모았습니다.</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div><div class="home-personal-grid">'+
-      '<a class="home-personal-card today" href="today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track)+'"><span>오늘의 학습</span><strong>'+(today?today.correct+'/'+today.total:'5문제')+'</strong><p>'+(today?'오늘 학습 완료 · 다시 도전할 수 있어요.':'약 5분이면 오늘의 진단을 마칠 수 있어요.')+'</p><b>'+(today?'다시 풀기':'시작하기')+' →</b></a>'+
-      '<a class="home-personal-card record" href="today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track)+'"><span>최근 학습 기록</span><strong>'+(recent.length?average+'%':'기록 전')+'</strong><p>'+(recent.length?'최근 '+recent.length+'회 평균 · 연속 학습 '+run+'일':'첫 학습을 마치면 평균과 연속 기록이 보여요.')+'</p><b>학습 이어가기 →</b></a>'+
-      '<a class="home-personal-card wrong" href="wrong-notes.html"><span>복습할 오답</span><strong>'+wrong.active+'문제</strong><p>'+(weak?'취약 개념: '+esc(weak.name)+' · 정답률 '+weak.rate+'%':'틀린 문제가 생기면 자동으로 모아 드려요.')+'</p><b>오답 복습 →</b></a>'+
-      '<a class="home-personal-card exam" href="files.html?grade='+profile.grade+'"><span>내 학년 기출</span><strong>고'+profile.grade+'</strong><p>'+esc(track.title)+' 학습과 함께 최근 3개년 기출을 확인하세요.</p><b>기출 보기 →</b></a>'+
-      '</div></div>';
+    const wrong=window.WrongNotes?.count?.()||{active:0,mastered:0};
+    const greeting=profile.name?esc(profile.name)+"님, 오늘도 한 걸음씩":"오늘의 수학 공부";
+    const review=today&&wrong.active>0;
+    const actionHref=review?'wrong-notes.html':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
+    const actionTitle=review?'남은 오답 '+wrong.active+'문제 복습하기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
+    const actionDescription=review?'오늘 학습은 마쳤어요. 틀린 문제를 다시 풀어 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
+    root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">TODAY</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
+      '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small><b>시작하기 →</b></a>'+
+      '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>복습 대기 <b>'+wrong.active+'문제</b></span></div></div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
   }
   window.addEventListener("wrong-notes-change",render);window.addEventListener("student-sync-applied",()=>{profile=initial();render()});render();

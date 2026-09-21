@@ -20,9 +20,8 @@ const server=http.createServer((req,res)=>{
       const page=await browser.newPage({viewport});
       const errors=[];page.on("pageerror",e=>errors.push(e.message));
       await page.goto("http://127.0.0.1:5198/index.html",{waitUntil:"networkidle"});
-      assert.equal(await page.locator(".grade-entry a").count(),3);
-      assert.equal(await page.locator(".portal-card").count(),7);
-      assert.equal(await page.locator("#examCount").textContent(),"39개 시험");
+      assert.equal(await page.locator(".portal-card").count(),5);
+      assert.equal(await page.locator(".home-main-action").count(),0);
       assert.equal(await page.locator('#homeProfileForm input[name="className"]').count(),1);
       assert.equal(await page.locator(".student-account-button").count(),1);
       await page.locator(".student-account-button").click();
@@ -35,6 +34,20 @@ const server=http.createServer((req,res)=>{
       await page.locator("#findQ").fill("고3 9월");
       await page.waitForSelector('.find-hit[href*="files.html?grade=3"]');
       await page.screenshot({path:"artifacts/home-"+viewport.name+".png",fullPage:false});
+      await page.locator('#homeProfileForm input[name="name"]').fill("민수");
+      await page.locator('#homeProfileForm select[name="grade"]').selectOption("2");
+      await page.locator('#homeProfileForm button[type="submit"]').click();
+      assert.equal(await page.locator(".home-main-action").count(),1);
+      assert.equal(await page.locator(".home-study-summary span").count(),3);
+      assert.match(await page.locator(".home-main-action").getAttribute("href"),/today\.html\?grade=2/);
+      await page.evaluate(()=>{
+        const d=new Date(),today=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+        localStorage.setItem("today-study-records",JSON.stringify([{date:today,grade:"2",track:"algebra",correct:3,total:5,finishedAt:d.toISOString()}]));
+        localStorage.setItem("math-wrong-notes-v1",JSON.stringify([{id:"sample",mastered:false}]));
+      });
+      await page.reload({waitUntil:"networkidle"});
+      assert.equal(await page.locator(".home-main-action").getAttribute("href"),"wrong-notes.html");
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
       await page.close();
     }
     const page=await browser.newPage({viewport:{width:820,height:1050}});
@@ -43,6 +56,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 학년 3개, 활동 7개, 기출 39회, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
+    console.log("메인 검사 통과: 단일 학습 행동, 기록 요약, 활동 5개, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});
