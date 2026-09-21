@@ -4,6 +4,7 @@ const root=path.join(__dirname,"..");
 const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,"http://localhost").pathname;
   if(["/api/files","/api/questions","/api/notices"].includes(pathname)){res.setHeader("Content-Type","application/json");res.end("[]");return}
+  if(pathname==="/api/student-account"){res.setHeader("Content-Type","application/json");res.end('{"signedIn":false}');return}
   const relative=pathname==="/"?"/index.html":pathname;
   const file=path.join(root,relative);
   if(!file.startsWith(root+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return}
@@ -22,7 +23,13 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.locator(".grade-entry a").count(),3);
       assert.equal(await page.locator(".portal-card").count(),7);
       assert.equal(await page.locator("#examCount").textContent(),"39개 시험");
-      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+      assert.equal(await page.locator(".student-account-button").count(),1);
+      await page.locator(".student-account-button").click();
+      await page.waitForSelector(".student-account-dialog[open] #studentAccountForm");
+      assert.equal(await page.locator('#studentAccountForm input[name="id"]').count(),1);
+      await page.locator(".student-dialog-close").click();
+      const overflow=await page.evaluate(()=>({wide:document.documentElement.scrollWidth>innerWidth,width:innerWidth,scroll:document.documentElement.scrollWidth,items:[...document.querySelectorAll("body *")].map(el=>({tag:el.tagName,cls:el.className,right:el.getBoundingClientRect().right,width:el.getBoundingClientRect().width})).filter(x=>x.right>innerWidth+1).slice(0,8)}));
+      assert.equal(overflow.wide,false,JSON.stringify(overflow));
       assert.equal(errors.length,0,errors.join("\n"));
       await page.locator("#findQ").fill("고3 9월");
       await page.waitForSelector('.find-hit[href*="files.html?grade=3"]');

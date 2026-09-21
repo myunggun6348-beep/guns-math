@@ -42,6 +42,7 @@
     const list=records().filter(r=>!(r.date===today&&r.grade===grade&&r.track===trackKey));
     list.unshift({date:today,grade,track:trackKey,correct,total:5,finishedAt:new Date().toISOString()});
     localStorage.setItem("today-study-records",JSON.stringify(list.slice(0,60)));
+    window.StudentSync?.changed();
   }
   function streak(){
     const dates=[...new Set(records().map(r=>r.date))].sort().reverse();
@@ -61,6 +62,7 @@
   function updateUrl(){
     const u=new URL(location.href);u.searchParams.set("grade",grade);u.searchParams.set("subject",trackKey);history.replaceState(null,"",u);
     localStorage.setItem("today-study-pref",JSON.stringify({grade,track:trackKey}));
+    window.StudentSync?.changed();
   }
   function setup(){
     window.GameScratch.destroy();updateUrl();

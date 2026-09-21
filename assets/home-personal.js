@@ -14,7 +14,7 @@
   let profile=initial();
   function save(next){
     profile={name:String(next.name||"").trim().slice(0,20),grade:String(next.grade),track:next.track};
-    localStorage.setItem(KEY,JSON.stringify(profile));localStorage.setItem("today-study-pref",JSON.stringify({grade:profile.grade,track:profile.track}));render();
+    localStorage.setItem(KEY,JSON.stringify(profile));localStorage.setItem("today-study-pref",JSON.stringify({grade:profile.grade,track:profile.track}));window.StudentSync?.changed();render();
   }
   const pad=n=>String(n).padStart(2,"0"),dateKey=date=>date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate());
   function streak(rows){
@@ -45,5 +45,5 @@
       '</div></div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
   }
-  window.addEventListener("wrong-notes-change",render);render();
+  window.addEventListener("wrong-notes-change",render);window.addEventListener("student-sync-applied",()=>{profile=initial();render()});render();
 })();

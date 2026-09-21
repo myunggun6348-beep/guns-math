@@ -3,7 +3,7 @@
   "use strict";
   const KEY="math-wrong-notes-v1",STATS_KEY="math-concept-stats-v1";
   function read(){try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
-  function persist(items){localStorage.setItem(KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
+  function persist(items){localStorage.setItem(KEY,JSON.stringify(items));window.StudentSync?.changed();window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
   function write(items){
     const saved=items.slice(0,200);try{return persist(saved)}catch{}
     for(let i=saved.length-1;i>=0;i--){if(saved[i].feedbackImage||saved[i].solutionImage){saved[i]={...saved[i],feedbackImage:"",solutionImage:""};try{return persist(saved)}catch{}}}
@@ -24,7 +24,7 @@
     if(Object.keys(migrated).length)writeStats(migrated);
     return migrated;
   }
-  function writeStats(value){try{localStorage.setItem(STATS_KEY,JSON.stringify(value));return true}catch{return false}}
+  function writeStats(value){try{localStorage.setItem(STATS_KEY,JSON.stringify(value));window.StudentSync?.changed();return true}catch{return false}}
   function track(data,isCorrect){
     if(!data.conceptId&&!data.conceptName)return;
     const all=readStats(),key=statKey(data),row=all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""};
