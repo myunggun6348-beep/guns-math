@@ -40,7 +40,7 @@ const call = (method, payload, cookie = "") => callWith(handler, method, payload
   const cookie = created.headers["set-cookie"].split(";")[0];
 
   const saved = await call("POST", { action: "sync", data: {
-    profile: { name: "민수", grade: "2", track: "calc1" },
+    profile: { name: "민수", grade: "2", className: "3", track: "calc1" },
     records: [{ date: "2026-09-21", grade: "2", track: "calc1", correct: 4, total: 5, finishedAt: "2026-09-21T01:00:00Z" }],
     notes: [{ id: "q1", prompt: "문제", mastered: false, lastWrongAt: "2026-09-21T01:00:00Z", solutionImage: "data:image/png;base64,private" }],
     stats: { derivative: { attempts: 2, correct: 1, wrong: 1, lastAt: "2026-09-21T01:00:00Z" } },
@@ -68,6 +68,9 @@ const call = (method, payload, cookie = "") => callWith(handler, method, payload
   assert.equal(teacher.data.students[0].id, "student01");
   assert.equal(teacher.data.students[0].activeWrong, 0);
   assert.equal(teacher.data.students[0].weakest.name, "기타");
+  assert.equal(teacher.data.students[0].className, "3");
+  assert.equal(teacher.data.classes[0].key, "2-3");
+  assert.equal(teacher.data.classes[0].average, 90);
 
   const blocked = await callWith(adminHandler, "POST", { password: "wrong" });
   assert.equal(blocked.code, 401);

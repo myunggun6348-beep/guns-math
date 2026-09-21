@@ -23,6 +23,7 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.locator(".grade-entry a").count(),3);
       assert.equal(await page.locator(".portal-card").count(),7);
       assert.equal(await page.locator("#examCount").textContent(),"39개 시험");
+      assert.equal(await page.locator('#homeProfileForm input[name="className"]').count(),1);
       assert.equal(await page.locator(".student-account-button").count(),1);
       await page.locator(".student-account-button").click();
       await page.waitForSelector(".student-account-dialog[open] #studentAccountForm");
