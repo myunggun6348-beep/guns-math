@@ -134,6 +134,20 @@
         <div id="풀이목록"><p class="empty">불러오는 중…</p></div>
       </section>
 
+      <!-- ===== 학생 학습 현황 ===== -->
+      <section class="adm-block" id="학생현황">
+        <div class="adm-section-head">
+          <div>
+            <h2 class="display-sm">학생 학습 현황</h2>
+            <p class="body-sm adm-note">학습 계정으로 로그인한 학생의 오늘 학습, 오답과 취약 개념을 확인합니다. PIN과 필기 이미지는 보이지 않습니다.</p>
+          </div>
+          <button type="button" class="adm-del" id="학생새로고침">새로고침</button>
+        </div>
+        <div class="student-admin-summary" id="학생현황요약" aria-live="polite"></div>
+        <label class="student-admin-search">학생 찾기<input type="search" id="학생검색" placeholder="이름·학생 코드·학년·과목·개념"></label>
+        <div id="학생현황목록"><p class="empty">불러오는 중…</p></div>
+      </section>
+
       <!-- ===== 공지 =====
            예전에는 index.html 안에 글로 박혀 있어서 한 줄 올리려면 코드를
            고쳐야 했습니다. 여기서 쓰면 홈 맨 위 공지 줄에 바로 올라갑니다. -->
@@ -297,6 +311,7 @@
     try { sessionStorage.removeItem(암호열쇠); } catch {}
   };
   let 암호 = 보관함읽기(localStorage) || 보관함읽기(sessionStorage);
+  window.선생님암호 = () => 암호;
   let 질문들 = [];
   let 파일들 = [];
   let 공지들 = [];
@@ -1242,6 +1257,7 @@
     공지불러오기();
     파일불러오기();
     방문불러오기();
+    window.dispatchEvent(new CustomEvent("admin-open"));
   }
 
   /* ---------- 전부 내보내기 (백업) ----------
@@ -1413,5 +1429,6 @@
 </script>
 
 <script src="assets/admin-solutions.js"></script>
+<script src="assets/admin-students.js"></script>
 </body>
 </html>

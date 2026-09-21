@@ -9,14 +9,17 @@ async function command(op, ...args) {
   if (op === "EXISTS") return values.has(args[0]) ? 1 : 0;
   if (op === "INCR") { const next = Number(values.get(args[0]) || 0) + 1; values.set(args[0], String(next)); return next; }
   if (op === "EXPIRE") return 1;
+  if (op === "SCAN") { const pattern = String(args[2] || "").replace("*", ""); return ["0", [...values.keys()].filter(key => key.startsWith(pattern))]; }
   throw new Error(`Unexpected Redis command: ${op}`);
 }
 
 const redisPath = require.resolve(path.join(__dirname, "../api/_redis.js"));
 require.cache[redisPath] = { id: redisPath, filename: redisPath, loaded: true, exports: { 준비됨: true, 명령: command } };
 const handler = require("../api/student-account.js");
+process.env.ADMIN_PASSWORD = "teacher-test-password";
+const adminHandler = require("../api/student-admin.js");
 
-function call(method, payload, cookie = "") {
+function callWith(target, method, payload, cookie = "") {
   return new Promise((resolve, reject) => {
     const req = { method, body: payload, headers: { cookie, "x-forwarded-for": "127.0.0.1" } };
     const headers = {};
@@ -25,9 +28,10 @@ function call(method, payload, cookie = "") {
       status(code) { this.code = code; return this; },
       json(data) { resolve({ code: this.code, data, headers }); },
     };
-    Promise.resolve(handler(req, res)).catch(reject);
+    Promise.resolve(target(req, res)).catch(reject);
   });
 }
+const call = (method, payload, cookie = "") => callWith(handler, method, payload, cookie);
 
 (async () => {
   const created = await call("POST", { action: "register", id: "student01", pin: "2468", name: "민수" });
@@ -58,9 +62,19 @@ function call(method, payload, cookie = "") {
   assert.equal(merged.data.data.notes[0].mastered, true);
   assert.equal(merged.data.data.stats.derivative.attempts, 3);
 
+  const teacher = await callWith(adminHandler, "POST", { password: "teacher-test-password" });
+  assert.equal(teacher.code, 200);
+  assert.equal(teacher.data.summary.total, 1);
+  assert.equal(teacher.data.students[0].id, "student01");
+  assert.equal(teacher.data.students[0].activeWrong, 0);
+  assert.equal(teacher.data.students[0].weakest.name, "기타");
+
+  const blocked = await callWith(adminHandler, "POST", { password: "wrong" });
+  assert.equal(blocked.code, 401);
+
   const logout = await call("POST", { action: "logout" }, cookie2);
   assert.equal(logout.code, 200);
   const after = await call("GET", null, cookie2);
   assert.equal(after.data.signedIn, false);
-  console.log("학생 계정 검사 통과: 생성, PIN 로그인, 기기 간 병합, 필기 이미지 제외, 로그아웃");
+  console.log("학생 계정 검사 통과: 생성, PIN 로그인, 기기 간 병합, 교사용 현황, 암호 보호, 로그아웃");
 })().catch(error => { console.error(error); process.exit(1); });

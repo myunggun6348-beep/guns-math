@@ -1,0 +1,16 @@
+const fs=require("fs"),path=require("path"),http=require("http"),assert=require("assert");
+const {chromium}=require("C:/Users/User/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
+const root=path.join(__dirname,"..");
+const json=(res,value)=>{res.setHeader("Content-Type","application/json");res.end(JSON.stringify(value))};
+const server=http.createServer((req,res)=>{
+  const pathname=new URL(req.url,"http://localhost").pathname;
+  if(pathname==="/api/student-admin")return json(res,{summary:{total:2,active7:1,today:1,activeWrong:3},students:[{id:"student01",name:"민수",grade:"2",track:"calc1",studyCount:8,todayDone:true,todayScore:4,activeWrong:2,mastered:3,weakest:{name:"미분",rate:50,attempts:4},lastAt:"2026-09-21T03:00:00Z"},{id:"math02",name:"지수",grade:"1",track:"common1",studyCount:2,todayDone:false,todayScore:null,activeWrong:1,mastered:0,weakest:null,lastAt:"2026-09-10T03:00:00Z"}]});
+  if(pathname==="/api/admin")return json(res,{좋음:true,목록:[],검토:false,labels:[],series:[],total:0});
+  if(pathname==="/api/solutions")return json(res,{items:[]});
+  if(pathname==="/api/files")return json(res,[]);
+  if(pathname==="/api/push-subscribe")return json(res,{supported:false});
+  const relative=pathname==="/"?"/admin.html":pathname,file=path.join(root,relative);
+  if(!file.startsWith(root+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return}
+  const types={".css":"text/css",".js":"text/javascript",".json":"application/json",".png":"image/png",".webmanifest":"application/manifest+json"};res.setHeader("Content-Type",types[path.extname(file)]||"text/html");res.end(fs.readFileSync(file));
+});
+(async()=>{await new Promise(resolve=>server.listen(5199,"127.0.0.1",resolve));const browser=await chromium.launch({headless:true,executablePath:"C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"});try{for(const viewport of [{width:1280,height:900},{width:390,height:844}]){const page=await browser.newPage({viewport});const errors=[];page.on("pageerror",error=>errors.push(error.message));await page.goto("http://127.0.0.1:5199/admin.html",{waitUntil:"networkidle"});await page.locator("#로그인 input[type=password]").fill("test-password");await page.locator("#로그인 button[type=submit]").click();await page.waitForSelector("#학생현황 .student-admin-row:not(.head)");assert.equal(await page.locator("#학생현황요약 b").first().textContent(),"2");assert.equal(await page.locator("#학생현황 .student-admin-row:not(.head)").count(),2);await page.locator("#학생검색").fill("미분");assert.equal(await page.locator("#학생현황 .student-admin-row:not(.head)").count(),1);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.equal(errors.length,0,errors.join("\n"));await page.close()}console.log("학생 현황 화면 검사 통과: 요약, 학생 목록, 취약 개념 검색, 모바일 화면")}finally{await browser.close();server.close()}})().catch(error=>{console.error(error);server.close();process.exitCode=1});
