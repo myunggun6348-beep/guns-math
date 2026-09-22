@@ -22,6 +22,8 @@ const server=http.createServer((req,res)=>{
       await page.goto("http://127.0.0.1:5198/index.html",{waitUntil:"networkidle"});
       assert.equal(await page.locator(".portal-card").count(),5);
       assert.equal(await page.locator(".home-main-action").count(),0);
+      assert.equal(await page.locator(".home-more").evaluate(el=>el.open),false);
+      assert.equal(await page.locator(".portal-hero").isVisible(),false);
       assert.equal(await page.locator('#homeProfileForm input[name="className"]').count(),1);
       assert.equal(await page.locator(".student-account-button").count(),1);
       await page.locator(".student-account-button").click();
@@ -31,6 +33,8 @@ const server=http.createServer((req,res)=>{
       const overflow=await page.evaluate(()=>({wide:document.documentElement.scrollWidth>innerWidth,width:innerWidth,scroll:document.documentElement.scrollWidth,items:[...document.querySelectorAll("body *")].map(el=>({tag:el.tagName,cls:el.className,right:el.getBoundingClientRect().right,width:el.getBoundingClientRect().width})).filter(x=>x.right>innerWidth+1).slice(0,8)}));
       assert.equal(overflow.wide,false,JSON.stringify(overflow));
       assert.equal(errors.length,0,errors.join("\n"));
+      await page.screenshot({path:"artifacts/home-simple-"+viewport.name+".png",fullPage:false});
+      await page.locator(".home-more>summary").click();
       await page.locator("#findQ").fill("고3 9월");
       await page.waitForSelector('.find-hit[href*="files.html?grade=3"]');
       await page.screenshot({path:"artifacts/home-"+viewport.name+".png",fullPage:false});
@@ -40,6 +44,8 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.locator(".home-main-action").count(),1);
       assert.equal(await page.locator(".home-study-summary span").count(),3);
       assert.match(await page.locator(".home-main-action").getAttribute("href"),/today\.html\?grade=2/);
+      await page.locator(".home-more>summary").click();
+      await page.screenshot({path:"artifacts/home-personal-simple-"+viewport.name+".png",fullPage:false});
       await page.evaluate(()=>{
         const d=new Date(),today=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
         localStorage.setItem("today-study-records",JSON.stringify([{date:today,grade:"2",track:"algebra",correct:3,total:5,finishedAt:d.toISOString()}]));

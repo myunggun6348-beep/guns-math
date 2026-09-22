@@ -32,7 +32,7 @@
 <link rel="stylesheet" href="assets/vendor/fonts/jetbrains-mono.css" />
 <link rel="stylesheet" href="assets/style.css" />
 </head>
-<body>
+<body class="home-page">
 
 <!-- ===================== 상단 내비 ===================== -->
 <header class="nav">
@@ -57,6 +57,7 @@
       <a href="games.html">게임</a>
     </div>
     <div class="nav-right">
+      <a class="home-nav-more" href="#more">둘러보기</a>
       <!-- ✏️ 이 사이트를 더 밝거나 어둡게 보고 싶어질 때 누르는 단추입니다.
            지금 상태가 아니라 눌렀을 때 어떻게 바뀌는지를 보여줍니다. -->
       <button type="button" id="themeToggle" class="theme-toggle" aria-pressed="false" aria-label="어두운 화면으로 보기">
@@ -104,6 +105,9 @@
 
 <!-- ===================== 나의 학습 홈 ===================== -->
 <section class="home-personal" id="homePersonal" hidden aria-live="polite"></section>
+
+<details class="home-more" id="more">
+  <summary>자료·게임·검색 더 보기 <span aria-hidden="true">＋</span></summary>
 
 <!-- ===================== 주요 학습 활동 ===================== -->
 <section class="section home-start" id="quick-start">
@@ -165,6 +169,8 @@
     </div>
   </div>
 </section>
+
+</details>
 
 <!-- ===================== 푸터 ===================== -->
 <footer class="footer">
