@@ -83,6 +83,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-file-archive.cjs` | 자료실의 학년 저장·필터·모바일 배치 |
 | `node scripts\check-escape.js` | 수학 탈출의 문항 조합·채점·기록 |
 | `node scripts\check-admin-password.cjs` | 선생님 방 암호 — 바꾸기·여벌 열쇠·되돌리기 (인터넷 필요 없음) |
+| `node scripts\check-phone.cjs` | 휴대폰 3종 — 가로 넘침·누르기 작은 단추·아이폰 확대·콘솔 오류 |
 | `node scripts\verify-exam-library.cjs` | 진짜 브라우저로 자료실을 열어 확인 (먼저 `폰으로 보기.bat` 으로 서버를 켜 둘 것) |
 
 ### 이름과 로고

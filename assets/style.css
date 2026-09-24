@@ -966,7 +966,8 @@ html.theme-dark .demo-next-head { color: rgba(255, 255, 255, 0.55); }
 .adm-edit-row textarea,
 .adm-q textarea {
   font-family: inherit;
-  font-size: 15px;
+  /* 16px 보다 작으면 아이폰 사파리가 칸을 누르는 순간 화면을 확대해 버립니다 */
+  font-size: 16px;
   color: var(--ink);
   background: var(--surface-soft);
   border: 1px solid var(--hairline);
@@ -984,7 +985,7 @@ html.theme-dark .demo-next-head { color: rgba(255, 255, 255, 0.55); }
   flex: 1;
   min-width: 220px;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16px;   /* 아이폰이 확대해 버리는 경계 */
   color: var(--ink);
   background: var(--surface-soft);
   border: 1px solid var(--hairline);
@@ -2098,7 +2099,7 @@ html.theme-dark .canvas-host {
 @media(max-width:520px){.student-admin-search{grid-template-columns:1fr}.student-admin-summary{grid-template-columns:1fr 1fr}.student-admin-row{grid-template-columns:1fr}.student-admin-row>span:first-child{grid-column:auto}}
 
 /* 학년·반 설정과 반별 학습 요약 */
-.home-profile-form{grid-template-columns:minmax(0,1fr) 105px 90px}.home-profile-form label:nth-child(3){grid-column:auto}.home-profile-form .home-profile-track{grid-column:1/-1}.student-class-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 18px}.student-class-summary button{display:grid;gap:3px;padding:13px;text-align:left;border:1px solid var(--hairline);border-radius:12px;background:var(--canvas);color:inherit;cursor:pointer}.student-class-summary span,.student-class-summary small{font-size:11px;color:var(--muted)}.student-admin-tools{display:flex;align-items:end;justify-content:space-between;gap:12px}.student-admin-filter{display:grid;gap:5px;min-width:150px;font-size:12px;font-weight:650}.student-admin-filter select{min-height:42px;padding:8px 10px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);color:var(--ink);font:inherit}
+.home-profile-form{grid-template-columns:minmax(0,1fr) 105px 90px}.home-profile-form label:nth-child(3){grid-column:auto}.home-profile-form .home-profile-track{grid-column:1/-1}.student-class-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 18px}.student-class-summary button{display:grid;gap:3px;padding:13px;text-align:left;border:1px solid var(--hairline);border-radius:12px;background:var(--canvas);color:inherit;cursor:pointer}.student-class-summary span,.student-class-summary small{font-size:11px;color:var(--muted)}.student-admin-tools{display:flex;align-items:end;justify-content:space-between;gap:12px}.student-admin-filter{display:grid;gap:5px;min-width:150px;font-size:12px;font-weight:650}.student-admin-filter select{min-height:44px;padding:8px 10px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);color:var(--ink);font:inherit;font-size:16px}
 @media(max-width:900px){.student-class-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.home-profile-form{grid-template-columns:1fr 1fr}.home-profile-form .home-profile-name,.home-profile-form .home-profile-track,.home-profile-form button{grid-column:1/-1}}
 @media(max-width:520px){.student-admin-tools{align-items:stretch;flex-direction:column}.student-admin-search,.student-admin-filter{width:100%}.student-class-summary{grid-template-columns:1fr}}
@@ -2170,3 +2171,27 @@ html.theme-dark .canvas-host {
 /* 접힌 칸의 테두리가 위 두 칸의 테두리와 나란히 서게 (gutter 만큼 넓힙니다). */
 .home-more { max-width: calc(1040px + 2 * var(--gutter)); }
 @media (max-width: 760px) { .home-more { max-width: calc(780px + 2 * var(--gutter)); } }
+
+/* =========================================================
+   휴대폰에서 손으로 쓸 때
+
+   1) 입력 칸 글씨가 16px 보다 작으면, 아이폰 사파리는 그 칸을 누르는 순간
+      화면을 확 확대해 버립니다. 글을 다 쓴 뒤 손가락으로 다시 줄여야 해서
+      한 칸 채울 때마다 이 일이 반복됩니다.
+   2) 손가락으로 누르는 곳은 44px 쯤 돼야 헛누르지 않습니다(애플 권장).
+      display 는 건드리지 않습니다 — 좁은 화면에서 일부러 숨겨 둔 단추를
+      되살려 버릴 수 있어서, 높이만 키웁니다.
+   ========================================================= */
+
+/* 기기와 상관없는 잘못: 홈 입력 칸이 font:inherit 이라 설명 글씨(12px)를 따라가 버렸습니다 */
+.home-profile-form input, .home-profile-form select { font-size: 16px; }
+
+@media (max-width: 860px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select, textarea { font-size: 16px; }
+
+  .btn, button.adm-del, #나가기, #내려받기, .file-filter,
+  .subject-nav a, .brand, .footer-wordmark { min-height: 44px; }
+  .home-nav-more { display: inline-flex; align-items: center; min-height: 44px; }
+  .brand { align-items: center; }
+}
