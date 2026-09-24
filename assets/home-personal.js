@@ -25,7 +25,20 @@
   }
   function setup(seed=profile){
     const grade=seed?.grade||"1",name=seed?.name||"",className=seed?.className||"",available=Object.entries(tracks).filter(([,track])=>track.grades.includes(grade));
-    root.hidden=false;root.innerHTML='<div class="home-personal-shell setup"><div class="home-personal-intro"><span class="eyebrow">MY HOME</span><h2>내 학습 홈 만들기</h2><p>학년·반과 과목을 한 번 정하면 다음 방문부터 오늘 할 공부와 복습할 내용을 바로 보여 줍니다.</p></div><form id="homeProfileForm" class="home-profile-form"><label class="home-profile-name">이름 또는 별명 <input name="name" maxlength="20" value="'+esc(name)+'" placeholder="선택 사항"></label><label>학년 <select name="grade"><option value="1">고1</option><option value="2">고2</option><option value="3">고3</option></select></label><label>반 <input name="className" type="number" inputmode="numeric" min="1" max="20" value="'+esc(className)+'" placeholder="선택"></label><label class="home-profile-track">주로 공부할 과목 <select name="track"></select></label><button class="btn btn-primary" type="submit">내 학습 홈 시작 →</button></form></div>';
+    /* 처음 온 학생에게는 길을 크게 둘로 나눠 보여 줍니다.
+       예전에는 이 자리에 입력 칸만 있어서, 아직 정하고 싶지 않은 학생은
+       뭘 해야 할지 알 수 없었습니다(둘러보는 길은 구석에 작게 있었습니다). */
+    root.hidden=false;root.innerHTML='<div class="home-personal-shell setup">'+
+      '<p class="home-setup-lead">고등학교 수학 자료·문제·질문을 한곳에 모아 둔 곳입니다. 어떻게 쓸지 고르세요.</p>'+
+      '<div class="home-fork">'+
+        '<div class="home-fork-card"><span class="eyebrow">MY HOME</span><h2>내 학습 홈 만들기</h2><p>학년·과목을 한 번 정하면, 다음부터 오늘 풀 5문제와 복습할 것을 바로 보여 줍니다.</p>'+
+          '<form id="homeProfileForm" class="home-profile-form"><label class="home-profile-name">이름 또는 별명 <input name="name" maxlength="20" value="'+esc(name)+'" placeholder="선택 사항"></label><label>학년 <select name="grade"><option value="1">고1</option><option value="2">고2</option><option value="3">고3</option></select></label><label>반 <input name="className" type="number" inputmode="numeric" min="1" max="20" value="'+esc(className)+'" placeholder="선택"></label><label class="home-profile-track">주로 공부할 과목 <select name="track"></select></label><button class="btn btn-primary" type="submit">내 학습 홈 시작 →</button></form>'+
+          '<small class="home-fork-note">가입도 로그인도 없습니다. 적은 것은 이 기기에만 남습니다.</small></div>'+
+        '<div class="home-fork-card"><span class="eyebrow">JUST LOOKING</span><h2>그냥 둘러보기</h2><p>아무것도 정하지 않고 바로 볼 수 있습니다. 이런 것들이 있습니다.</p>'+
+          '<ul class="home-fork-list"><li>오늘의 5문제 · 자동 선별 기출 · 오답노트</li><li>기출·자료실 · 직접 보는 수학 · 개념 지도</li><li>수학 게임 · 수학 탈출 · 질문하기</li></ul>'+
+          '<a class="btn btn-primary home-fork-look" href="#more">둘러보기 →</a>'+
+          '<small class="home-fork-note">나중에 마음이 바뀌면 그때 정해도 됩니다.</small></div>'+
+      '</div></div>';
     const form=root.querySelector("#homeProfileForm"),gradeSelect=form.elements.grade,trackSelect=form.elements.track;
     gradeSelect.value=grade;
     const fillTracks=selected=>{const list=Object.entries(tracks).filter(([,track])=>track.grades.includes(gradeSelect.value));trackSelect.innerHTML=list.map(([id,track])=>'<option value="'+esc(id)+'">'+esc(track.title)+'</option>').join("");if(list.some(([id])=>id===selected))trackSelect.value=selected};

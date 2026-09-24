@@ -2182,3 +2182,59 @@ html.theme-dark .canvas-host {
 /* 첫 방문 학생은 가입 없이 시작하고, 계정은 기록 동기화가 필요할 때만 만든다. */
 .student-account-dialog{max-height:min(720px,calc(100dvh - 24px));overflow-y:auto}.student-account-card [hidden]{display:none!important}.student-account-card h2{margin:12px 0 10px}.student-guest>p,.student-account-entry>p{margin:0 0 22px;color:var(--muted);font-size:14px;line-height:1.6}.student-guest{display:grid;gap:12px}.student-guest h2,.student-guest p{grid-column:1}.student-guest .btn{width:100%;min-height:48px}.student-secondary-action{min-height:46px;border:1px solid var(--hairline);border-radius:999px;background:var(--canvas);color:var(--ink);font:650 14px inherit;cursor:pointer}.student-text-action{padding:9px;border:0;background:transparent;color:var(--ink);font:600 13px inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.student-back{padding:4px 0;border:0;background:transparent;color:var(--ink);font:600 12px inherit;cursor:pointer}.student-account-form label span{font-weight:400;opacity:.65}.student-account-form .btn{width:100%;margin-top:3px}.student-account-help{color:var(--muted)}.student-account-error:empty{display:none}.student-account-button:not(.signed-in){font-size:0}.student-account-button:not(.signed-in)::after{content:"내 기록";font-size:12px}
 @media(max-width:600px){.student-account-card{padding:27px 22px}.student-account-dialog{width:min(470px,calc(100% - 20px))}.student-account-button:not(.signed-in)::after{content:"내 기록"}}
+
+/* =========================================================
+   홈 첫 화면 — 길을 크게 둘로 (내 학습 홈 만들기 / 그냥 둘러보기)
+   처음 온 학생이 입력 칸만 보고 막히지 않게, 둘러보는 길을 같은 크기로 둡니다.
+   ========================================================= */
+.home-setup-lead { margin: 0 0 22px; max-width: 40em; font-size: 15px; line-height: 1.6; opacity: 0.7; }
+.home-fork { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.home-fork-card {
+  display: flex; flex-direction: column;
+  padding: 26px; border: 1px solid var(--hairline); border-radius: 18px; background: var(--surface-soft);
+}
+.home-fork-card h2 { margin: 6px 0 8px; font-size: clamp(22px, 2.6vw, 30px); }
+.home-fork-card > p { margin: 0 0 20px; font-size: 14px; line-height: 1.6; opacity: 0.7; }
+.home-fork-card .home-profile-form { margin-top: auto; }
+.home-fork-look { align-self: flex-start; margin-top: auto; text-decoration: none; }
+.home-fork-note { display: block; margin-top: 14px; font-size: 12px; line-height: 1.5; opacity: 0.55; }
+@media (max-width: 760px) { .home-fork { grid-template-columns: 1fr; } .home-fork-card { padding: 21px; } }
+
+/* =========================================================
+   '이 사이트에 있는 것' — 세 묶음으로 나란히.
+   칸 모양(줄 + 화살표)은 .portal-grid .portal-card 규칙을 그대로 씁니다.
+   ========================================================= */
+.home-more .portal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 28px; }
+.portal-group { display: grid; align-content: start; grid-template-columns: 1fr; }
+.portal-group > h3 {
+  margin: 0 0 2px; padding-bottom: 6px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted);
+}
+.portal-grid .portal-card h4 { grid-column: 1; margin: 0; font-size: 17px; line-height: 1.35; }
+@media (max-width: 860px) {
+  .home-more .portal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-group:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 650px) {
+  .home-more .portal-grid { grid-template-columns: 1fr; }
+  .portal-group { margin-top: 18px; }
+  .portal-group:first-child { margin-top: 0; }
+  .portal-group:last-child { grid-column: 1; }
+}
+
+/* 두 갈래와 아홉 칸이 들어가야 해서 첫 화면 폭을 넓힙니다(전에는 780px). */
+.home-page .home-personal-shell.setup { max-width: 1040px; }
+.home-more { max-width: 1040px; }
+@media (max-width: 760px) { .home-page .home-personal-shell.setup, .home-more { max-width: 780px; } }
+
+/* 둘러보기 쪽 칸이 허전하지 않게, 안에 무엇이 있는지 세 줄로 미리 보여 줍니다. */
+.home-fork-list { margin: 0 0 20px; padding: 0; list-style: none; }
+.home-fork-list li {
+  padding: 9px 0; border-top: 1px solid var(--hairline);
+  font-size: 14px; line-height: 1.5; opacity: 0.8;
+}
+.home-fork-list li:last-child { border-bottom: 1px solid var(--hairline); }
+
+/* 접힌 칸의 테두리가 위 두 칸의 테두리와 나란히 서게 (gutter 만큼 넓힙니다). */
+.home-more { max-width: calc(1040px + 2 * var(--gutter)); }
+@media (max-width: 760px) { .home-more { max-width: calc(780px + 2 * var(--gutter)); } }

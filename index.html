@@ -107,21 +107,37 @@
 <section class="home-personal" id="homePersonal" hidden aria-live="polite"></section>
 
 <details class="home-more" id="more">
-  <summary>자료·게임·검색 더 보기 <span aria-hidden="true">＋</span></summary>
+  <summary>이 사이트에 있는 것 전부 보기 <span aria-hidden="true">＋</span></summary>
 
-<!-- ===================== 주요 학습 활동 ===================== -->
+<!-- ===================== 이 사이트에 있는 것 =====================
+     ✏️ 학생 페이지를 새로 만들면 여기에 한 줄 추가하세요. 여기가 전체 목록입니다.
+     예전에는 다섯 개만 적어 두어서 '오늘의 학습'·'오답노트'·'자동 선별 기출'·
+     '수학 탈출'은 주소를 아는 사람만 갈 수 있었습니다. -->
 <section class="section home-start" id="quick-start">
   <div class="wrap">
     <div class="home-start-head">
       <span class="eyebrow">Explore</span>
-      <div><h2 class="headline">다른 학습 찾아보기</h2><p class="body-sm">필요할 때 자료와 활동을 골라 보세요.</p></div>
+      <div><h2 class="headline">이 사이트에 있는 것</h2><p class="body-sm">아홉 가지가 전부입니다. 아무거나 눌러 보세요.</p></div>
     </div>
     <div class="portal-grid">
-      <a class="portal-card portal-card-exam" href="files.html"><h3>기출·자료실</h3><span>학년별 기출과 학습지</span><b aria-hidden="true">→</b></a>
-      <a class="portal-card portal-card-view" href="library.html"><h3>직접 보는 수학</h3><span>그래프와 도형 탐색</span><b aria-hidden="true">→</b></a>
-      <a class="portal-card portal-card-map" href="map.html"><h3>개념 지도</h3><span>개념의 연결 살펴보기</span><b aria-hidden="true">→</b></a>
-      <a class="portal-card portal-card-game" href="games.html"><h3>수학 게임</h3><span>짧게 도전하며 익히기</span><b aria-hidden="true">→</b></a>
-      <a class="portal-card portal-card-question" href="ask.html"><h3>질문하기</h3><span>막힌 문제 물어보기</span><b aria-hidden="true">→</b></a>
+      <div class="portal-group">
+        <h3>공부하기</h3>
+        <a class="portal-card" href="today.html"><h4>오늘의 5문제</h4><span>하루 5분, 학년·과목에 맞춰</span><b aria-hidden="true">→</b></a>
+        <a class="portal-card" href="past-practice.html"><h4>자동 선별 기출</h4><span>약한 개념의 기출만 골라서</span><b aria-hidden="true">→</b></a>
+        <a class="portal-card" href="wrong-notes.html"><h4>오답노트</h4><span>틀린 문제가 저절로 모입니다</span><b aria-hidden="true">→</b></a>
+      </div>
+      <div class="portal-group">
+        <h3>찾아보기</h3>
+        <a class="portal-card" href="files.html"><h4>기출·자료실</h4><span>최근 3개년 기출과 학습지</span><b aria-hidden="true">→</b></a>
+        <a class="portal-card" href="library.html"><h4>직접 보는 수학</h4><span>그래프와 도형을 움직여 보며</span><b aria-hidden="true">→</b></a>
+        <a class="portal-card" href="map.html"><h4>개념 지도</h4><span>개념이 어떻게 이어지는지</span><b aria-hidden="true">→</b></a>
+      </div>
+      <div class="portal-group">
+        <h3>즐기기·묻기</h3>
+        <a class="portal-card" href="games.html"><h4>수학 게임</h4><span>4분짜리 미니 게임 열 가지</span><b aria-hidden="true">→</b></a>
+        <a class="portal-card" href="escape.html"><h4>수학 탈출</h4><span>단서를 풀고 교실 나가기</span><b aria-hidden="true">→</b></a>
+        <a class="portal-card" href="ask.html"><h4>질문하기</h4><span>이름 없이 물어봐도 됩니다</span><b aria-hidden="true">→</b></a>
+      </div>
     </div>
   </div>
 </section>
@@ -244,6 +260,28 @@
     .then(응답 => (응답.ok ? 응답.json() : []))
     .then(목록 => 그리기(Array.isArray(목록) ? 목록 : []))
     .catch(() => strip.remove());
+}
+
+
+/* =========================================================
+   1-1. '둘러보기' — 손대지 않아도 됩니다.
+
+   #more 는 접혀 있는 칸입니다. 그냥 두면 '둘러보기' 를 눌러도 그 자리로
+   내려가기만 하고 닫힌 채여서, 아무 일도 안 일어난 것처럼 보입니다.
+   ========================================================= */
+{
+  const 더보기 = document.getElementById("more");
+  const 펼치기 = () => {
+    if (location.hash !== "#more") return;
+    더보기.open = true;
+    더보기.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  addEventListener("hashchange", 펼치기);
+  // 이미 #more 인 채로 또 눌렀을 때는 hashchange 가 안 옵니다. 그래서 누름도 봅니다.
+  document.addEventListener("click", 사건 => {
+    if (사건.target.closest('a[href="#more"]')) setTimeout(펼치기, 0);
+  });
+  펼치기();
 }
 
 

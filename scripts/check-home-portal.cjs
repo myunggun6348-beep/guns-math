@@ -20,7 +20,17 @@ const server=http.createServer((req,res)=>{
       const page=await browser.newPage({viewport});
       const errors=[];page.on("pageerror",e=>errors.push(e.message));
       await page.goto("http://127.0.0.1:5198/index.html",{waitUntil:"networkidle"});
-      assert.equal(await page.locator(".portal-card").count(),5);
+      /* 개수를 적어 두면 활동이 하나 늘 때마다 틀립니다(5 라고 적힌 채 9 가 됐었다).
+         대신 '학생이 갈 수 있는 페이지가 빠짐없이 적혀 있는가'를 봅니다 —
+         실제로 오늘의 학습·오답노트·자동 선별 기출·수학 탈출이 빠져 있었습니다. */
+      const 선생님것=["admin.html","question-bank.html","review.html"];
+      // 주소에 ?id=·?game= 이 있어야 열리는 페이지라 목록에 둘 자리가 아닙니다
+      const 혼자못감=["index.html","solve.html","quick-game.html"];
+      const 학생페이지=fs.readdirSync(root).filter(f=>f.endsWith(".html")&&!선생님것.includes(f)&&!혼자못감.includes(f));
+      const 적힌것=await page.locator(".portal-card").evaluateAll(els=>els.map(el=>el.getAttribute("href").split(/[?#]/)[0]));
+      const 빠진것=학생페이지.filter(f=>!적힌것.includes(f));
+      assert.equal(빠진것.length,0,"'이 사이트에 있는 것'에서 빠진 페이지: "+빠진것.join(", "));
+      assert.equal(new Set(적힌것).size,적힌것.length,"같은 페이지가 두 번 적혀 있습니다: "+적힌것.join(", "));
       assert.equal(await page.locator(".home-main-action").count(),0);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),false);
       assert.equal(await page.locator(".portal-hero").isVisible(),false);
@@ -45,6 +55,16 @@ const server=http.createServer((req,res)=>{
       assert.equal(overflow.wide,false,JSON.stringify(overflow));
       assert.equal(errors.length,0,errors.join("\n"));
       await page.screenshot({path:"artifacts/home-simple-"+viewport.name+".png",fullPage:false});
+
+      /* 처음 온 학생에게 길이 둘 다 보여야 합니다 — 정하고 시작하기 / 그냥 둘러보기.
+         그리고 '둘러보기'를 누르면 접힌 칸이 실제로 펼쳐져야 합니다
+         (전에는 그 자리로 내려가기만 하고 닫힌 채였습니다). */
+      assert.equal(await page.locator(".home-fork-card").count(),2);
+      assert.equal(await page.locator("#homeProfileForm").isVisible(),true);
+      await page.locator(".home-fork-look").click();
+      await page.waitForTimeout(300);
+      assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
+      await page.locator(".home-more>summary").click();   // 다시 닫고 아래 검사를 이어 갑니다
       await page.locator(".home-more>summary").click();
       await page.locator("#findQ").fill("고3 9월");
       await page.waitForSelector('.find-hit[href*="files.html?grade=3"]');
@@ -73,6 +93,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 단일 학습 행동, 기록 요약, 활동 5개, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
+    console.log("메인 검사 통과: 단일 학습 행동, 기록 요약, 두 갈래 입구, 활동 빠짐없이, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});
