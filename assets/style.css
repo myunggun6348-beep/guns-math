@@ -355,21 +355,6 @@ img, svg { max-width: 100%; }
 /* 요즘 올라온 것 — 새 소식 알림 줄일 뿐이라 주요 섹션(찾기 등)의
    큰 제목 대신, 알약 모양 딱지 하나로 존재만 알린다. 목록 자체가
    무엇이 새로 왔는지 이미 보여 주므로 별도 설명 문장은 두지 않는다. */
-.fresh-head {
-  padding-top: var(--md);
-  margin-bottom: var(--sm);
-  border-top: 1px solid var(--hairline);
-}
-.fresh-badge {
-  display: inline-block;
-  padding: 5px 14px 6px;
-  border-radius: var(--r-full);
-  background: var(--block-lilac);
-  color: #14150f;
-  font-size: 14px;
-  font-weight: 650;
-  letter-spacing: -0.005em;
-}
 
 /* --- 히어로 : 크림 색면 + 수학 그림 --- */
 .hero {
@@ -894,53 +879,6 @@ img, svg { max-width: 100%; }
    눈에 띄어야 한다. 자료실 목록과 같은 '줄' 모양을 쓰되, 왼쪽에 종류
    딱지를 붙여 학습지인지 답변인지 한눈에 갈라 보이게 한다.
    ========================================================= */
-.freshlist { border-top: 1px solid var(--hairline); }
-.fresh-hit {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--md) var(--lg);
-  padding: var(--md) var(--sm);
-  border-bottom: 1px solid var(--hairline);
-  text-decoration: none;
-}
-.fresh-hit:hover { background: var(--surface-soft); }
-.fresh-kind {
-  justify-self: start;
-  padding: 3px 10px 4px;
-  border-radius: var(--r-full);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #14150f;
-  white-space: nowrap;
-}
-.fresh-file   { background: var(--block-lime); }
-.fresh-answer { background: var(--block-mint); }
-.fresh-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.fresh-text b {
-  font-weight: 520;
-  /* 질문 제목은 길 수 있다 — 두 줄까지만 보이고 자른다 */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.fresh-when {
-  display: flex;
-  align-items: center;
-  gap: var(--sm);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.fresh-new {
-  padding: 2px 7px 3px;
-  border-radius: var(--r-full);
-  background: var(--ink);
-  color: var(--canvas);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-}
 
 /* =========================================================
    자료실 (files.html) — 내려받는 파일 목록
@@ -1994,12 +1932,6 @@ html.theme-dark .canvas-host {
   /* 자료실 목록 — 날짜 칸을 뺄 폭이 없다. 제목 위로 올린다 */
   .filelist-row a { grid-template-columns: 1fr; gap: var(--xs); }
 
-  /* 요즘 올라온 것 — 폰에서는 종류 딱지를 제목 위로 올린다
-     (가로 세 칸을 유지하면 제목이 두 글자마다 줄바꿈된다) */
-  .fresh-hit { grid-template-columns: minmax(0, 1fr) auto; gap: var(--xs) var(--md); }
-  .fresh-kind { grid-column: 1; }
-  .fresh-when { grid-column: 2; grid-row: 1; align-self: start; }
-  .fresh-text { grid-column: 1 / -1; }
   .filelist-go { justify-self: start; }
 }
 
