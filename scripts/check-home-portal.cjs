@@ -109,9 +109,6 @@ const server=http.createServer((req,res)=>{
       assert.match(await page.locator(".home-main-action").getAttribute("href"),/today\.html\?grade=2/);
       await page.screenshot({path:"artifacts/home-personal-simple-"+viewport.name+".png",fullPage:false});
 
-      // 아직 잃을 것이 없으면 가입하라고 조르지 않습니다
-      assert.equal(await page.locator(".home-keep").count(),0,"기록도 없는데 가입을 권하고 있습니다");
-
       await page.evaluate(()=>{
         const d=new Date(),today=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
         localStorage.setItem("today-study-records",JSON.stringify([{date:today,grade:"2",track:"algebra",correct:3,total:5,finishedAt:d.toISOString()}]));
@@ -119,11 +116,9 @@ const server=http.createServer((req,res)=>{
       });
       await page.reload({waitUntil:"networkidle"});
       assert.equal(await page.locator(".home-main-action").getAttribute("href"),"wrong-notes.html");
-      // 이제는 잃을 것이 생겼으니 한 줄로 알려 줍니다
-      assert.equal(await page.locator(".home-keep").count(),1,"기록이 쌓였는데 '이 기기에만 있다'는 안내가 없습니다");
-      await page.locator("#homeKeep").click();
-      await page.waitForSelector(".student-account-dialog[open] #studentAccountForm");
-      await page.locator(".student-dialog-close").click();
+      /* 고른 뒤에는 가입 이야기를 다시 꺼내지 않습니다. 기록이 쌓이면 '이 기기에만
+         있습니다' 하는 줄을 띄운 적이 있는데, 닫을 수가 없어 잔소리가 됐습니다. */
+      assert.equal(await page.locator(".home-keep").count(),0,"공부하는 학생에게 가입하라고 또 붙어 있습니다");
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
       await page.close();
     }
@@ -148,7 +143,6 @@ const server=http.createServer((req,res)=>{
 
       assert.equal(await 가입.locator(".student-account-button").isVisible(),true,"가입했는데 계정 단추가 안 보입니다");
       assert.equal(await 가입.locator(".home-fork-card").count(),0,"가입했는데 아직 고르는 화면이 남아 있습니다");
-      assert.equal(await 가입.locator(".home-keep").count(),0,"가입한 학생에게 가입하라고 하고 있습니다");
       assert.match(await 가입.locator(".home-main-action").getAttribute("href"),/today\.html\?grade=2/);
       // 적은 학년·과목이 계정으로 올라갔는가 (다른 기기에서 로그인해도 따라오려면 이게 돼야 합니다)
       assert.equal(계정.기록?.profile?.grade,"2","가입할 때 고른 학년이 계정에 안 올라갔습니다");
@@ -162,6 +156,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 문 두 개(가입·둘러보기), 가입 끝까지, 학년·과목이 계정으로, 기록 쌓인 뒤 안내, 활동 빠짐없이, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
+    console.log("메인 검사 통과: 문 두 개(가입·둘러보기), 가입 끝까지, 학년·과목이 계정으로, 가입하라고 안 조름, 활동 빠짐없이, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});

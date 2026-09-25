@@ -5,8 +5,9 @@
      가입하고 시작 → 기록이 계정에 남아 다른 기기에서도 이어집니다
      그냥 둘러보기 → 아무것도 안 정하고 바로. 기록은 이 기기에만 쌓입니다
 
-   가입을 강요하지 않습니다. 둘러보다 오답이 쌓이면 그때 '이 기기에만
-   있습니다' 하고 한 번 알려 주는 정도로 둡니다.
+   고른 뒤에는 가입 이야기를 다시 꺼내지 않습니다. 한때 기록이 쌓이면
+   '이 기기에만 있습니다' 하는 줄을 띄웠는데, 닫을 수가 없어서 가입 생각이
+   없는 학생에게는 계속 붙어 있는 잔소리가 됐습니다.
    ========================================================= */
 (function(){
   "use strict";
@@ -93,18 +94,11 @@
     const actionTitle=review?'남은 오답 '+wrong.active+'문제 복습하기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
     const actionDescription=review?'오늘 학습은 마쳤어요. 틀린 문제를 다시 풀어 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
 
-    /* 잃을 것이 생겼을 때만 한 줄로 알려 줍니다. 처음부터 조르지 않습니다 —
-       아직 아무것도 안 한 학생에게 '기록이 사라진다'는 말은 뜻이 없습니다. */
-    const 쌓인것=wrong.active+all.length;
-    const 권유=(!로그인했나()&&쌓인것>=3)?'<div class="home-keep"><p>지금까지의 기록은 <b>이 기기에만</b> 있습니다. 폰을 바꾸면 사라집니다.</p>'+
-      '<button type="button" class="btn btn-secondary" id="homeKeep">기록 지키기 · 가입하기 →</button></div>':'';
-
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">TODAY</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
       '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small><b>시작하기 →</b></a>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>복습 대기 <b>'+wrong.active+'문제</b></span></div>'+
-      권유+'</div>';
+      '</div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
-    root.querySelector("#homeKeep")?.addEventListener("click",()=>window.StudentAccountUI?.열기("register"));
   }
   window.addEventListener("wrong-notes-change",render);
   window.addEventListener("student-account-change",render);

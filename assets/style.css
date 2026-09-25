@@ -2204,16 +2204,6 @@ html.theme-dark .canvas-host {
 }
 @media (max-width: 860px) { .home-fork-login { min-height: 44px; } }
 
-/* 둘러보기로 쓰던 학생에게 기록이 쌓였을 때만 나오는 줄 */
-.home-keep {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-  gap: var(--sm) var(--md);
-  margin-top: var(--lg); padding: var(--md);
-  border: 1px solid var(--hairline); border-radius: var(--r-md);
-  background: var(--surface-soft);
-}
-.home-keep p { margin: 0; font-size: 14px; line-height: 1.55; }
-.home-keep .btn { white-space: nowrap; }
 
 /* 가입 창의 학년·과목 — 한 줄에 둘 */
 .student-account-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
