@@ -2238,3 +2238,22 @@ html.theme-dark .canvas-host {
   .student-admin-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .student-admin-row > span:first-child { grid-column: 1 / -1; }
 }
+
+/* =========================================================
+   처음 온 학생의 폰 화면 — 두 갈래가 한 화면에 다 들어와야 합니다.
+
+   컴퓨터 화면만 보고 만들었더니 폰에서는 '둘러보기' 단추가 y=1017 에 있었고
+   화면은 844 였습니다. 즉 스크롤해야 나왔습니다 — 그러면 길을 둘로 나눈
+   뜻이 없어집니다. 그래서 좁을 때는 칸마다 제목·한 줄·단추만 남깁니다.
+   (설명 목록은 바로 아래 '이 사이트에 있는 것 전부 보기'와 겹칩니다)
+   ========================================================= */
+@media (max-width: 700px) {
+  .home-setup-lead { margin-bottom: 14px; font-size: 14px; }
+  .home-fork { gap: 10px; }
+  .home-fork-card { padding: 18px; }
+  .home-fork-card .eyebrow { display: none; }
+  .home-fork-card h2 { margin: 0 0 6px; font-size: 21px; }
+  .home-fork-card > p { margin: 0 0 14px; font-size: 13px; }
+  .home-fork-list { display: none; }
+  .home-fork-note { margin-top: 10px; font-size: 11px; }
+}

@@ -65,6 +65,16 @@ const server=http.createServer((req,res)=>{
          (예전에는 문이 셋이라 같은 것을 두 군데서 고르게 돼 있었습니다). */
       assert.equal(await page.locator(".home-fork-card").count(),2);
       assert.equal(await page.locator("#homeProfileForm").count(),0,"첫 화면에 입력 칸이 또 생겼습니다");
+
+      /* 두 갈래가 한 화면에 다 보여야 합니다. 스크롤해야 둘째 길이 나오면
+         길을 둘로 나눈 뜻이 없습니다 — 폰에서 실제로 그랬습니다(단추가 1017px,
+         화면은 844px). 학생은 대부분 폰으로 옵니다. */
+      const 둘째길 = await page.evaluate(()=>{
+        const 단추=document.querySelectorAll(".home-fork-card")[1].querySelector(".btn");
+        return {바닥:Math.round(단추.getBoundingClientRect().bottom),화면:innerHeight};
+      });
+      assert.ok(둘째길.바닥<=둘째길.화면,
+        "'둘러보기'가 첫 화면 밖에 있습니다("+둘째길.바닥+"px > "+둘째길.화면+"px). 스크롤해야 보이면 갈래가 하나인 것과 같습니다.");
       assert.equal(await page.locator(".student-account-button").isVisible(),false,"로그인 전인데 계정 단추가 보입니다");
 
       // 가입 — 아이디·비밀번호에 학년·과목까지 한 화면에서
