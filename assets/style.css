@@ -2195,3 +2195,38 @@ html.theme-dark .canvas-host {
   .home-nav-more { display: inline-flex; align-items: center; min-height: 44px; }
   .brand { align-items: center; }
 }
+
+/* 가입 칸 안의 '이미 계정이 있어요' — 글처럼 보이지만 단추입니다.
+   위아래 여백은 손가락으로 누를 자리를 만들려고 둡니다(폰에서 44px). */
+.home-fork-login {
+  padding: 10px 0 2px; border: 0; background: none; color: var(--ink);
+  font: inherit; text-decoration: underline; cursor: pointer;
+}
+@media (max-width: 860px) { .home-fork-login { min-height: 44px; } }
+
+/* 둘러보기로 쓰던 학생에게 기록이 쌓였을 때만 나오는 줄 */
+.home-keep {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--sm) var(--md);
+  margin-top: var(--lg); padding: var(--md);
+  border: 1px solid var(--hairline); border-radius: var(--r-md);
+  background: var(--surface-soft);
+}
+.home-keep p { margin: 0; font-size: 14px; line-height: 1.55; }
+.home-keep .btn { white-space: nowrap; }
+
+/* 가입 창의 학년·과목 — 한 줄에 둘 */
+.student-account-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.student-account-pair[hidden] { display: none; }
+@media (max-width: 480px) { .student-account-pair { grid-template-columns: 1fr; } }
+
+/* 가입 창의 칸들. 여기도 font:inherit 이라 설명 글씨(12px)를 따라가고 있었고,
+   select 는 아예 꾸며 주지도 않아 브라우저 기본 모양으로 남아 있었습니다.
+   (input 종류를 하나하나 적는 방식이 같은 실수를 계속 만듭니다 — 세 번째입니다) */
+.student-account-form input,
+.student-account-form select {
+  min-height: 46px; padding: 10px 12px;
+  border: 1px solid var(--hairline); border-radius: 10px;
+  background: var(--canvas); color: var(--ink);
+  font-family: inherit; font-size: 16px;
+}
