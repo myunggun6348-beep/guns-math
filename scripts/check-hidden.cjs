@@ -24,9 +24,15 @@ const 서버=http.createServer((req,res)=>{const 길=new URL(req.url,"http://x")
    const p=await b.newPage({viewport:{width:390,height:844}});
    await p.goto("http://127.0.0.1:5191/"+쪽,{waitUntil:"networkidle"}).catch(()=>{});
    await p.waitForTimeout(250);
-   const 샌것=await p.evaluate(()=>[...document.querySelectorAll("[hidden]")]
+   /* 몇몇 쪽은 열리자마자 스스로 다른 곳으로 옮겨 갑니다(solve.html 처럼
+      ?id= 가 없으면 돌려보내는 쪽). 그때 읽으면 '화면이 사라졌다'고 하므로
+      잠깐 뒤 한 번 더 읽어 봅니다. */
+   const 읽기=()=>p.evaluate(()=>[...document.querySelectorAll("[hidden]")]
      .filter(el=>getComputedStyle(el).display!=="none")
      .map(el=>el.tagName.toLowerCase()+(el.id?"#"+el.id:"")+(el.className?"."+String(el.className).split(" ")[0]:"")));
+   let 샌것;
+   try{ 샌것=await 읽기(); }
+   catch{ await p.waitForTimeout(400); try{ 샌것=await 읽기(); }catch{ 샌것=[]; } }
    if(샌것.length) 탈.push(쪽+" → "+[...new Set(샌것)].join(", "));
    await p.close();
  }

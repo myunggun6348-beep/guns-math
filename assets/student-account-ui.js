@@ -50,11 +50,25 @@
   }
 
   /* ---------- 가입 / 로그인 ---------- */
-  function 과목칸(학년) {
-    return Object.entries(과목들)
-      .filter(([, 과목]) => 과목.grades.includes(String(학년)))
-      .map(([번호, 과목]) => '<option value="' + 안전하게(번호) + '">' + 안전하게(과목.title) + '</option>')
-      .join("");
+  /* 서버(api/student-account.js)의 새PIN문제() 와 같은 규칙입니다.
+     한쪽만 고치면 "되는데 안 된다"는 말이 나오므로 함께 고쳐야 합니다. */
+  function 새비밀번호문제(값) {
+    const v = String(값 || "");
+    if (!/^\d{6,12}$/.test(v)) return "비밀번호는 숫자 6~12자리로 만들어 주세요.";
+    if (/^(\d)\1+$/.test(v)) return "같은 숫자만 쓰면 너무 쉽게 뚫립니다. 다르게 만들어 주세요.";
+    const 차이 = [...v].slice(1).map((글, i) => Number(글) - Number(v[i]));
+    if (차이.every(d => d === 1) || 차이.every(d => d === -1)) {
+      return "1234 처럼 이어지는 숫자는 쓸 수 없습니다. 다르게 만들어 주세요.";
+    }
+    return "";
+  }
+
+  /* 과목은 가입할 때 묻지 않습니다. 처음 온 학생에게 '공통수학2 와 대수 중
+     무엇을 주로 하느냐'는 답하기 어려운 질문이고, 나중에 홈의 '학년·반·과목
+     변경'에서 언제든 바꿀 수 있습니다. 학년에 맞는 첫 과목으로 시작합니다. */
+  function 기본과목(학년) {
+    const 맞는것 = Object.entries(과목들).find(([, 과목]) => 과목.grades.includes(String(학년)));
+    return 맞는것 ? 맞는것[0] : "";
   }
 
   function 들어가기전(모드) {
@@ -70,18 +84,19 @@
         '<form id="studentAccountForm" class="student-account-form">' +
           '<label class="student-name"' + (만드나 ? '' : ' hidden') + '>이름 또는 별명 <span>(선택)</span>' +
             '<input name="name" maxlength="20" autocomplete="nickname" placeholder="예: 민수"></label>' +
-          '<div class="student-account-pair"' + (만드나 ? '' : ' hidden') + '>' +
-            '<label>학년<select name="grade"><option value="1">고1</option><option value="2">고2</option><option value="3">고3</option></select></label>' +
-            '<label>주로 공부할 과목<select name="track"></select></label>' +
-          '</div>' +
+          '<label class="student-grade"' + (만드나 ? '' : ' hidden') + '>학년' +
+            '<select name="grade"><option value="1">고1</option><option value="2">고2</option><option value="3">고3</option></select></label>' +
           '<label>아이디<input name="id" required minlength="4" maxlength="16" pattern="[a-z0-9]+" autocomplete="username" autocapitalize="none" placeholder="영문 소문자·숫자 4~16자"></label>' +
-          '<label>숫자 비밀번호<input name="pin" required type="password" inputmode="numeric" minlength="4" maxlength="8" pattern="[0-9]+" ' +
-            'autocomplete="' + (만드나 ? 'new-password' : 'current-password') + '" placeholder="숫자 4~8자리"></label>' +
-          '<label class="student-confirm"' + (만드나 ? '' : ' hidden') + '>숫자 비밀번호 다시' +
-            '<input name="confirm" type="password" inputmode="numeric" minlength="4" maxlength="8" pattern="[0-9]+" autocomplete="new-password" placeholder="같은 숫자를 다시"></label>' +
+          '<label>비밀번호<input name="pin" required type="password" inputmode="numeric" ' +
+            'minlength="' + (만드나 ? 6 : 4) + '" maxlength="12" pattern="[0-9]+" ' +
+            'autocomplete="' + (만드나 ? 'new-password' : 'current-password') + '" ' +
+            'placeholder="' + (만드나 ? '숫자 6자리 이상' : '숫자 비밀번호') + '"></label>' +
+          '<label class="student-confirm"' + (만드나 ? '' : ' hidden') + '>비밀번호 다시' +
+            '<input name="confirm" type="password" inputmode="numeric" minlength="6" maxlength="12" pattern="[0-9]+" autocomplete="new-password" placeholder="같은 숫자를 다시"></label>' +
           /* 숨길 일이 아닙니다. 나중에 알게 되는 편이 훨씬 나쁩니다. */
           (만드나
-            ? '<p class="student-account-help">아이디와 비밀번호를 꼭 기억하세요 — 잊어버리면 되찾을 수 없습니다.<br>' +
+            ? '<p class="student-account-help">비밀번호는 숫자 6자리 이상. 1111 이나 1234 처럼 뻔한 것은 쓸 수 없습니다.<br>' +
+              '아이디와 비밀번호를 꼭 기억하세요 — 잊어버리면 되찾을 수 없습니다.<br>' +
               '선생님은 학습 기록(오늘의 학습·오답노트)을 봅니다. 질문은 그대로 익명입니다.</p>'
             : '<p class="student-account-help">계정이 없어도 창을 닫고 그냥 둘러볼 수 있습니다.</p>') +
           '<p class="student-account-error" role="status"></p>' +
@@ -95,18 +110,18 @@
     const 오류 = 창.querySelector(".student-account-error");
     창.querySelector("#studentSwap").onclick = () => 들어가기전(만드나 ? "login" : "register");
 
-    if (만드나) {
-      const 학년칸 = 폼.elements.grade, 과목선택 = 폼.elements.track;
-      const 채우기 = () => { 과목선택.innerHTML = 과목칸(학년칸.value); };
-      채우기();
-      학년칸.addEventListener("change", 채우기);
-    }
 
     폼.onsubmit = async 사건 => {
       사건.preventDefault();
-      if (만드나 && 폼.elements.pin.value !== 폼.elements.confirm.value) {
-        오류.textContent = "숫자 비밀번호가 서로 다릅니다.";
-        return;
+      if (만드나) {
+        /* 서버도 같은 것을 다시 봅니다(그쪽이 진짜 관문입니다).
+           여기서 먼저 보는 건 학생이 왜 안 되는지 바로 알게 하려는 것입니다. */
+        const 문제 = 새비밀번호문제(폼.elements.pin.value);
+        if (문제) { 오류.textContent = 문제; return; }
+        if (폼.elements.pin.value !== 폼.elements.confirm.value) {
+          오류.textContent = "비밀번호가 서로 다릅니다.";
+          return;
+        }
       }
       const 보내기단추 = 폼.querySelector("button[type=submit]");
       보내기단추.disabled = true;
@@ -119,7 +134,7 @@
             name: 폼.elements.name.value,
             grade: 폼.elements.grade.value,
             className: "",
-            track: 폼.elements.track.value,
+            track: 기본과목(폼.elements.grade.value),
           });
         }
         await 맞춤[만드나 ? "register" : "login"]({

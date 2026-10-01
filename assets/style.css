@@ -2080,7 +2080,7 @@ html.theme-dark .canvas-host {
   select, textarea { font-size: 16px; }
 
   .btn, button.adm-del, #나가기, #내려받기, .file-filter,
-  .subject-nav a, .brand, .footer-wordmark { min-height: 44px; }
+  .subject-nav a, .brand, .footer-wordmark, .footer-admin-link { min-height: 44px; }
   .home-nav-more { display: inline-flex; align-items: center; min-height: 44px; }
   .brand { align-items: center; }
 }
@@ -2156,3 +2156,15 @@ html.theme-dark .canvas-host {
   padding: 9px 12px; border: 1px solid var(--hairline); border-radius: var(--r-md);
   background: var(--surface-soft); font-size: 13px; white-space: nowrap;
 }
+
+/* 홈 푸터 — 학생 메뉴는 '이 사이트에 있는 것'이 대신하므로 감추지만,
+   선생님 방 가는 길은 남깁니다. 없으면 선생님이 들어갈 데가 없습니다. */
+.home-page .footer-line ul { display: flex; }
+.home-page .footer-line ul li { display: none; }
+.home-page .footer-line ul li.footer-admin-item { display: block; }
+
+/* 가입 창의 학년 칸 — 과목 칸을 빼면서 혼자 남아 폭이 어색해졌습니다 */
+.student-grade select { max-width: 160px; }
+
+/* 폰에서 누를 자리를 만들려면 inline 이면 안 됩니다 */
+@media (max-width: 860px) { .footer-admin-link { display: inline-flex; align-items: center; } }

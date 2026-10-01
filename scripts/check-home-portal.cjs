@@ -77,11 +77,14 @@ const server=http.createServer((req,res)=>{
         "'둘러보기'가 첫 화면 밖에 있습니다("+둘째길.바닥+"px > "+둘째길.화면+"px). 스크롤해야 보이면 갈래가 하나인 것과 같습니다.");
       assert.equal(await page.locator(".student-account-button").isVisible(),false,"로그인 전인데 계정 단추가 보입니다");
 
-      // 가입 — 아이디·비밀번호에 학년·과목까지 한 화면에서
+      /* 가입은 네 가지만 묻습니다 — 이름(선택)·학년·아이디·비밀번호.
+         과목까지 고르게 하면 처음 온 학생에게 답하기 어려운 질문이 됩니다
+         (학년에 맞는 기본 과목으로 시작하고 홈에서 언제든 바꿉니다). */
       await page.locator("#homeJoin").click();
       await page.waitForSelector(".student-account-dialog[open] #studentAccountForm");
-      for(const 칸 of ["name","grade","track","id","pin","confirm"])
+      for(const 칸 of ["name","grade","id","pin","confirm"])
         assert.equal(await page.locator('#studentAccountForm [name="'+칸+'"]').isVisible(),true,"가입 칸이 없습니다: "+칸);
+      assert.equal(await page.locator('#studentAccountForm [name="track"]').count(),0,"가입에서 과목을 또 묻고 있습니다");
       assert.match(await page.locator(".student-account-card .student-account-help").innerText(),/선생님/,"선생님이 기록을 본다는 안내가 없습니다");
       await page.screenshot({path:"artifacts/student-entry-"+viewport.name+".png",fullPage:false});
 
@@ -144,8 +147,21 @@ const server=http.createServer((req,res)=>{
       await 가입.locator('#studentAccountForm [name="name"]').fill("민수");
       await 가입.locator('#studentAccountForm [name="grade"]').selectOption("2");
       await 가입.locator('#studentAccountForm [name="id"]').fill("minsu2026");
-      await 가입.locator('#studentAccountForm [name="pin"]').fill("1234");
-      await 가입.locator('#studentAccountForm [name="confirm"]').fill("1234");
+
+      /* 뻔한 비밀번호는 막혀야 합니다.
+         '1234' 는 브라우저가 minlength 로 먼저 잡아서 우리 글귀가 안 뜹니다 —
+         그때는 '가입이 안 됐다'만 봅니다. 나머지는 왜 안 되는지 알려 줘야 합니다. */
+      for(const [나쁜것,말] of [["1234",null],["111111",/같은 숫자/],["123456",/이어지는 숫자/]]){
+        await 가입.locator('#studentAccountForm [name="pin"]').fill(나쁜것);
+        await 가입.locator('#studentAccountForm [name="confirm"]').fill(나쁜것);
+        await 가입.locator('#studentAccountForm button[type="submit"]').click();
+        await 가입.waitForTimeout(150);
+        if(말) assert.match(await 가입.locator(".student-account-error").innerText(),말,"왜 안 되는지 안 알려 줍니다: "+나쁜것);
+        assert.equal(await 가입.locator(".home-main-action").count(),0,"뻔한 비밀번호 '"+나쁜것+"' 로 가입이 됐습니다");
+      }
+
+      await 가입.locator('#studentAccountForm [name="pin"]').fill("728315");
+      await 가입.locator('#studentAccountForm [name="confirm"]').fill("728315");
       await 가입.locator('#studentAccountForm button[type="submit"]').click();
       await 가입.waitForSelector(".home-main-action");
 
@@ -155,6 +171,7 @@ const server=http.createServer((req,res)=>{
       // 적은 학년·과목이 계정으로 올라갔는가 (다른 기기에서 로그인해도 따라오려면 이게 돼야 합니다)
       assert.equal(계정.기록?.profile?.grade,"2","가입할 때 고른 학년이 계정에 안 올라갔습니다");
       assert.equal(계정.기록?.profile?.name,"민수");
+      assert.equal(계정.기록?.profile?.track,"algebra","고2 기본 과목이 안 정해졌습니다");
       await 가입.close();
     }
 
@@ -164,6 +181,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 문 두 개(가입·둘러보기), 가입 끝까지, 학년·과목이 계정으로, 가입하라고 안 조름, 활동 빠짐없이, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
+    console.log("메인 검사 통과: 문 두 개(가입·둘러보기), 가입 네 칸, 뻔한 비밀번호 막힘, 학년·기본과목이 계정으로, 가입하라고 안 조름, 활동 빠짐없이, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});
