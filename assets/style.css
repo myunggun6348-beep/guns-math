@@ -1481,118 +1481,6 @@ html.theme-dark #나가기 { color: rgba(255, 255, 255, 0.45); }
 .cmap-links a:hover { text-decoration: underline; }
 .cmap-none { font-size: 15px; opacity: 0.55; }
 
-/* =========================================================
-   홈 가운데 — 찾기
-
-   이 자리는 두 번 바뀌었다. 처음엔 공지 목록, 다음엔 탭 세 개
-   (새로 올린 자료 / 오늘의 자료 / 과목별 자료). 탭을 없앤 이유는
-   셋 다 '자료를 어떻게 늘어놓을까'에 대한 답이었기 때문이다.
-   학생이 실제로 하는 말은 "그거 어디 있어요" 하나뿐이라, 검색칸 하나로
-   바꿨다. 내용은 그대로 assets/demos.js 에서 나온다.
-
-   가운데 정렬로 둔 것은 이 칸이 홈에서 유일하게 '하는 것'이기 때문이다.
-   왼쪽에 붙여 두면 다른 문단과 같은 무게로 읽힌다.
-   ========================================================= */
-/* 위 공지 줄이 이미 경계를 그어 주므로, 섹션 기본 여백(96px)은 과했다 */
-#find { padding-top: var(--xxl); }
-/* 40em(720px)이면 과목 칩 여섯 개가 한 줄에 732px 필요해 12px이 모자라
-   '기하' 하나만 다음 줄로 떨어졌다. 43em으로 여유를 둬 한 줄에 다 들어오게 한다. */
-.find { max-width: 43em; margin: 0 auto; text-align: center; }
-.find-note { margin: var(--sm) 0 0; color: rgba(0, 0, 0, 0.58); }
-
-.find-box { position: relative; margin-top: var(--lg); }
-.find-box svg {
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  width: 20px;
-  height: 20px;
-  transform: translateY(-50%);
-  color: rgba(0, 0, 0, 0.4);
-  pointer-events: none;   /* 돋보기를 눌러도 칸이 눌리게 */
-}
-.find-box input {
-  width: 100%;
-  font-family: inherit;
-  font-size: 19px;
-  font-weight: 420;
-  /* 왼쪽만 넉넉한 것은 돋보기 자리 때문 */
-  padding: 16px 20px 16px 52px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-pill);
-  background: var(--canvas);
-  color: var(--ink);
-}
-.find-box input::placeholder { color: rgba(0, 0, 0, 0.38); }
-.find-box input:focus { outline: none; border-color: var(--ink); }
-.find-box input:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-
-/* "자료 4개 · 개념 1개 찾았습니다" — 눈에는 안 보이고 화면낭독기만 읽습니다.
-   묶음 머리(.find-group-head)가 이미 같은 것을 보여 주므로 화면에 두면 같은 말이
-   두 번 나오고, 가운데 정렬이라 왼쪽 정렬인 묶음 머리와 부딪혀 보였다.
-   display:none 으로 지우면 낭독기도 안 읽으므로 이렇게 감춘다. */
-.find-count {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.find .subject-nav { justify-content: center; margin-top: var(--md); }
-
-/* 결과 묶음 — 자료 / 개념 / 학습지. 어디로 가는 것인지 밝혀 두지 않으면
-   같은 줄 모양이라 셋이 구별되지 않는다. */
-.find-group { margin-top: var(--lg); }
-.find-group + .find-group { margin-top: var(--xl); }
-.find-group-head {
-  display: flex;
-  align-items: center;
-  gap: var(--xs);
-  margin: 0 0 var(--xs);
-  padding: 0 var(--sm) var(--xs);
-  border-bottom: 1px solid var(--hairline);
-  text-align: left;
-}
-.find-group-head span {
-  padding: 1px 7px 2px;
-  border-radius: var(--r-pill);
-  background: var(--surface-soft);
-  font-variant-numeric: tabular-nums;
-}
-
-/* 찾은 것 한 줄 — 카드가 아니라 줄. 묶음마다 넷까지 보여 주므로
-   카드로 깔면 그것만으로 화면 하나를 넘긴다. */
-.find-hit {
-  display: flex;
-  align-items: center;
-  gap: var(--md);
-  padding: var(--sm);
-  border-radius: var(--r-md);
-  text-decoration: none;
-  text-align: left;
-}
-.find-hit:hover { background: var(--surface-soft); }
-/* 묶음 안에서 줄과 줄 사이에만. 묶음 머리 바로 밑에는 이미 선이 있으므로
-   .find-hit + .find-hit 로 첫 줄은 건너뛴다 */
-.find-hit + .find-hit { border-top: 1px solid var(--hairline-soft); }
-.find-fig {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 60px;
-  height: 42px;
-  border-radius: var(--r-xs);
-  overflow: hidden;
-}
-.find-fig svg { width: 46px; height: auto; }
-.find-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.find-text b { font-weight: 520; }
-.find-go { margin-left: auto; flex: none; opacity: 0.4; }
-.find-none { margin: var(--lg) 0 0; }
-.find-more { margin: var(--md) 0 0; }
 
 /* 공지 — 목록이 아니라 접히는 한 줄. 히어로 바로 아래에 놓는다.
    시험 범위는 여전히 올릴 수 있지만 홈을 차지하지는 않는다. */
@@ -1927,9 +1815,6 @@ html.theme-dark .canvas-host {
      본문이 전부 왼쪽 정렬이라 푸터만 가운데면 따로 논다) */
   .footer-line { align-items: flex-start; }
 
-  .find-box input { font-size: 17px; padding: 14px 16px 14px 46px; }
-  .find-box svg { left: 16px; }
-
   /* 자료실 목록 — 날짜 칸을 뺄 폭이 없다. 제목 위로 올린다 */
   .filelist-row a { grid-template-columns: 1fr; gap: var(--xs); }
 
@@ -1965,9 +1850,6 @@ html.theme-dark .canvas-host {
 .theme-dark .file-filter.on .n { border-left-color: rgba(0, 0, 0, 0.22); }
 .theme-dark .card .use { color: rgba(255, 255, 255, 0.72); }
 .theme-dark .card .use b { color: rgba(255, 255, 255, 0.55); }
-.theme-dark .find-note { color: rgba(255, 255, 255, 0.58); }
-.theme-dark .find-box svg { color: rgba(255, 255, 255, 0.45); }
-.theme-dark .find-box input::placeholder { color: rgba(255, 255, 255, 0.4); }
 
 /* 히어로 — 크림 색면 대신 다크 네이비 + 왼쪽 위에서 오는 옅은 파란 광원.
    글자·단추는 --ink/--primary 를 그대로 쓰므로 따로 안 건드려도 흰 글자·
@@ -2203,7 +2085,6 @@ html.theme-dark .canvas-host {
   font: inherit; text-decoration: underline; cursor: pointer;
 }
 @media (max-width: 860px) { .home-fork-login { min-height: 44px; } }
-
 
 /* 가입 창의 학년·과목 — 한 줄에 둘 */
 .student-account-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

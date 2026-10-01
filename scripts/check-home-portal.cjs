@@ -104,8 +104,6 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
       await page.locator(".home-more>summary").click();   // 다시 닫고 아래 검사를 이어 갑니다
       await page.locator(".home-more>summary").click();
-      await page.locator("#findQ").fill("고3 9월");
-      await page.waitForSelector('.find-hit[href*="files.html?grade=3"]');
       await page.screenshot({path:"artifacts/home-"+viewport.name+".png",fullPage:false});
 
       /* 둘러보다 오늘의 5문제를 푼 학생 — 가입을 안 해도 홈이 그 사람 것이 됩니다 */
@@ -166,6 +164,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 문 두 개(가입·둘러보기), 가입 끝까지, 학년·과목이 계정으로, 가입하라고 안 조름, 활동 빠짐없이, 통합 검색, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
+    console.log("메인 검사 통과: 문 두 개(가입·둘러보기), 가입 끝까지, 학년·과목이 계정으로, 가입하라고 안 조름, 활동 빠짐없이, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});
