@@ -42,6 +42,29 @@
     $("#studentForm [name=course]").disabled = joined; $("#studentForm [name=difficulty]").disabled = joined;
   });
 
+  /* 주소에 방 코드가 붙어 오면(escape.html?code=ABC123) 학생은 이름만 적으면 됩니다.
+     예전에는 코드를 칠판에 적어 주고 학생이 받아 적어야 했습니다. 이제 선생님이
+     카톡으로 링크 하나만 보내면 됩니다.
+     과목·난이도 칸은 숨깁니다 — 선생님이 이미 정해 둔 것이라 고를 것이 없고,
+     놔두면 고1이 미적분을 고르는 일이 생깁니다. */
+  {
+    const 붙어온코드 = roomCode(new URLSearchParams(location.search).get("code"));
+    if (붙어온코드) {
+      const 폼 = $("#studentForm");
+      폼.roomCode.value = 붙어온코드;
+      폼.course.disabled = 폼.difficulty.disabled = true;
+      폼.querySelectorAll("label").forEach(칸 => {
+        if (칸.querySelector("[name=student]")) return;      // 이름만 남깁니다
+        칸.hidden = true;
+      });
+      const 알림 = document.createElement("p");
+      알림.className = "muted";
+      알림.textContent = `선생님이 만든 방 ${붙어온코드} 에 들어갑니다. 이름만 적으면 시작합니다.`;
+      폼.prepend(알림);
+      폼.student.focus();
+    }
+  }
+
   $("#teacherForm").addEventListener("submit", async event => {
     event.preventDefault(); const values = Object.fromEntries(new FormData(event.currentTarget));
     try {
@@ -49,8 +72,24 @@
       const box = $("#roomResult"); box.hidden = false; box.replaceChildren();
       const intro = document.createElement("div"); intro.textContent = `${data.room.course} · ${difficultyLabel(data.room.difficulty)}`;
       const code = document.createElement("div"); code.className = "room-code"; code.textContent = data.room.code;
-      const note = document.createElement("p"); note.textContent = "학생에게 이 코드를 보여 주세요. 35일 동안 사용할 수 있습니다.";
-      box.append(intro, code, note); await loadRooms(data.room.code);
+
+      /* 링크를 같이 줍니다. 코드를 칠판에 적고 학생이 받아 적는 것보다,
+         카톡으로 링크 하나 보내는 편이 훨씬 빠르고 틀릴 일도 없습니다. */
+      const 링크 = `${location.origin}${location.pathname}?code=${data.room.code}`;
+      const 링크줄 = document.createElement("div"); 링크줄.className = "room-link";
+      const 링크글 = document.createElement("code"); 링크글.textContent = 링크;
+      const 복사 = document.createElement("button");
+      복사.type = "button"; 복사.className = "escape-btn"; 복사.textContent = "링크 복사";
+      복사.onclick = async () => {
+        try { await navigator.clipboard.writeText(링크); 복사.textContent = "복사했습니다"; }
+        catch { 링크글.focus?.(); toast("복사가 막혀 있습니다. 링크를 직접 선택해 복사해 주세요."); return; }
+        setTimeout(() => (복사.textContent = "링크 복사"), 2000);
+      };
+      링크줄.append(링크글, 복사);
+
+      const note = document.createElement("p");
+      note.textContent = "링크를 보내면 학생은 이름만 적고 바로 시작합니다. 코드를 불러 줘도 됩니다. 35일 동안 쓸 수 있습니다.";
+      box.append(intro, code, 링크줄, note); await loadRooms(data.room.code);
     } catch (error) { errorMessage(error); }
   });
   $("#refreshRooms").addEventListener("click", () => {

@@ -51,7 +51,11 @@ function invoke(body) {
 }
 (async () => {
   const created = await invoke({ action:"createRoom", password:"test-password", course:"수학 종합", difficulty:"standard" });
-  assert.strictEqual(created.status, 200); assert.match(created.body.room.code, /^[A-F0-9]{8}$/);
+  assert.strictEqual(created.status, 200);
+  /* 코드는 칠판에 적거나 불러 주는 것이라, 받아 적다 틀릴 글자가 없어야 합니다.
+     0·O, 1·I·L 이 들어가면 학생이 못 들어옵니다. 길이도 6자까지만. */
+  assert.match(created.body.room.code, /^[A-HJ-NP-Z2-9]{6}$/,
+    "방 코드에 헷갈리는 글자가 들어갔거나 너무 깁니다: " + created.body.room.code);
   const playerKey = "12345678-1234-1234-1234-123456789012";
   const started = await invoke({ action:"start", playerKey, student:"2107 김수학", code:created.body.room.code });
   assert.strictEqual(started.status, 200); const run = started.body.run;

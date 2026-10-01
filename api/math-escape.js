@@ -62,7 +62,12 @@ module.exports = async (req, res) => {
       if (!passwordMatches(body.password)) return res.status(401).json({ error: "관리자 암호가 맞지 않습니다." });
       if (!courses.includes(body.course)) return res.status(400).json({ error: "출제 과목을 확인하세요." });
       const difficulty = ["basic", "standard", "advanced"].includes(body.difficulty) ? body.difficulty : "standard";
-      let code; do { code = crypto.randomBytes(4).toString("hex").toUpperCase(); } while (await 명령("EXISTS", `escape:room:${code}`));
+      /* 코드는 칠판에 적거나 불러 주는 것이라 받아 적기 쉬워야 합니다.
+         16진수 8자리(3A0F91BC)는 길고, 0·O 와 1·I 가 헷갈립니다.
+         헷갈리는 글자를 뺀 31자에서 6자를 뽑습니다(약 9억 가지). */
+      const 글자들 = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+      const 코드만들기 = () => Array.from(crypto.randomBytes(6), 바이트 => 글자들[바이트 % 글자들.length]).join("");
+      let code; do { code = 코드만들기(); } while (await 명령("EXISTS", `escape:room:${code}`));
       const room = { code, course: body.course, difficulty, created: Date.now() };
       await 명령("SET", `escape:room:${code}`, JSON.stringify(room), "EX", runDays);
       await 명령("ZADD", "escape:rooms", room.created, code);
