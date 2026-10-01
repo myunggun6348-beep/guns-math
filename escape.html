@@ -45,19 +45,30 @@
   </section>
 
   <section class="wrap escape-shell" id="lobby">
-    <div class="role-tabs" role="tablist"><button class="active" data-role="student" role="tab">학생으로 시작</button><button data-role="teacher" role="tab">교사 운영</button></div>
+    <!-- 처음 온 학생은 아무것도 안 정하고 바로 시작할 수 있어야 합니다.
+         예전에는 이름·코드·과목·난이도를 먼저 정해야 했는데, 그냥 해 보려던
+         학생에게는 그게 벽이었습니다. 정하고 싶은 사람만 펼치면 됩니다.
+         이름은 '선생님이 준 코드' 쪽에만 둡니다 — 코드 없이 혼자 하면 기록이
+         선생님에게 가지 않아서 이름을 받을 이유가 없습니다. -->
     <div id="studentPanel" class="setup-panel">
-      <div><span class="step-no">01</span><h2>도전 설정</h2><p class="muted">방 코드가 있다면 선생님이 정한 과목과 난이도가 적용됩니다.</p></div>
+      <div><span class="step-no">01</span><h2 id="studentPanelTitle">혼자 해 보기</h2><p class="muted" id="studentPanelLead">15분 동안 교실 세 개를 빠져나가세요. 아무것도 정하지 않아도 바로 시작합니다.</p></div>
       <form id="studentForm" class="form-grid">
-        <label>이름 또는 별명<input name="student" required maxlength="20" autocomplete="nickname" placeholder="예: 2107 김수학" /></label>
-        <label>방 코드 <span class="optional">선택</span><input name="roomCode" maxlength="8" inputmode="text" autocomplete="off" placeholder="예: MATH12" /></label>
-        <label>과목<select name="course"><option>수학 종합</option><option>공통수학1</option><option>공통수학2</option><option>대수</option><option>미적분Ⅰ</option><option>확률과 통계</option><option>기하</option></select></label>
-        <label>난이도<select name="difficulty"><option value="basic">기본</option><option value="standard" selected>표준</option><option value="advanced">도전</option></select></label>
-        <button class="escape-btn primary wide" type="submit">탈출 시작</button>
+        <button class="escape-btn primary wide" type="submit" id="startButton">바로 시작 →</button>
+        <details class="escape-more" id="optionBox">
+          <summary>과목·난이도 고르기</summary>
+          <label>과목<select name="course"><option>수학 종합</option><option>공통수학1</option><option>공통수학2</option><option>대수</option><option>미적분Ⅰ</option><option>확률과 통계</option><option>기하</option></select></label>
+          <label>난이도<select name="difficulty"><option value="basic">기본</option><option value="standard" selected>표준</option><option value="advanced">도전</option></select></label>
+        </details>
+        <details class="escape-more" id="codeBox">
+          <summary>선생님이 준 코드가 있어요</summary>
+          <label>이름 또는 별명<input name="student" maxlength="20" autocomplete="nickname" placeholder="예: 2107 김수학" /></label>
+          <label>방 코드<input name="roomCode" maxlength="8" inputmode="text" autocomplete="off" autocapitalize="characters" placeholder="예: 8GWXMF" /></label>
+        </details>
       </form>
+      <p class="escape-teacher-line"><button type="button" class="text-btn" data-role="teacher">선생님이신가요? 수업 운영 →</button></p>
     </div>
     <div id="teacherPanel" class="setup-panel" hidden>
-      <div><span class="step-no">T</span><h2>수업 운영</h2><p class="muted">기존 관리자 비밀번호를 사용합니다.</p></div>
+      <div><button type="button" class="text-btn" data-role="student">← 학생 화면으로</button><span class="step-no">T</span><h2>수업 운영</h2><p class="muted">선생님 방과 같은 암호를 씁니다.</p></div>
       <form id="teacherForm" class="form-grid">
         <label>관리자 비밀번호<input name="password" required type="password" autocomplete="current-password" /></label>
         <label>과목<select name="course"><option>수학 종합</option><option>공통수학1</option><option>공통수학2</option><option>대수</option><option>미적분Ⅰ</option><option>확률과 통계</option><option>기하</option></select></label>

@@ -23,15 +23,24 @@
   function roomCode(value) { return String(value || "").trim().toUpperCase(); }
   function draftKey() { return run && currentQuestion ? `mathEscapeInk:${run.id}:${currentQuestion.id}` : ""; }
 
+  /* 탭 두 개를 나란히 두면 학생이 '교사 운영'을 먼저 보게 됩니다. 이제
+     학생 화면이 기본이고, 선생님은 아래 줄에서 넘어옵니다. */
   document.querySelectorAll("[data-role]").forEach(button => button.addEventListener("click", () => {
-    document.querySelectorAll("[data-role]").forEach(x => x.classList.toggle("active", x === button));
-    $("#studentPanel").hidden = button.dataset.role !== "student";
-    $("#teacherPanel").hidden = button.dataset.role !== "teacher";
-    if (button.dataset.role === "teacher" && teacherPassword) { $("#teacherForm [name=password]").value = teacherPassword; loadRooms(); }
+    const 학생쪽 = button.dataset.role === "student";
+    $("#studentPanel").hidden = !학생쪽;
+    $("#teacherPanel").hidden = 학생쪽;
+    if (!학생쪽 && teacherPassword) { $("#teacherForm [name=password]").value = teacherPassword; loadRooms(); }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }));
 
   $("#studentForm").addEventListener("submit", async event => {
     event.preventDefault(); const values = Object.fromEntries(new FormData(event.currentTarget));
+    // 코드를 넣었는데 이름이 없으면 선생님이 누군지 알 수 없습니다
+    if (roomCode(values.roomCode) && !String(values.student || "").trim()) {
+      $("#codeBox").open = true;
+      event.currentTarget.student.focus();
+      return toast("수업 방에 들어가려면 이름이나 번호를 적어 주세요.");
+    }
     try {
       const data = await call("start", { playerKey, student: values.student, code: roomCode(values.roomCode), course: values.course, difficulty: values.difficulty });
       run = data.run; localStorage.setItem("mathEscapeRun", run.id); renderGame();
@@ -53,14 +62,14 @@
       const 폼 = $("#studentForm");
       폼.roomCode.value = 붙어온코드;
       폼.course.disabled = 폼.difficulty.disabled = true;
-      폼.querySelectorAll("label").forEach(칸 => {
-        if (칸.querySelector("[name=student]")) return;      // 이름만 남깁니다
-        칸.hidden = true;
-      });
-      const 알림 = document.createElement("p");
-      알림.className = "muted";
-      알림.textContent = `선생님이 만든 방 ${붙어온코드} 에 들어갑니다. 이름만 적으면 시작합니다.`;
-      폼.prepend(알림);
+      $("#optionBox").hidden = true;                 // 선생님이 이미 정했습니다
+      $("#codeBox").open = true;                     // 이름 칸이 보이도록 펼칩니다
+      $("#codeBox").querySelector("summary").hidden = true;
+      폼.roomCode.closest("label").hidden = true;    // 코드는 이미 채워져 있습니다
+      $("#startButton").textContent = "탈출 시작 →";
+      $("#studentPanelTitle").textContent = "수업 방 들어가기";
+      $("#studentPanelLead").textContent =
+        `선생님이 만든 방 ${붙어온코드} 입니다. 이름만 적으면 시작합니다.`;
       폼.student.focus();
     }
   }

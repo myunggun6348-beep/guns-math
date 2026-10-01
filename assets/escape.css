@@ -6,3 +6,15 @@
 .finish{text-align:center;padding:100px 24px}.finish h2{font-size:clamp(46px,9vw,90px);margin:15px}.finish-score{margin:30px}.finish-score span{display:block}.finish-score strong{font:800 72px var(--mono)}.review-pages{display:grid;gap:18px}.review-page{border-top:1px solid var(--hairline);padding-top:14px}.review-page canvas{width:100%;height:auto;border:1px solid #ddd;background:#fff}.toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,30px);background:var(--ink);color:var(--canvas);padding:11px 18px;opacity:0;pointer-events:none;transition:.2s;z-index:99}.toast.show{opacity:1;transform:translate(-50%,0)}
 @media(max-width:760px){.escape-hero{padding:44px 0}.escape-hero-grid,.setup-panel{grid-template-columns:1fr}.clock-art{display:none}.form-grid{grid-template-columns:1fr}.wide,.button-pair{grid-column:auto}.clue-grid{grid-template-columns:1fr}.game-top{grid-template-columns:1fr auto}.game-top>div:first-child{display:none}.question-dialog{padding:24px 14px}.scratch-head{align-items:flex-start;gap:8px;flex-direction:column}#scratchCanvas{height:330px}.submit-row{flex-wrap:wrap}.submit-row>span{width:100%}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* 처음 온 학생 화면 — 단추 하나 + 펼치면 나오는 설정 */
+.escape-more { margin-top: 14px; border-top: 1px solid rgba(0,0,0,.1); padding-top: 12px; }
+.escape-more > summary { cursor: pointer; font-size: 14px; font-weight: 650; list-style: none; padding: 6px 0; }
+.escape-more > summary::-webkit-details-marker { display: none; }
+.escape-more > summary::before { content: "＋ "; opacity: .55; }
+.escape-more[open] > summary::before { content: "－ "; }
+.escape-more > label { margin-top: 10px; }
+.escape-teacher-line { margin-top: 26px; }
+.escape-teacher-line .text-btn { font-size: 13px; opacity: .65; }
+#teacherPanel .text-btn { display: block; margin-bottom: 10px; font-size: 13px; opacity: .65; }
+.theme-dark .escape-more { border-top-color: rgba(255,255,255,.14); }

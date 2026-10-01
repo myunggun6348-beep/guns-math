@@ -77,8 +77,13 @@ module.exports = async (req, res) => {
       if (await limited(req, "start", 30)) return res.status(429).json({ error: "게임을 너무 자주 시작했습니다. 잠시 뒤 다시 시도해 주세요." });
       const playerKey = String(body.playerKey || "");
       if (!/^[a-zA-Z0-9-]{20,80}$/.test(playerKey)) return res.status(400).json({ error: "기기 정보를 다시 확인하세요." });
-      const student = String(body.student || "").trim().slice(0, 20);
-      if (!student) return res.status(400).json({ error: "학생 번호나 이름을 입력하세요." });
+      /* 이름은 방(수업)에 들어올 때만 받습니다. 선생님이 기록을 보려면 누군지
+         알아야 하니까요. 코드 없이 혼자 하면 그 기록은 선생님에게 가지 않으므로
+         이름을 물을 이유가 없습니다 — 그냥 해 보려는 학생을 막지 않습니다. */
+      const student = String(body.student || "").trim().slice(0, 20) || "혼자";
+      if (body.code && !String(body.student || "").trim()) {
+        return res.status(400).json({ error: "수업 방에 들어가려면 이름이나 번호를 적어 주세요." });
+      }
       let room = null, course = body.course, difficulty = body.difficulty;
       if (body.code) { room = json(await 명령("GET", `escape:room:${String(body.code).trim().toUpperCase()}`)); if (!room) return res.status(404).json({ error: "참여 코드를 확인하세요." }); course = room.course; difficulty = room.difficulty; }
       if (!courses.includes(course)) return res.status(400).json({ error: "출제 과목을 확인하세요." });
