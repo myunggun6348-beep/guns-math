@@ -51,7 +51,7 @@
             '<button type="button" class="home-fork-login" id="homeLogin">이미 계정이 있어요 · 로그인</button></small></div>'+
         '<div class="home-fork-card"><span class="eyebrow">JUST LOOKING</span><h2>그냥 둘러보기</h2>'+
           '<p>아무것도 정하지 않고 바로 볼 수 있습니다.</p>'+
-          '<ul class="home-fork-list"><li>오늘의 5문제 · 자동 선별 기출 · 오답노트</li><li>기출·자료실 · 직접 보는 수학 · 개념 지도</li><li>수학 게임 · 수학 탈출 · 질문하기</li></ul>'+
+          '<ul class="home-fork-list"><li>오늘의 5문제 · 자동 선별 기출 · 오답노트</li><li>기출·자료실 · 직접 보는 수학 · 개념 지도</li><li>수학 게임 · 질문하기</li></ul>'+
           '<a class="btn btn-primary home-fork-look" href="#more">둘러보기 →</a>'+
           '<small class="home-fork-note">가입 안 해도 문제를 풀고 오답노트를 쓸 수 있습니다. 기록이 이 기기에만 남을 뿐입니다.</small></div>'+
       '</div></div>';

@@ -50,13 +50,18 @@ const server=http.createServer((req,res)=>{
          대신 '학생이 갈 수 있는 페이지가 빠짐없이 적혀 있는가'를 봅니다 —
          실제로 오늘의 학습·오답노트·자동 선별 기출·수학 탈출이 빠져 있었습니다. */
       const 선생님것=["admin.html","question-bank.html","review.html"];
-      // 주소에 ?id=·?game= 이 있어야 열리는 페이지라 목록에 둘 자리가 아닙니다
-      const 혼자못감=["index.html","solve.html","quick-game.html"];
+      /* 홈 목록에 둘 자리가 아닌 쪽들.
+         solve·quick-game 은 주소에 ?id=·?game= 이 있어야 열립니다.
+         escape(수학 탈출)는 혼자서도 열리지만, 게임이 홈과 게임 목록 두 군데로
+         나뉘어 보이지 않게 일부러 게임 안쪽에만 둡니다 — 아래에서 게임 목록이
+         정말 데리고 가는지 따로 확인합니다. */
+      const 혼자못감=["index.html","solve.html","quick-game.html","escape.html"];
       const 학생페이지=fs.readdirSync(root).filter(f=>f.endsWith(".html")&&!선생님것.includes(f)&&!혼자못감.includes(f));
       const 적힌것=await page.locator(".portal-card").evaluateAll(els=>els.map(el=>el.getAttribute("href").split(/[?#]/)[0]));
       const 빠진것=학생페이지.filter(f=>!적힌것.includes(f));
       assert.equal(빠진것.length,0,"'이 사이트에 있는 것'에서 빠진 페이지: "+빠진것.join(", "));
       assert.equal(new Set(적힌것).size,적힌것.length,"같은 페이지가 두 번 적혀 있습니다: "+적힌것.join(", "));
+      assert.ok(!적힌것.includes("escape.html"),"수학 탈출은 홈이 아니라 게임 안에만 있어야 합니다");
       assert.equal(await page.locator(".home-main-action").count(),0);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),false);
       assert.equal(await page.locator(".portal-hero").isVisible(),false);
@@ -173,6 +178,16 @@ const server=http.createServer((req,res)=>{
       assert.equal(계정.기록?.profile?.name,"민수");
       assert.equal(계정.기록?.profile?.track,"algebra","고2 기본 과목이 안 정해졌습니다");
       await 가입.close();
+    }
+
+    /* 홈에서 뺀 수학 탈출이 실제로 게임 목록 안에 있어야 합니다.
+       한쪽에서 빼고 다른 쪽에 넣는 걸 잊으면 아무도 못 가는 쪽이 됩니다. */
+    {
+      const 게임 = await browser.newPage({viewport:{width:1280,height:900}});
+      await 게임.goto("http://127.0.0.1:5198/games.html",{waitUntil:"networkidle"});
+      await 게임.waitForSelector('a[href^="escape.html"], a[href="escape.html"]',{timeout:5000})
+        .catch(()=>{throw new Error("게임 목록에 수학 탈출이 없습니다 — 홈에서도 뺐으니 아무도 못 갑니다")});
+      await 게임.close();
     }
 
     const page=await browser.newPage({viewport:{width:820,height:1050}});
