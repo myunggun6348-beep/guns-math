@@ -34,7 +34,6 @@ assets/concepts.js         개념 목록 (NODES/LAYERS/EDGES) — 홈의 찾기�
 assets/exam-catalog.json   최근 3개년 EBSi 기출 목록
 assets/file-library.js     학년·연도·검색 필터와 기출 링크
 assets/solve.js · solve.css 태블릿 풀이 화면과 필기 저장
-assets/files.js            직접 올린 파일 목록 (FILES) — 홈의 찾기와 files.html
 assets/theme.js            어두운 화면 켜고 끄기 — 다섯 페이지가 함께 씁니다
 assets/style.css           사이트 전체 공통 스타일
 assets/state.js            수업용 링크 (조작값 ↔ 주소) — 모든 자료가 함께 씁니다
@@ -242,8 +241,10 @@ chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
 
 ### 자료실 — 내려받는 파일 (`files.html`)
 
-`assets/files.js` 의 `FILES` 배열에 한 줄씩 적으면 목록이 된다 (올리는 법도 그 파일
-맨 위에 적어 두었다). 배열이 비면 "아직 올린 파일이 없습니다" 한 줄만 나온다.
+파일은 **자료실에서 바로 올린다** — `files.html?admin` 으로 들어가 선생님 방과 같은
+암호를 넣으면 올리는 칸이 생긴다(`api/files-admin.js`). 올린 것이 없으면 "아직 올린
+파일이 없습니다" 한 줄만 나온다. 예전에는 `assets/files.js` 에 손으로 적었는데,
+한 줄 올리려고 코드를 고쳐야 해서 결국 아무도 안 올리게 됐다. 그 파일은 지웠다.
 PDF 는 `files/` 폴더에 넣고, **파일 이름에 띄어쓰기를 쓰지 않는다**
 (주소가 깨져 내려받기가 안 될 수 있다). `files/README.md` 도 참고 —
 GitHub 에서 그 폴더를 열면 바로 보인다.
@@ -402,8 +403,7 @@ demos/riemann.html?n=40&mode=right                직사각형 40개, 오른쪽 
   - `desc` : 화면에는 안 나오지만 **검색에는 걸리는** 설명문 (`keywords` 와 같은 역할)
   - `d3: true` : 3D 자료에 붙는 검은 **3D** 배지
   - 과목 색과 목차는 `subject` 값을 보고 자동으로 붙습니다 (색은 `style.css` 의 `--sub-*`)
-- **내려받는 파일** — `assets/files.js` 의 `FILES` 배열 (최신 글을 맨 앞에).
-  PDF 는 `files/` 폴더에 (`files/README.md` 참고)
+- **내려받는 파일** — 코드에 적지 않습니다. `files.html?admin` 에서 바로 올립니다
 - **개념** — `assets/concepts.js` 의 `NODES`. 자료를 만들면 해당 개념의
   `demos` 배열에 한 줄 매답니다 (그래야 개념 지도에서도 그 자료로 갈 수 있습니다)
 - **질문·답변** — `ask.html` 아래쪽 `QNA` 배열 (최신 글을 맨 앞에)
@@ -596,4 +596,4 @@ Vercel 이 알아서 다시 배포한다. 폰에서 새로고침하면 바뀌어
 쪽에서만 안 보이는, 알아채기 어려운 상태가 된다.
 
 > `files.html`(자료실)은 `DEMOS` 와 **상관없다.** 그쪽은 내려받는 파일이라
-> `assets/files.js` 의 `FILES` 라는 다른 배열을 쓴다.
+> 코드가 아니라 저장소(`api/files.js`)에서 목록을 읽는다.
