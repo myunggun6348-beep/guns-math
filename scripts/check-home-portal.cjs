@@ -65,11 +65,12 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.locator(".home-main-action").count(),0);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),false);
       assert.equal(await page.locator(".portal-hero").isVisible(),false);
-      /* 첫 화면의 큰 문은 하나(둘러보기)이고, 가입은 그 아래 한 줄입니다.
+      /* 첫 화면의 큰 문은 하나(오늘의 5문제)이고, 둘러보기는 글줄, 가입은 그 아래 한 줄입니다.
          입력 칸도, 오른쪽 위 계정 단추도 여기서는 안 보입니다
          (예전에는 문이 셋이라 같은 것을 두 군데서 고르게 돼 있었습니다). */
       assert.equal(await page.locator(".home-start-card").count(),1);
-      assert.equal(await page.locator(".home-start-go").count(),1,"큰 문(둘러보기)이 하나가 아닙니다");
+      assert.equal(await page.locator(".home-start-go").count(),1,"큰 문이 하나가 아닙니다");
+      assert.equal(await page.locator(".home-start-go").getAttribute("href"),"today.html","큰 문이 오늘의 5문제로 가지 않습니다");
       assert.equal(await page.locator("#homeProfileForm").count(),0,"첫 화면에 입력 칸이 또 생겼습니다");
 
       /* 둘러보기와 가입이 한 화면에 다 보여야 합니다. 스크롤해야 가입이 나오면
@@ -108,7 +109,7 @@ const server=http.createServer((req,res)=>{
 
       /* '둘러보기'를 누르면 접힌 칸이 실제로 펼쳐져야 합니다
          (전에는 그 자리로 내려가기만 하고 닫힌 채였습니다). */
-      await page.locator(".home-start-go").click();
+      await page.locator(".home-start-browse").click();
       await page.waitForTimeout(300);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
       await page.locator(".home-more>summary").click();   // 다시 닫고 아래 검사를 이어 갑니다

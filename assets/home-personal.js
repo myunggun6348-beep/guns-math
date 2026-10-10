@@ -2,7 +2,8 @@
    홈 첫 화면 — 손대지 않아도 됩니다.
 
    큰 문은 하나입니다.
-     둘러보기 → 아무것도 안 정하고 바로. 기록은 이 기기에만 쌓입니다
+     오늘의 5문제 풀기 → 아무것도 안 정하고 바로. 기록은 이 기기에만 쌓입니다
+     (그 옆 글줄 '다른 것 둘러보기' → 사이트 전체 목록)
    그 아래 한 줄로:
      가입하기 → 기록이 계정에 남아 다른 기기에서도 이어집니다
 
@@ -42,13 +43,17 @@
   /* ---------- 처음 온 학생 — 큰 문 하나, 가입은 그 아래 한 줄 ----------
      전에는 '가입하고 시작'과 '그냥 둘러보기'를 칸 둘로 나란히 뒀는데, 처음 온
      학생은 여기가 뭐 하는 곳인지도 모른 채 가입부터 고르게 됐습니다.
-     가입 없이도 다 쓸 수 있으니 둘러보기를 기본으로, 가입은 필요할 때만. */
+     가입 없이도 다 쓸 수 있으니 오늘의 5문제를 큰 문으로, 둘러보기는 그 옆 글줄로,
+     가입은 필요할 때만. (둘러보기를 큰 문으로 뒀더니 5문제까지 세 번을 눌러야 했습니다) */
   function 갈래(){
     root.hidden=false;root.innerHTML='<div class="home-personal-shell setup">'+
       '<div class="home-start-card">'+
         '<h2>고등학교 수학, 한곳에서</h2>'+
-        '<p class="home-setup-lead">오늘의 5문제, 기출, 오답노트, 개념 지도, 수학 게임, 질문하기까지. 가입 없이 바로 쓸 수 있습니다.</p>'+
-        '<a class="btn btn-primary home-start-go" href="#more">둘러보기 →</a>'+
+        '<p class="home-setup-lead">하루 5분, 학년에 맞춘 5문제부터 풀어 보세요. 틀린 문제는 오답노트에 저절로 모입니다. 가입 없이 바로 쓸 수 있습니다.</p>'+
+        '<div class="home-start-actions">'+
+          '<a class="btn btn-primary home-start-go" href="today.html">오늘의 5문제 풀기 →</a>'+
+          '<a class="home-start-browse" href="#more">다른 것 둘러보기</a>'+
+        '</div>'+
         '<div class="home-join">'+
           '<p>폰과 학교 컴퓨터에서 <b>기록을 이어 보려면</b> 가입하세요. 안 하면 기록이 이 기기에만 남습니다.</p>'+
           '<div class="home-join-actions">'+
