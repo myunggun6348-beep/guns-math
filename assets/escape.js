@@ -150,7 +150,7 @@
   function renderGame() {
     if (run.done) return renderFinish();
     show("#game"); $("#gameCourse").textContent = `${run.course} · ${difficultyLabel(run.difficulty)}`; $("#studentLabel").textContent = run.student; $("#score").textContent = run.score;
-    $("#progressBar").style.width = `${run.solved.length / 6 * 100}%`; $("#roomNumber").textContent = `ROOM ${run.stage + 1}`; $("#roomTitle").textContent = roomNames[run.stage]; $("#roomStory").textContent = roomStories[run.stage];
+    $("#progressBar").style.width = `${run.solved.length / 6 * 100}%`; $("#roomNumber").textContent = ["첫", "두", "세"][run.stage] + " 번째 방"; $("#roomTitle").textContent = roomNames[run.stage]; $("#roomStory").textContent = roomStories[run.stage];
     const root = $("#clueGrid"); root.replaceChildren();
     run.questions.slice(run.stage * 2, run.stage * 2 + 2).forEach((question, index) => {
       const locked = index === 1 && !run.solved.includes(question.id - 1), solved = run.solved.includes(question.id);

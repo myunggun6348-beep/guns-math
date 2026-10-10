@@ -2184,3 +2184,8 @@ html.theme-dark .canvas-host {
 
 /* 폰에서 누를 자리를 만들려면 inline 이면 안 됩니다 */
 @media (max-width: 860px) { .footer-admin-link { display: inline-flex; align-items: center; } }
+
+/* 작은 머리말(eyebrow)을 영어에서 한국어로 바꿨습니다. JetBrains Mono 에는 한글이
+   없어서 윈도에서는 옛 고정폭 글꼴(돋움체 같은 것)로 떨어집니다. 그래서 본문 글꼴로. */
+html .eyebrow, html .wrong-kicker, html .past-kicker, html .room-heading span { font-family: var(--sans); letter-spacing: 0.02em; }
+.eyebrow { font-weight: 600; }

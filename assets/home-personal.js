@@ -71,7 +71,7 @@
   function setup(seed=profile){
     const grade=seed?.grade||"1",name=seed?.name||"",className=seed?.className||"";
     root.hidden=false;root.innerHTML='<div class="home-personal-shell setup">'+
-      '<div class="home-fork-card"><span class="eyebrow">MY HOME</span><h2>학년·과목 정하기</h2>'+
+      '<div class="home-fork-card"><span class="eyebrow">내 학습 홈</span><h2>학년·과목 정하기</h2>'+
         '<p>한 번 정하면 다음부터 오늘 풀 5문제와 복습할 것을 바로 보여 줍니다.</p>'+
         '<form id="homeProfileForm" class="home-profile-form">'+
           '<label class="home-profile-name">이름 또는 별명 <input name="name" maxlength="20" value="'+esc(name)+'" placeholder="선택 사항"></label>'+
@@ -102,7 +102,7 @@
     const actionTitle=review?'남은 오답 '+wrong.active+'문제 복습하기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
     const actionDescription=review?'오늘 학습은 마쳤어요. 틀린 문제를 다시 풀어 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
 
-    root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">TODAY</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
+    root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">오늘</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
       '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small><b>시작하기 →</b></a>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>복습 대기 <b>'+wrong.active+'문제</b></span></div>'+
       '</div>';

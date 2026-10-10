@@ -36,7 +36,7 @@
     창.innerHTML =
       '<form method="dialog" class="student-account-card">' +
         '<button class="student-dialog-close" aria-label="닫기">×</button>' +
-        '<span class="eyebrow">SYNC ON</span>' +
+        '<span class="eyebrow">기록 이어 보는 중</span>' +
         '<h2>' + 안전하게(형편.student.name || 형편.student.id) + '의 학습 계정</h2>' +
         '<p><b>' + 안전하게(형편.student.id) + '</b> 로 로그인했습니다. 오늘의 학습과 오답노트가 이 계정에 저장되어, 다른 기기에서도 이어 볼 수 있습니다.</p>' +
         '<div class="student-sync-status">' +
@@ -76,7 +76,7 @@
     창.innerHTML =
       '<div class="student-account-card">' +
         '<form method="dialog"><button class="student-dialog-close" aria-label="닫기">×</button></form>' +
-        '<span class="eyebrow">MY STUDY</span>' +
+        '<span class="eyebrow">내 학습 기록</span>' +
         '<h2 id="studentEntryTitle">' + (만드나 ? '학습 계정 만들기' : '로그인') + '</h2>' +
         '<p id="studentEntryHelp">' + (만드나
           ? '폰에서 풀고 학교 컴퓨터에서 이어 볼 수 있습니다. 기기를 바꿔도 오답노트가 그대로 남습니다.'

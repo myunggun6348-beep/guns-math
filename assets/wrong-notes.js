@@ -13,13 +13,13 @@
   function level(rate){return rate<60?{text:"집중 복습",cls:"focus"}:rate<80?{text:"보완",cls:"review"}:{text:"안정",cls:"stable"}}
   function dashboard(){
     const rows=store.stats(),perf=store.performance();
-    if(!rows.length)return '<section class="concept-dashboard empty"><div><span class="wrong-kicker">CONCEPT REPORT</span><h2>개념별 학습 진단</h2><p>문제를 풀면 개념별 정답률과 취약 순위가 여기에 쌓입니다.</p></div><a class="wrong-link" href="today.html">오늘의 학습 시작 →</a></section>';
+    if(!rows.length)return '<section class="concept-dashboard empty"><div><span class="wrong-kicker">개념 진단</span><h2>개념별 학습 진단</h2><p>문제를 풀면 개념별 정답률과 취약 순위가 여기에 쌓입니다.</p></div><a class="wrong-link" href="today.html">오늘의 학습 시작 →</a></section>';
     const weakest=perf.weakest;
     const ranks=rows.map((row,i)=>{
       const state=level(row.rate);
       return '<button type="button" class="concept-rank '+(conceptFilter===row.key?"on":"")+'" data-concept="'+esc(row.key)+'"><span class="rank-number">'+(i+1)+'</span><span class="rank-main"><b>'+esc(row.name)+'</b><small>'+row.correct+'회 정답 · '+row.wrong+'회 오답 · 총 '+row.attempts+'회</small><i><span style="width:'+row.rate+'%"></span></i></span><strong>'+row.rate+'%</strong><em class="'+state.cls+'">'+state.text+'</em></button>';
     }).join("");
-    return '<section class="concept-dashboard"><div class="concept-dash-head"><div><span class="wrong-kicker">CONCEPT REPORT</span><h2>개념별 학습 진단</h2><p>오늘의 학습·미니게임·오답 재풀이의 모든 시도를 합산합니다.</p></div><a class="wrong-link" href="'+(weakest.conceptId?'map.html?n='+encodeURIComponent(weakest.conceptId):'today.html')+'">가장 약한 개념 복습 →</a></div><div class="performance-grid"><div><b>'+perf.rate+'%</b><span>전체 정답률</span></div><div><b>'+perf.attempts+'</b><span>누적 풀이</span></div><div><b>'+perf.concepts+'</b><span>진단 개념</span></div><div><b>'+esc(weakest.name)+'</b><span>집중 복습 1순위</span></div></div><div class="rank-head"><h3>취약 개념 순위</h3><span>정답률이 낮은 순</span></div><div class="concept-ranks">'+ranks+'</div></section>';
+    return '<section class="concept-dashboard"><div class="concept-dash-head"><div><span class="wrong-kicker">개념 진단</span><h2>개념별 학습 진단</h2><p>오늘의 학습·미니게임·오답 재풀이의 모든 시도를 합산합니다.</p></div><a class="wrong-link" href="'+(weakest.conceptId?'map.html?n='+encodeURIComponent(weakest.conceptId):'today.html')+'">가장 약한 개념 복습 →</a></div><div class="performance-grid"><div><b>'+perf.rate+'%</b><span>전체 정답률</span></div><div><b>'+perf.attempts+'</b><span>누적 풀이</span></div><div><b>'+perf.concepts+'</b><span>진단 개념</span></div><div><b>'+esc(weakest.name)+'</b><span>집중 복습 1순위</span></div></div><div class="rank-head"><h3>취약 개념 순위</h3><span>정답률이 낮은 순</span></div><div class="concept-ranks">'+ranks+'</div></section>';
   }
   function draw(){
     const counts=store.count(),all=store.all();
