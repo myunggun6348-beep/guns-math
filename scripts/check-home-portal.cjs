@@ -65,21 +65,22 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.locator(".home-main-action").count(),0);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),false);
       assert.equal(await page.locator(".portal-hero").isVisible(),false);
-      /* 첫 화면에 고를 것은 둘뿐이어야 합니다 — 가입 / 둘러보기.
+      /* 첫 화면의 큰 문은 하나(둘러보기)이고, 가입은 그 아래 한 줄입니다.
          입력 칸도, 오른쪽 위 계정 단추도 여기서는 안 보입니다
          (예전에는 문이 셋이라 같은 것을 두 군데서 고르게 돼 있었습니다). */
-      assert.equal(await page.locator(".home-fork-card").count(),2);
+      assert.equal(await page.locator(".home-start-card").count(),1);
+      assert.equal(await page.locator(".home-start-go").count(),1,"큰 문(둘러보기)이 하나가 아닙니다");
       assert.equal(await page.locator("#homeProfileForm").count(),0,"첫 화면에 입력 칸이 또 생겼습니다");
 
-      /* 두 갈래가 한 화면에 다 보여야 합니다. 스크롤해야 둘째 길이 나오면
+      /* 둘러보기와 가입이 한 화면에 다 보여야 합니다. 스크롤해야 가입이 나오면
          길을 둘로 나눈 뜻이 없습니다 — 폰에서 실제로 그랬습니다(단추가 1017px,
          화면은 844px). 학생은 대부분 폰으로 옵니다. */
       const 둘째길 = await page.evaluate(()=>{
-        const 단추=document.querySelectorAll(".home-fork-card")[1].querySelector(".btn");
+        const 단추=document.getElementById("homeJoin");
         return {바닥:Math.round(단추.getBoundingClientRect().bottom),화면:innerHeight};
       });
       assert.ok(둘째길.바닥<=둘째길.화면,
-        "'둘러보기'가 첫 화면 밖에 있습니다("+둘째길.바닥+"px > "+둘째길.화면+"px). 스크롤해야 보이면 갈래가 하나인 것과 같습니다.");
+        "'가입하기'가 첫 화면 밖에 있습니다("+둘째길.바닥+"px > "+둘째길.화면+"px). 스크롤해야 보이면 가입하는 길이 없는 것과 같습니다.");
       assert.equal(await page.locator(".student-account-button").isVisible(),false,"로그인 전인데 계정 단추가 보입니다");
 
       /* 가입은 네 가지만 묻습니다 — 이름(선택)·학년·아이디·비밀번호.
@@ -107,7 +108,7 @@ const server=http.createServer((req,res)=>{
 
       /* '둘러보기'를 누르면 접힌 칸이 실제로 펼쳐져야 합니다
          (전에는 그 자리로 내려가기만 하고 닫힌 채였습니다). */
-      await page.locator(".home-fork-look").click();
+      await page.locator(".home-start-go").click();
       await page.waitForTimeout(300);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
       await page.locator(".home-more>summary").click();   // 다시 닫고 아래 검사를 이어 갑니다
@@ -139,7 +140,7 @@ const server=http.createServer((req,res)=>{
       await page.close();
     }
     /* ---- 가입을 끝까지 눌러 봅니다 (화면 폭마다 할 필요는 없어서 한 번만) ----
-       여기까지 되어야 '가입하고 시작'이 진짜 문입니다: 계정이 생기고, 적은
+       여기까지 되어야 '가입하기'가 진짜 문입니다: 계정이 생기고, 적은
        학년·과목이 계정으로 올라가고, 홈이 그 학생의 화면으로 바뀌어야 합니다. */
     {
       const 가입 = await browser.newPage({viewport:{width:1280,height:900}});
@@ -171,7 +172,7 @@ const server=http.createServer((req,res)=>{
       await 가입.waitForSelector(".home-main-action");
 
       assert.equal(await 가입.locator(".student-account-button").isVisible(),true,"가입했는데 계정 단추가 안 보입니다");
-      assert.equal(await 가입.locator(".home-fork-card").count(),0,"가입했는데 아직 고르는 화면이 남아 있습니다");
+      assert.equal(await 가입.locator(".home-start-card").count(),0,"가입했는데 아직 처음 화면이 남아 있습니다");
       assert.match(await 가입.locator(".home-main-action").getAttribute("href"),/today\.html\?grade=2/);
       // 적은 학년·과목이 계정으로 올라갔는가 (다른 기기에서 로그인해도 따라오려면 이게 돼야 합니다)
       assert.equal(계정.기록?.profile?.grade,"2","가입할 때 고른 학년이 계정에 안 올라갔습니다");
