@@ -2,7 +2,15 @@
   const grades=["1","2","3","common"],names={all:"전체","1":"1학년","2":"2학년","3":"3학년",common:"공통·기타"},kindNames={problem:"문제",answer:"정답",solution:"해설"};
   const list=document.getElementById("fileList"),tabs=document.getElementById("gradeTabs"),kind=document.getElementById("kindFilter"),year=document.getElementById("yearFilter"),search=document.getElementById("fileSearch"),heading=document.getElementById("archiveHeading"),count=document.getElementById("archiveCount");
   const params=new URLSearchParams(location.search);
-  let files=[],selected=grades.includes(params.get("grade"))?params.get("grade"):"all";
+  /* 처음 열 때 어느 학년 칸을 보여 줄지: 주소(?grade=) → 지난번에 고른 칸 → 오늘의 학습에서
+     고른 학년 → 전체. 폰에서 41개를 다 내려 보며 내 학년을 찾지 않게 하려는 것입니다. */
+  const 기억=key=>{try{return JSON.parse(localStorage.getItem(key)||"null")}catch{return null}};
+  const 고른칸="files-grade-tab";
+  const 처음칸=()=>{
+    const 후보=[params.get("grade"),(()=>{try{return localStorage.getItem(고른칸)}catch{return null}})(),기억("math-home-profile-v1")?.grade,기억("today-study-pref")?.grade];
+    return 후보.map(String).find(g=>g==="all"||grades.includes(g))||"all";
+  };
+  let files=[],selected=처음칸();
   const safe=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const safeUrl=value=>{try{const u=new URL(String(value),location.href);return ["http:","https:"].includes(u.protocol)?safe(u.href):"#"}catch{return "#"}};
   const gradeOf=f=>grades.includes(String(f.grade))?String(f.grade):"common";
@@ -52,9 +60,12 @@
     if(!rows.length){list.innerHTML='<p class="archive-empty">조건에 맞는 자료가 없습니다.</p>';return}
     const groups=new Map();
     rows.forEach(f=>{const y=yearOf(f);if(!groups.has(y))groups.set(y,[]);groups.get(y).push(f)});
-    list.innerHTML=[...groups.entries()].sort((a,b)=>String(b[0]).localeCompare(String(a[0]))).map(([y,items])=>'<section><h3 class="archive-year">'+safe(y)+(/^\d{4}$/.test(y)?"년":"")+'</h3><div class="archive-list">'+items.map(f=>f.sets?bundleCard(f):singleCard(f)).join("")+"</div></section>").join("");
+    /* 가장 최근 연도만 펼쳐 두고 나머지는 접습니다. 찾기·연도를 골랐을 때는 다 펼칩니다
+       (찾은 것이 접힌 칸 안에 숨으면 안 되니까요). */
+    const 다펼침=Boolean(search.value.trim()||year.value);
+    list.innerHTML=[...groups.entries()].sort((a,b)=>String(b[0]).localeCompare(String(a[0]))).map(([y,items],i)=>'<details class="archive-year-group"'+(다펼침||i===0?" open":"")+'><summary class="archive-year">'+safe(y)+(/^\d{4}$/.test(y)?"년":"")+'<span>'+items.length+'개</span></summary><div class="archive-list">'+items.map(f=>f.sets?bundleCard(f):singleCard(f)).join("")+"</div></details>").join("");
   }
-  tabs.addEventListener("click",e=>{const b=e.target.closest("[data-grade]");if(b){selected=b.dataset.grade;draw()}});
+  tabs.addEventListener("click",e=>{const b=e.target.closest("[data-grade]");if(b){selected=b.dataset.grade;try{localStorage.setItem(고른칸,selected)}catch{}draw()}});
   [kind,year].forEach(e=>e.addEventListener("change",draw));
   search.addEventListener("input",draw);
   Promise.allSettled([fetch("/assets/exam-catalog.json").then(r=>r.ok?r.json():{items:[]}),fetch("/api/files").then(r=>r.ok?r.json():[])]).then(([catalogResult,uploadResult])=>{

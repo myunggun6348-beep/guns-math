@@ -6,3 +6,11 @@
 .exam-bundle{grid-template-columns:72px minmax(0,1fr);align-items:start}.exam-bundle:hover{background:var(--canvas)}.exam-bundle .archive-grade{min-height:70px}.exam-sets{display:grid;gap:9px;margin-top:16px}.exam-set{display:grid;grid-template-columns:100px minmax(0,1fr);align-items:center;gap:10px;padding-top:9px;border-top:1px solid var(--hairline)}.exam-set strong{font-size:13px}.exam-actions{display:flex;flex-wrap:wrap;gap:6px}.exam-file-button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:36px;padding:7px 11px;border:1px solid var(--hairline);border-radius:7px;color:var(--ink);background:var(--surface-soft);font-size:13px;font-weight:650;text-decoration:none}.exam-file-button:hover{border-color:var(--ink);background:var(--block-lime);color:#14150f}.exam-source{display:inline-block;margin-top:13px;color:var(--ink);font-size:12px;opacity:.58}.exam-source:hover{opacity:1}
 .exam-solve-button{border-color:#111;background:var(--block-lime);color:#111}.exam-solve-button:hover{background:#111;color:#fff}
 @media(max-width:600px){.exam-bundle{grid-template-columns:52px minmax(0,1fr)}.exam-set{grid-template-columns:1fr}.exam-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.exam-file-button{padding:7px 5px}.exam-solve-button{grid-column:1/-1}.exam-bundle .archive-grade{min-height:58px}}
+
+/* 연도 칸 — 가장 최근 연도만 펼쳐 두고 나머지는 눌러서 펼칩니다 */
+.archive-year-group>summary{display:flex;align-items:center;gap:10px;list-style:none;cursor:pointer}
+.archive-year-group>summary::-webkit-details-marker{display:none}
+.archive-year-group>summary span{font:500 13px var(--sans);opacity:.6}
+.archive-year-group>summary::after{content:"＋";margin-left:auto;font:400 20px var(--sans)}
+.archive-year-group[open]>summary::after{content:"－"}
+@media(max-width:860px){.archive-year-group>summary{min-height:44px}}
