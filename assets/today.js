@@ -57,7 +57,7 @@
     return count;
   }
   function hero(){
-    return '<header class="today-hero"><span class="today-date">'+dateLabel+'</span><h1>오늘의 학습</h1><p>학년과 과목을 고르면 오늘 풀 5문제를 준비합니다. 결과에서 부족한 개념을 바로 복습하고 관련 기출로 이어갈 수 있습니다.</p></header>';
+    return '<header class="page-head g-study"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></span><div class="page-head-text"><h1>오늘의 학습</h1><p>학년과 과목을 고르면 오늘 풀 5문제를 준비합니다. 결과에서 부족한 개념을 바로 복습하고 관련 기출로 이어갈 수 있습니다.</p></div><span class="page-head-meta">'+dateLabel+'</span></header>';
   }
   function updateUrl(){
     const u=new URL(location.href);u.searchParams.set("grade",grade);u.searchParams.set("subject",trackKey);history.replaceState(null,"",u);

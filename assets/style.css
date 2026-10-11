@@ -2206,3 +2206,36 @@ html .eyebrow, html .wrong-kicker, html .past-kicker, html .room-heading span { 
   .home-start-card.has-art .home-start-art { order: 0; width: min(100%, 320px); margin: -4px auto 4px; }
   .home-start-art .hero-figure figcaption { display: none; }
 }
+
+/* =========================================================
+   페이지 제목 — 얇은 색 띠 (시안 C)
+   학생 페이지는 모두 이 모양을 씁니다. 홈의 세 묶음마다 색이 하나씩입니다.
+     공부하기(오늘의 학습·오답노트·기출 연습)   g-study  연두
+     찾아보기(자료실·직접 보는 수학·개념 지도)   g-find   보라
+     즐기기·묻기(게임·질문)                      g-play   주황
+   예전에는 쪽마다 제목 모양이 셋(흰 바탕 얇은 큰 글씨 / 색 상자 / 작은 글씨)으로 달랐습니다.
+   ========================================================= */
+.page-head { --g: var(--block-lime); display: flex; align-items: center; gap: 16px; margin: 0 0 24px; padding: 16px 20px; border-radius: 16px; background: var(--g); color: #111; }
+.page-head.g-study { --g: var(--block-lime); }
+.page-head.g-find { --g: var(--block-lilac); }
+.page-head.g-play { --g: var(--block-coral); }
+.page-head-icon { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; background: rgba(255, 255, 255, 0.6); }
+.page-head-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.page-head-text { min-width: 0; }
+html .page-head h1 { margin: 0; color: #111; font-family: var(--sans); font-size: clamp(22px, 2.4vw, 28px); font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14px; line-height: 1.55; opacity: 0.85; }
+.page-head-meta { align-self: flex-start; margin-left: auto; padding-left: 12px; font-size: 12px; font-weight: 650; white-space: nowrap; opacity: 0.7; }
+@media (max-width: 650px) {
+  .page-head { gap: 12px; margin-bottom: 16px; padding: 12px 14px; border-radius: 14px; }
+  .page-head-icon { width: 38px; height: 38px; border-radius: 10px; }
+  .page-head-icon svg { width: 20px; height: 20px; }
+  html .page-head h1 { font-size: 21px; }
+  html .page-head p { font-size: 13px; }
+}
+
+/* 질문 종류 단추 — 숨긴 라디오가 자기 이름표 밖으로 떠서 폰에서 옆으로 밀리던 것을 고칩니다 */
+.qtype label { position: relative; }
+.qtype input { inset: 0; width: 100%; height: 100%; margin: 0; }
+
+/* 폰에서는 띠 오른쪽 끝의 날짜·개수를 뺍니다 — 좁은 띠에 끼면 설명이 세 줄로 늘어납니다 */
+@media (max-width: 650px) { .page-head-meta { display: none; } }
