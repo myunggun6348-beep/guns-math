@@ -2191,3 +2191,18 @@ html.theme-dark .canvas-host {
    없어서 윈도에서는 옛 고정폭 글꼴(돋움체 같은 것)로 떨어집니다. 그래서 본문 글꼴로. */
 html .eyebrow, html .wrong-kicker, html .past-kicker, html .room-heading span { font-family: var(--sans); letter-spacing: 0.02em; }
 .eyebrow { font-weight: 600; }
+
+/* 첫 화면 카드의 그림 — 단위원과 사인 곡선(index.html 의 #heroArt 를 카드로 옮겨 옴).
+   컴퓨터에서는 글 오른쪽, 폰에서는 제목 위에 작게. 폰에서도 '가입하기'까지 한 화면에 들어오게
+   폭을 줄이고 그림 설명 줄은 숨깁니다. */
+.home-start-card.has-art { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 0.8fr); gap: 8px 36px; align-items: center; }
+.home-start-card.has-art .home-start-body { order: 1; min-width: 0; }
+.home-start-card.has-art .home-start-art { order: 2; }
+.home-start-card:not(.has-art) .home-start-art { display: none; }
+.home-start-art .hero-figure { margin: 0; max-width: none; }
+.home-start-art .hero-figure figcaption { margin-top: 6px; font-size: 12px; opacity: 0.55; text-align: center; }
+@media (max-width: 760px) {
+  .home-start-card.has-art { grid-template-columns: 1fr; }
+  .home-start-card.has-art .home-start-art { order: 0; width: min(100%, 320px); margin: -4px auto 4px; }
+  .home-start-art .hero-figure figcaption { display: none; }
+}

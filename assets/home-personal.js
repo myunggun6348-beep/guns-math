@@ -45,9 +45,16 @@
      학생은 여기가 뭐 하는 곳인지도 모른 채 가입부터 고르게 됐습니다.
      가입 없이도 다 쓸 수 있으니 오늘의 5문제를 큰 문으로, 둘러보기는 그 옆 글줄로,
      가입은 필요할 때만. (둘러보기를 큰 문으로 뒀더니 5문제까지 세 번을 눌러야 했습니다) */
+  /* 단위원 위의 점이 돌면 사인 곡선이 따라 그려지는 그림(index.html 의 #heroArt).
+     옛 히어로 칸은 홈에서 숨겨 두었으므로 그림만 이 카드로 옮겨 옵니다. 카드는 로그인·로그아웃 때
+     다시 그려지면서 안의 것이 지워지니, 그림을 붙잡아 두었다가 그릴 때마다 다시 넣습니다. */
+  const 그림=document.querySelector(".hero-figure");
+  function 그림넣기(){const 자리=root.querySelector(".home-start-art");if(그림&&자리)자리.appendChild(그림)}
   function 갈래(){
     root.hidden=false;root.innerHTML='<div class="home-personal-shell setup">'+
-      '<div class="home-start-card">'+
+      '<div class="home-start-card'+(그림?' has-art':'')+'">'+
+        '<div class="home-start-art"></div>'+
+        '<div class="home-start-body">'+
         '<h2>고등학교 수학, 한곳에서</h2>'+
         '<p class="home-setup-lead">하루 5분, 학년에 맞춘 5문제부터 풀어 보세요. 틀린 문제는 오답노트에 저절로 모입니다. 가입 없이 바로 쓸 수 있습니다.</p>'+
         '<div class="home-start-actions">'+
@@ -62,7 +69,9 @@
           '</div>'+
           '<small class="home-fork-note">가입하면 선생님이 학습 기록을 봅니다. 질문은 그대로 익명입니다.</small>'+
         '</div>'+
+        '</div>'+
       '</div></div>';
+    그림넣기();
     root.querySelector("#homeJoin").onclick=()=>window.StudentAccountUI?.열기("register");
     root.querySelector("#homeLogin").onclick=()=>window.StudentAccountUI?.열기("login");
   }
