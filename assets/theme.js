@@ -16,16 +16,17 @@
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
+  /* 선생님 방 가는 길 — 맨 아래 줄에 둡니다.
+     예전에는 위쪽 메뉴 오른쪽에 검은 단추로 붙였는데, 학생 화면에서 가장 진한 단추가
+     학생은 쓸 일 없는 '선생님 방'이 됐습니다. 홈처럼 푸터 끝에 한 줄로 둡니다. */
   const page = location.pathname.split("/").pop();
   if (!["admin.html", "question-bank.html"].includes(page)) {
-    const navRight = document.querySelector(".nav-right");
-    if (navRight && !navRight.querySelector(".teacher-entry")) {
-      const link = document.createElement("a");
-      link.className = "teacher-entry";
-      link.href = "admin.html";
-      link.setAttribute("aria-label", "선생님 방으로 들어가기");
-      link.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="teacher-entry-full">선생님 방</span><span class="teacher-entry-short">교사</span>';
-      navRight.insertBefore(link, navRight.firstChild);
+    const list = document.querySelector(".footer .footer-line ul");
+    if (list && !list.querySelector(".footer-admin-link")) {
+      const item = document.createElement("li");
+      item.className = "footer-admin-item";
+      item.innerHTML = '<a class="footer-admin-link" href="admin.html">선생님 방 →</a>';
+      list.appendChild(item);
     }
   }
   const btn = document.getElementById("themeToggle");
