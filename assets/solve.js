@@ -467,6 +467,12 @@ function setupDocument(item, subjectSet) {
   $("#examMeta").textContent = [item.grade + "학년", subjectSet.subject, exam].filter(Boolean).join(" · ");
   document.title = item.title + " · 기출문제 풀기";
   $("#backLink").href = "files.html?grade=" + encodeURIComponent(item.grade);
+  // ?back=past-practice.html?… — 기출 연습에서 왔으면 그쪽으로 돌아갑니다 (이 사이트의 그 페이지만 받습니다)
+  const 돌아갈곳 = params.get("back") || "";
+  if (/^past-practice\.html\?[\w=&%.-]*$/.test(돌아갈곳)) {
+    $("#backLink").href = 돌아갈곳;
+    $("#backLink").setAttribute("aria-label", "기출 연습으로 돌아가기");
+  }
   const links = [];
   if (subjectSet.files.answer) links.push(`<a href="${subjectSet.files.answer.url}" target="_blank" rel="noopener">정답 확인 <span>↗</span></a>`);
   if (subjectSet.files.solution) links.push(`<a href="${subjectSet.files.solution.url}" target="_blank" rel="noopener">해설 확인 <span>↗</span></a>`);
@@ -494,6 +500,9 @@ async function start() {
   state.pdf = await task.promise;
   state.pageCount = state.pdf.numPages;
   $("#pageCount").textContent = state.pageCount;
+  // ?page=7 — 기출 연습 카드에서 그 문항이 있는 쪽으로 바로 엽니다
+  const 처음쪽 = Number(params.get("page"));
+  if (처음쪽) state.page = Math.max(1, Math.min(state.pageCount, Math.floor(처음쪽)));
   await renderPage();
   setSaveState(Object.keys(state.pages).length ? "필기 불러옴" : "자동 저장");
 }
