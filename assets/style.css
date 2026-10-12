@@ -2239,3 +2239,5 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
 
 /* 폰에서는 띠 오른쪽 끝의 날짜·개수를 뺍니다 — 좁은 띠에 끼면 설명이 세 줄로 늘어납니다 */
 @media (max-width: 650px) { .page-head-meta { display: none; } }
+
+.student-reset-button{width:fit-content;min-height:40px;margin-top:5px;padding:7px 10px;border:1px solid var(--hairline);border-radius:9px;background:var(--canvas);color:var(--ink);font-size:12px;cursor:pointer}

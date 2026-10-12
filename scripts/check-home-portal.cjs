@@ -186,6 +186,11 @@ const server=http.createServer((req,res)=>{
       await 새기기.waitForSelector('[data-grade="2"].on');
       assert.equal(await 새기기.locator('[data-track="algebra"]').getAttribute("class"),"pick-button on","새 기기의 기본값이 계정 과목을 덮어썼습니다");
       assert.equal(계정.기록.pref.grade,"2");
+      await 새기기.evaluate(()=>window.StudentSync.logout());
+      await 새기기.reload({waitUntil:"networkidle"});
+      assert.equal(await 새기기.locator(".student-account-button").isVisible(),true,"로그인이 해제된 기존 학생이 다시 로그인할 수 없습니다");
+      await 새기기.locator(".student-account-button").click();await 새기기.waitForSelector("#studentAccountForm");
+      assert.equal(await 새기기.locator('#studentAccountForm [name="name"]').isVisible(),false);
       await 새기기.close();
     }
 

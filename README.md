@@ -82,6 +82,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-file-archive.cjs` | 자료실의 학년 저장·필터·모바일 배치 |
 | `node scripts\check-escape.js` | 수학 탈출의 문항 조합·채점·기록 |
 | `node scripts\check-study-sync.cjs` | 필기 보존·오답 삭제 전파·여러 기기 합산·재전송·동시 저장 충돌 |
+| `node scripts\check-student-reset.cjs` | 선생님 비밀번호 초기화 권한·학습 기록 보존·기존 로그인 해제 |
 | `node scripts\check-admin-password.cjs` | 선생님 방 암호 — 바꾸기·여벌 열쇠·되돌리기 (인터넷 필요 없음) |
 | `node scripts\check-phone.cjs` | 휴대폰 3종 — 가로 넘침·누르기 작은 단추·아이폰 확대·콘솔 오류 |
 | `node scripts\check-hidden.cjs` | 숨긴 칸이 정말 숨겨졌는지 (전체 15쪽) |
@@ -215,6 +216,9 @@ chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
   한때 기록이 쌓이면 "이 기기에만 있습니다" 하는 줄을 띄웠는데, 닫을 수가 없어서
   가입 생각이 없는 학생에게는 계속 붙어 있는 잔소리가 됐다. 그래서 뺐다.
 - 가입 화면에 **선생님이 학습 기록을 본다는 것을 적어 둔다**(`assets/student-account-ui.js`).
+  선생님 방 → 학생 학습 현황 → 학생별 **비밀번호 초기화**에서 새 숫자 비밀번호를 두 번 입력한다.
+  가입과 같은 숫자 6~12자리 규칙을 적용하고, 기존 로그인 세션을 해제한다. 새 비밀번호는
+  지문만 저장하며 기존 학습 기록은 유지한다. 새 비밀번호는 선생님이 해당 학생에게 직접 전달한다.
   나중에 알게 되는 편이 훨씬 나쁘다. 질문(`ask.html`)은 계정과 엮여 있지 않아
   그대로 익명이다.
 

@@ -1,5 +1,7 @@
 const { 준비됨, 명령 } = require("./_redis");
 const { passwordMatches } = require("./_admin-auth");
+const crypto=require("crypto");
+const {새PIN문제,digest}=require("./_student-auth");
 
 function input(req) { return typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {}); }
 function koreaDate() { return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date()); }
@@ -27,6 +29,19 @@ module.exports = async (req, res) => {
   try {
     const received = input(req);
     if (!(await passwordMatches(received.password))) return res.status(401).json({ error: "선생님 방 암호가 맞지 않습니다." });
+    if(received.action==="reset-password"){
+      const id=String(received.id||"").trim().toLowerCase();
+      if(!/^[a-z0-9]{4,16}$/.test(id))return res.status(400).json({error:"학생 아이디를 확인해 주세요."});
+      const problem=새PIN문제(received.newPin);if(problem)return res.status(400).json({error:problem});
+      const key=`student:account:${id}`,raw=await 명령("GET",key);
+      if(!raw)return res.status(404).json({error:"해당 학생 계정이 없습니다."});
+      const account=JSON.parse(raw),salt=crypto.randomBytes(16).toString("hex");
+      const updated={...account,salt,hash:digest(received.newPin,salt),authVersion:crypto.randomBytes(16).toString("hex"),passwordResetAt:new Date().toISOString()};
+      const script="if redis.call('GET',KEYS[1])~=ARGV[1] then return 0 end; redis.call('SET',KEYS[1],ARGV[2]); redis.call('DEL',KEYS[2]); return 1";
+      if(!await 명령("EVAL",script,2,key,`student:rate:login-id:${id}`,raw,JSON.stringify(updated)))return res.status(409).json({error:"다른 창에서 계정이 변경됐습니다. 새로고침 후 다시 시도해 주세요."});
+      return res.status(200).json({ok:true,id});
+    }
+    if(received.action&&received.action!=="list")return res.status(400).json({error:"지원하지 않는 작업입니다."});
     const keys = await accountIds(), today = koreaDate(), students = [];
     for (const key of keys) {
       const id = key.slice("student:account:".length);

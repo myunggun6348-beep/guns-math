@@ -51,6 +51,7 @@ async function browserChecks(){
 async function serverChecks(){
   const values=new Map(),token="a".repeat(64),redisPath=require.resolve("../api/_redis");let competing=null;
   values.set("student:session:"+token,"minsu");
+  values.set("student:account:minsu",JSON.stringify({name:"민수"}));
   require.cache[redisPath]={id:redisPath,filename:redisPath,loaded:true,exports:{준비됨:true,명령:async(op,...args)=>{
     if(op==="GET")return values.get(args[0])||null;
     if(op==="EXPIRE")return 1;

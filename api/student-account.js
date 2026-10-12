@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const { 준비됨, 명령 } = require("./_redis");
 const {safeState,merge}=require("../assets/study-state");
+const {새PIN문제,digest}=require("./_student-auth");
 
 const COOKIE = "math_student_session";
 const SESSION_DAYS = 30;
@@ -19,24 +20,9 @@ function validId(value) { return /^[a-z0-9]{4,16}$/.test(value); }
    새로 만들 때만 깐깐하게 봅니다. */
 function 로그인용PIN(value) { return /^\d{4,12}$/.test(String(value || "")); }
 
-/* 새 비밀번호: 숫자 6~12자리. 숫자 자판으로 치기 쉬우라고 숫자로 두되,
-   네 자리는 1만 가지뿐이라 6자리로 올립니다(100만 가지).
-   그리고 실제로 제일 많이 쓰이는 두 가지를 막습니다 —
-   같은 숫자 반복(111111)과 이어지는 숫자(123456 · 987654). */
-function 새PIN문제(value) {
-  const v = String(value || "");
-  if (!/^\d{6,12}$/.test(v)) return "비밀번호는 숫자 6~12자리로 만들어 주세요.";
-  if (/^(\d)\1+$/.test(v)) return "같은 숫자만 쓰면 너무 쉽게 뚫립니다. 다르게 만들어 주세요.";
-  const 차이 = [...v].slice(1).map((글, i) => Number(글) - Number(v[i]));
-  if (차이.every(d => d === 1) || 차이.every(d => d === -1)) {
-    return "1234 처럼 이어지는 숫자는 쓸 수 없습니다. 다르게 만들어 주세요.";
-  }
-  return "";
-}
 function accountKey(id) { return `student:account:${id}`; }
 function dataKey(id) { return `student:data:${id}`; }
 function sessionKey(token) { return `student:session:${token}`; }
-function digest(pin, salt) { return crypto.scryptSync(String(pin), salt, 32).toString("hex"); }
 function equal(a, b) {
   try { return crypto.timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex")); } catch { return false; }
 }
@@ -56,14 +42,18 @@ async function rate(req, kind, limit, 누구) {
 async function current(req) {
   const token = cookies(req)[COOKIE];
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
-  const id = await 명령("GET", sessionKey(token));
-  if (!id) return null;
+  const raw=await 명령("GET",sessionKey(token));if(!raw)return null;
+  const saved=String(raw).startsWith("{")?JSON.parse(raw):{id:raw,version:""};
+  const id=saved.id;if(!validId(id))return null;
+  const accountRaw=await 명령("GET",accountKey(id));if(!accountRaw)return null;
+  const account=JSON.parse(accountRaw);
+  if((saved.version||"")!==(account.authVersion||""))return null;
   await 명령("EXPIRE", sessionKey(token), SESSION_DAYS * 86400);
   return { id, token };
 }
-async function openSession(res, id) {
+async function openSession(res, id, version="") {
   const token = crypto.randomBytes(32).toString("hex");
-  await 명령("SET", sessionKey(token), id, "EX", SESSION_DAYS * 86400);
+  await 명령("SET", sessionKey(token), JSON.stringify({id,version}), "EX", SESSION_DAYS * 86400);
   setCookie(res, token, SESSION_DAYS * 86400);
 }
 // 다른 기기가 먼저 저장했으면 최신 기록을 다시 읽어 합친다.
@@ -116,7 +106,7 @@ module.exports = async (req, res) => {
       const account = raw ? JSON.parse(raw) : null;
       if (!account || !equal(digest(pin, account.salt), account.hash)) return res.status(401).json({ error: "아이디 또는 비밀번호를 확인해 주세요." });
       await 명령("DEL", `student:rate:login-id:${id}`);   // 들어왔으면 틀린 횟수는 지웁니다
-      await openSession(res, id);
+      await openSession(res, id, account.authVersion||"");
       const rawData = await 명령("GET", dataKey(id));
       return res.status(200).json({ signedIn: true, student: { id, name: account.name || "" }, data: rawData ? JSON.parse(rawData) : {} });
     }

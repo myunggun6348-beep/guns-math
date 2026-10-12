@@ -99,9 +99,9 @@
           /* 숨길 일이 아닙니다. 나중에 알게 되는 편이 훨씬 나쁩니다. */
           (만드나
             ? '<p class="student-account-help">비밀번호는 숫자 6자리 이상. 1111 이나 1234 처럼 뻔한 것은 쓸 수 없습니다.<br>' +
-              '아이디와 비밀번호를 꼭 기억하세요 — 잊어버리면 되찾을 수 없습니다.<br>' +
+              '아이디와 비밀번호를 기억하세요. 비밀번호를 잊으면 선생님에게 초기화를 요청하세요.<br>' +
               '선생님은 학습 기록(오늘의 학습·오답노트)을 봅니다. 질문은 그대로 익명입니다.</p>'
-            : '<p class="student-account-help">계정이 없어도 창을 닫고 그냥 둘러볼 수 있습니다.</p>') +
+            : '<p class="student-account-help">비밀번호를 잊으면 선생님에게 초기화를 요청하세요. 계정이 없어도 창을 닫고 공부할 수 있습니다.</p>') +
           '<p class="student-account-error" role="status"></p>' +
           '<button class="btn btn-primary" type="submit">' + (만드나 ? '계정 만들기 →' : '로그인 →') + '</button>' +
         '</form>' +
@@ -155,14 +155,15 @@
   }
 
   function 그리기(형편 = 맞춤.getState()) {
-    단추.hidden = !형편.signedIn && !형편.error;
+    let 이전계정=false;try{이전계정=Boolean(localStorage.getItem("math-student-data-owner"))}catch{}
+    단추.hidden = !형편.signedIn && !형편.error && !이전계정;
     if (형편.signedIn) {
       단추.textContent = (형편.student.name || 형편.student.id) + " · 내 기록";
       단추.classList.add("signed-in");
       if (창.open) 들어온뒤(형편);
-    } else if (형편.error) {
-      단추.textContent="다시 로그인";단추.classList.remove("signed-in");
-      if(창.open&&창.querySelector(".student-sync-status")){들어가기전("login");창.querySelector(".student-account-error").textContent=형편.error;}
+    } else if (형편.error || 이전계정) {
+      단추.textContent=형편.error?"다시 로그인":"로그인";단추.classList.remove("signed-in");
+      if(형편.error&&창.open&&창.querySelector(".student-sync-status")){들어가기전("login");창.querySelector(".student-account-error").textContent=형편.error;}
     }
   }
 

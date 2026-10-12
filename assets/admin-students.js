@@ -2,6 +2,8 @@
   "use strict";
   const root=document.getElementById("학생현황"),summary=document.getElementById("학생현황요약"),classSummary=document.getElementById("반별요약"),list=document.getElementById("학생현황목록"),search=document.getElementById("학생검색"),filter=document.getElementById("학생반필터"),refresh=document.getElementById("학생새로고침");
   if(!root)return;
+  const resetDialog=document.createElement("dialog");resetDialog.className="student-account-dialog";resetDialog.setAttribute("aria-label","학생 비밀번호 초기화");document.body.append(resetDialog);
+  let resetting=false;resetDialog.addEventListener("cancel",event=>{if(resetting)event.preventDefault()});
   const tracks={common1:"공통수학1",common2:"공통수학2",algebra:"대수",calc1:"미적분Ⅰ",probability:"확률과 통계",geometry:"기하",calc2:"미적분Ⅱ"};
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   const when=value=>{if(!value)return"학습 기록 없음";const date=new Date(value);if(Number.isNaN(date.getTime()))return value;return new Intl.DateTimeFormat("ko-KR",{timeZone:"Asia/Seoul",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}).format(date)};
@@ -18,6 +20,23 @@
     });
     if(!shown.length){list.innerHTML='<p class="empty">'+(students.length?'검색 결과가 없습니다.':'아직 학생 계정이 없습니다.')+'</p>';return}
     list.innerHTML='<div class="student-admin-table"><div class="student-admin-row head"><span>학생</span><span>학년·반·과목</span><span>학습</span><span>오답</span><span>취약 개념</span><span>최근 활동 · 가입</span></div>'+shown.map(student=>'<article class="student-admin-row"><span class="student-admin-name"><b>'+esc(student.name||student.id)+'</b><small>'+esc(student.id)+'</small></span><span data-col="학년·반·과목">'+(student.grade?'고'+esc(student.grade)+(student.className?' '+esc(student.className)+'반':' · 반 미설정'):'미설정')+'<small>'+esc(tracks[student.track]||student.track||'과목 미설정')+'</small></span><span data-col="학습"><b>'+(student.todayDone?'오늘 '+student.todayScore+'/5':'누적 '+student.studyCount+'회')+'</b><small>'+(student.average===null?'평균 기록 없음':'전체 평균 '+student.average+'%')+'</small></span><span data-col="오답"><b>'+student.activeWrong+'문제</b><small>완료 '+student.mastered+'</small></span><span data-col="취약 개념">'+(student.weakest?'<b>'+esc(student.weakest.name)+'</b><small>정답률 '+student.weakest.rate+'% · '+student.weakest.attempts+'회</small>':'<small>기록 없음</small>')+'</span><span data-col="최근 활동"><b>'+esc(when(student.lastAt))+'</b><small>'+esc(가입날(student.joinedAt))+'</small></span></article>').join('')+'</div>';
+    list.querySelectorAll(".student-admin-name").forEach((span,index)=>{const button=document.createElement("button");button.type="button";button.className="student-reset-button";button.textContent="비밀번호 초기화";button.onclick=()=>openReset(shown[index]);span.append(button)});
+  }
+  function openReset(student){
+    if(resetting)return;
+    resetDialog.innerHTML='<div class="student-account-card"><h2>학생 비밀번호 초기화</h2><p><b>'+esc(student.name||student.id)+'</b> · '+esc(student.id)+'<br>새 숫자 비밀번호를 학생에게 직접 알려 주세요. 기존 로그인은 해제되며 학습 기록은 유지됩니다.</p><form id="studentResetForm" class="student-account-form"><label>새 비밀번호<input name="pin" type="password" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="12" pattern="[0-9]+" required placeholder="숫자 6~12자리"></label><label>새 비밀번호 다시 입력<input name="confirm" type="password" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="12" pattern="[0-9]+" required></label><p class="student-account-error" role="status"></p><button class="btn btn-primary" type="submit">비밀번호 초기화</button><button type="button" class="student-secondary-action" id="cancelReset">취소</button></form></div>';
+    const form=resetDialog.querySelector("form"),status=form.querySelector('[role="status"]');
+    resetDialog.querySelector("#cancelReset").onclick=()=>resetDialog.close();
+    form.onsubmit=async event=>{
+      event.preventDefault();if(form.elements.pin.value!==form.elements.confirm.value){status.textContent="두 비밀번호가 서로 다릅니다.";return}
+      const submit=form.querySelector('[type="submit"]'),cancel=resetDialog.querySelector("#cancelReset");resetting=true;submit.disabled=true;cancel.disabled=true;status.textContent="";
+      try{
+        const response=await fetch("/api/student-admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reset-password",password:window.선생님암호?.()||"",id:student.id,newPin:form.elements.pin.value})}),data=await response.json().catch(()=>({}));
+        if(!response.ok)throw new Error(data.error||"비밀번호를 초기화하지 못했습니다.");
+        form.reset();status.textContent="초기화했습니다. 학생은 새 비밀번호로 로그인할 수 있습니다.";submit.hidden=true;resetDialog.querySelector("#cancelReset").textContent="닫기";
+      }catch(error){status.textContent=error.message}finally{resetting=false;submit.disabled=false;cancel.disabled=false}
+    };
+    resetDialog.showModal();
   }
   function drawClasses(classes){
     const label=item=>item.key==="unset"?"반 미설정":"고"+item.grade+" "+item.className+"반";
