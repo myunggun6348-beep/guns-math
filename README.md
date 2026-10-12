@@ -6,6 +6,10 @@
 인터넷 주소: **https://guns-math.vercel.app**
 (GitHub `main` 에 올리면 Vercel 이 알아서 다시 배포한다)
 
+## Codex 작업 이어받기
+
+로컬·원격 Codex 작업은 저장소의 [프로젝트 지침](AGENTS.md)과 [인수인계 문서](docs/CODEX_HANDOFF.md)를 읽고 이어서 진행할 수 있습니다. 새 작업에는 “AGENTS.md와 docs/CODEX_HANDOFF.md를 읽고 현재 코드를 확인한 뒤, 내가 요청하는 개선 작업을 이어서 진행해 주세요.”라고 전달하세요. 계정 인증과 비밀 환경 변수는 문서에 포함하지 않습니다.
+
 ## 구조
 
 ```
