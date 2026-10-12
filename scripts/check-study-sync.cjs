@@ -72,6 +72,8 @@ async function serverChecks(){
   const tieA={notes:[{id:"tie",updatedAt:"2026-10-01T00:00:00Z",mastered:true}]},tieB={notes:[{id:"tie",updatedAt:"2026-10-01T00:00:00Z",mastered:false}]};
   assert.deepEqual(merge(tieA,tieB).notes,merge(tieB,tieA).notes,"시각이 같은 변경의 결과가 전송 순서에 따라 바뀜");
   const deletion={notes:[{id:"n",lastWrongAt:"2026-10-01T00:00:00Z"}],deletedNotes:{n:"2026-10-02T00:00:00Z"}};
+  const metricA={stats:{poly:{devices:{tablet:{correct:1,wrong:1,reviewAttempts:2,hintUsed:1,hintSteps:3,soloCorrect:1}}}}},metricB={stats:{poly:{devices:{phone:{correct:2,wrong:1,reviewAttempts:3,hintUsed:2,hintSteps:4,soloCorrect:1}}}}};
+  const metrics=merge(metricA,metricB);assert.equal(metrics.stats.poly.reviewAttempts,5);assert.equal(metrics.stats.poly.hintUsed,3);assert.equal(metrics.stats.poly.hintSteps,7);assert.equal(metrics.stats.poly.soloCorrect,2);assert.deepEqual(merge(metrics,metricA).stats.poly,metrics.stats.poly);assert.deepEqual(merge(metricB,metricA).stats.poly.devices,metrics.stats.poly.devices);
   assert.equal((await call(deletion)).data.data.notes.length,0);
   const malformed=await call({notes:[null,4],stats:{poly:null},records:[null],deletedNotes:{x:"invalid"}});assert.equal(malformed.code,200);
   const beforeMismatch=values.get("student:data:minsu");assert.equal((await call({notes:[{id:"foreign"}]},"another")).code,409);assert.equal(values.get("student:data:minsu"),beforeMismatch,"다른 창의 계정 기록이 저장됨");

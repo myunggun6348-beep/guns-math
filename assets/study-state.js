@@ -10,12 +10,14 @@
     const a=time(left),b=time(right),stable=row=>JSON.stringify(Object.entries(row).sort(([x],[y])=>x.localeCompare(y)));
     return a>b?left:a<b?right:stable(left)>=stable(right)?left:right;
   }
-  function counter(value){return{correct:count(value.correct),wrong:count(value.wrong)}}
+  const fields=["correct","wrong","reviewAttempts","hintUsed","hintSteps","soloCorrect"];
+  function counter(value){return Object.fromEntries(fields.map(key=>[key,count(value[key])]))}
+  const maximum=(a,b)=>Object.fromEntries(fields.map(key=>[key,Math.max(a[key]||0,b[key]||0)]));
   function totals(row){
     // shortcut: 이전 누적 기록은 기준값으로 보존한다. 과거의 개별 풀이를 복원하려면 원본 이력이 필요하다.
-    const base=row.base?counter(object(row.base)):{correct:Math.min(count(row.correct),count(row.attempts)),wrong:Math.max(0,count(row.attempts)-count(row.correct))};
+    const base=row.base?counter(object(row.base)):{...counter(row),correct:Math.min(count(row.correct),count(row.attempts)),wrong:Math.max(0,count(row.attempts)-count(row.correct))};
     const devices=Object.fromEntries(Object.entries(object(row.devices)).filter(([id])=>validId(id)).map(([id,value])=>[id,counter(object(value))]));
-    const result=Object.values(devices).reduce((sum,value)=>({correct:sum.correct+value.correct,wrong:sum.wrong+value.wrong}),{...base});
+    const result=Object.values(devices).reduce((sum,value)=>Object.fromEntries(fields.map(key=>[key,sum[key]+value[key]])),{...base});
     // 배포 전에 열어 둔 화면이 기기별 값 대신 누적값만 늘렸을 때도 새 풀이를 보존한다.
     if(row.base){const correct=Math.min(count(row.correct),count(row.attempts)),wrong=Math.max(0,count(row.attempts)-count(row.correct));base.correct+=Math.max(0,correct-result.correct);base.wrong+=Math.max(0,wrong-result.wrong);result.correct=Math.max(result.correct,correct);result.wrong=Math.max(result.wrong,wrong)}
     return{...row,base,devices,...result,attempts:result.correct+result.wrong};
@@ -38,8 +40,8 @@
     const stats=Object.fromEntries(Object.entries(a.stats));
     Object.entries(b.stats).forEach(([key,row])=>{
       const old=Object.hasOwn(stats,key)?stats[key]:null;if(!old){Object.defineProperty(stats,key,{value:row,enumerable:true,writable:true,configurable:true});return}
-      const base={correct:Math.max(old.base.correct,row.base.correct),wrong:Math.max(old.base.wrong,row.base.wrong)},devices=Object.assign(Object.create(null),old.devices);
-      Object.entries(row.devices).forEach(([id,value])=>{devices[id]={correct:Math.max(devices[id]?.correct||0,value.correct),wrong:Math.max(devices[id]?.wrong||0,value.wrong)}});
+      const base=maximum(old.base,row.base),devices=Object.assign(Object.create(null),old.devices);
+      Object.entries(row.devices).forEach(([id,value])=>{devices[id]=maximum(devices[id]||{},value)});
       stats[key]=totals({...old,...(String(row.lastAt||"")>=String(old.lastAt||"")?row:{}),base,devices});
     });
     const latest=(left,right)=>newer(left,right,row=>stamp(row.updatedAt));

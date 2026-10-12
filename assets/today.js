@@ -7,7 +7,7 @@
   const params=new URLSearchParams(location.search);
   const reviewId=params.get("review"),similarMode=Boolean(reviewId);
   const difficulties={basic:"기초",standard:"표준",challenge:"도전"};
-  let difficulty="standard",hintCount=0,wrongSaved=true;
+  let difficulty="standard",subtype="",hintCount=0,wrongSaved=true,dailyFocus=[];
   let saved={};try{saved=JSON.parse(localStorage.getItem("today-study-pref")||"{}")}catch{}
   let grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):(saved.grade||"1");
   let trackKey=params.get("subject")||saved.track||"common1";
@@ -20,21 +20,6 @@
   const dateLabel=(now.getMonth()+1)+"월 "+now.getDate()+"일 오늘";
   const esc=v=>String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   const norm=v=>String(v).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"");
-  function hash(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-  function random(seed){return function(){seed+=0x6D2B79F5;let t=seed;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
-  function shuffle(items,seedText){
-    const a=items.slice(),rnd=random(hash(seedText));
-    for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
-    return a;
-  }
-  function selectDaily(track,key){
-    const picked=[];
-    const ids=[...new Set(track.questions.map(q=>q.concept))];
-    ids.forEach(id=>picked.push(shuffle(track.questions.filter(q=>q.concept===id),today+"|"+key+"|"+id)[0]));
-    const rest=shuffle(track.questions.filter(q=>!picked.includes(q)),today+"|"+key+"|rest");
-    while(picked.length<5&&rest.length)picked.push(rest.shift());
-    return shuffle(picked.slice(0,5),today+"|"+key+"|order");
-  }
   function records(){
     try{return JSON.parse(localStorage.getItem("today-study-records")||"[]")}catch{return[]}
   }
@@ -43,7 +28,7 @@
   }
   function saveRecord(){
     const list=records().filter(r=>!(r.date===today&&r.grade===grade&&r.track===trackKey));
-    list.unshift({date:today,grade,track:trackKey,correct,total:5,finishedAt:new Date().toISOString()});
+    list.unshift({date:today,grade,track:trackKey,correct,total:5,questionPrompts:questions.map(q=>q.prompt),focusConcepts:dailyFocus,finishedAt:new Date().toISOString()});
     localStorage.setItem("today-study-records",JSON.stringify(list.slice(0,60)));
     window.StudentSync?.changed();
   }
@@ -72,7 +57,7 @@
     window.GameScratch.destroy();updateUrl();
     const available=Object.entries(tracks).filter(([,t])=>t.grades.includes(grade));
     const last=latest();
-    app.innerHTML=hero()+'<section class="today-panel"><h2>오늘 공부할 과목</h2><p class="today-panel-intro">한 판은 약 5분입니다. 선택한 과목의 주요 개념에서 문제가 고르게 나옵니다.</p><span class="picker-label">학년</span><div class="grade-picks">'+["1","2","3"].map(g=>'<button type="button" class="pick-button '+(g===grade?"on":"")+'" data-grade="'+g+'">고'+g+'</button>').join("")+'</div><span class="picker-label">과목</span><div class="subject-picks">'+available.map(([key,t])=>'<button type="button" class="pick-button '+(key===trackKey?"on":"")+'" data-track="'+key+'"><b>'+t.title+'</b></button>').join("")+'</div>'+(last?'<div class="today-last">오늘 이 과목에서 <b>'+last.correct+'/5</b>점을 받았습니다. 같은 세트를 다시 풀어 취약 개념을 확인할 수 있습니다.</div>':'')+'<button type="button" class="today-primary today-start" id="todayStart">'+(last?"다시 도전하기":"오늘의 5문제 시작")+'</button></section>';
+    app.innerHTML=hero()+'<section class="today-panel"><h2>오늘 공부할 과목</h2><p class="today-panel-intro">한 판은 약 5분입니다. 학습 기록이 있으면 취약 개념·복습할 개념을 최대 3문제까지 우선 구성하고, 다른 문제로 균형을 맞춥니다.</p><span class="picker-label">학년</span><div class="grade-picks">'+["1","2","3"].map(g=>'<button type="button" class="pick-button '+(g===grade?"on":"")+'" data-grade="'+g+'">고'+g+'</button>').join("")+'</div><span class="picker-label">과목</span><div class="subject-picks">'+available.map(([key,t])=>'<button type="button" class="pick-button '+(key===trackKey?"on":"")+'" data-track="'+key+'"><b>'+t.title+'</b></button>').join("")+'</div>'+(last?'<div class="today-last">오늘 이 과목에서 <b>'+last.correct+'/5</b>점을 받았습니다. 같은 세트를 다시 풀어 취약 개념을 확인할 수 있습니다.</div>':'')+'<button type="button" class="today-primary today-start" id="todayStart">'+(last?"다시 도전하기":"오늘의 5문제 시작")+'</button></section>';
     app.querySelectorAll("[data-grade]").forEach(btn=>btn.addEventListener("click",()=>{
       grade=btn.dataset.grade;
       const first=Object.keys(tracks).find(k=>tracks[k].grades.includes(grade));
@@ -88,7 +73,7 @@
     const base=tracks[trackKey];
     const added=await window.ProblemBank?.load({surface:"today",grade,track:trackKey})||[];
     const track={...base,questions:base.questions.concat(added)};
-    questions=selectDaily(track,trackKey);index=0;correct=0;answers=[];selected=null;locked=false;
+    const picked=window.DailySelection.select({questions:track.questions,trackKey,date:today,grade,stats:window.WrongNotes.stats(),notes:window.WrongNotes.all(),record:latest()});questions=picked.questions;dailyFocus=picked.focus;index=0;correct=0;answers=[];selected=null;locked=false;
     window.GameScratch.reset();
     renderQuestion();
   }
@@ -101,8 +86,9 @@
     app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / '+questions.length+'</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)/questions.length*100)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question" data-math>'+esc(q.prompt)+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
     window.MathView?.typeset(app);
     window.GameScratch.mount(index);
+    if(!similarMode&&dailyFocus.length){const guide=document.createElement("p");guide.className="today-personal-guide";guide.textContent="맞춤 학습 · 집중 개념: "+dailyFocus.map(id=>concepts[id]?.name||id).join(" · ");app.querySelector(".daily-top").after(guide)}
     if(similarMode){
-      app.querySelector(".daily-concept").append(" · "+difficulties[q.difficulty]);
+      app.querySelector(".daily-concept").append(" · "+difficulties[q.difficulty]+(q.subtype?" · "+q.subtype:""));
       const help=document.createElement("section");help.className="similar-hints";help.setAttribute("aria-label","단계별 힌트");
       help.innerHTML='<button type="button" class="today-secondary" id="showHint">힌트 1단계 보기</button><ol id="hintSteps" aria-live="polite"></ol>';
       app.querySelector(".daily-question").after(help);
@@ -131,7 +117,7 @@
     }
     locked=true;if(isCorrect)correct++;
     const track=tracks[trackKey],meta=concepts[q.concept];
-    const recorded=window.WrongNotes?.record({source:similarMode?"similar":"today",sourceKey:trackKey,sourceTitle:(similarMode?"비슷한 문제 확인 · ":"오늘의 학습 · ")+track.title,grade,subject:track.title,conceptId:q.concept,conceptName:meta.name,prompt:q.prompt,type:q.type,difficulty:similarMode?q.difficulty:"",hintsUsed:hintCount,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"today.html?grade="+grade+"&subject="+trackKey,solutionImage:isCorrect?"":window.GameScratch.capture(index)},isCorrect);
+    const recorded=window.WrongNotes?.record({source:similarMode?"similar":"today",sourceKey:trackKey,sourceTitle:(similarMode?"비슷한 문제 확인 · ":"오늘의 학습 · ")+track.title,grade,subject:track.title,conceptId:q.concept,conceptName:meta.name,prompt:q.prompt,type:q.type,subtype:q.subtype||"",difficulty:similarMode?q.difficulty:"",hintsUsed:hintCount,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],acceptedAnswers:q.type==="text"?q.answers:[],userAnswer,explanation:q.explanation,reviewHref:"today.html?grade="+grade+"&subject="+trackKey,solutionImage:isCorrect?"":window.GameScratch.capture(index)},isCorrect);
     if(similarMode&&!isCorrect)wrongSaved=recorded===true;
     answers.push({concept:q.concept,correct:isCorrect});
     app.querySelectorAll(".daily-choice,.daily-input,#textSubmit,#choiceSubmit").forEach(el=>el.disabled=true);
@@ -174,9 +160,11 @@
     const available=Object.keys(difficulties).filter(level=>window.similarQuestion(note,level));
     if(!available.includes(difficulty))difficulty=available.includes("standard")?"standard":available[0];
     if(!difficulty){app.innerHTML=hero()+'<section class="today-panel"><h2>이 기록에 연결할 다른 문제를 준비하고 있습니다.</h2><a class="today-primary" href="wrong-notes.html">오답노트로 돌아가기 →</a></section>';return}
+    const types=window.similarTypes(note,difficulty);if(!types.includes(subtype))subtype="";
     app.innerHTML=hero()+'<section class="today-panel"><h2>확인 문제 난도를 골라 주세요</h2><p>같은 학년의 '+esc(concepts[note.conceptId].name)+' 문제를 1개 풉니다.</p><div class="subject-picks" role="group" aria-label="확인 문제 난도">'+Object.entries(difficulties).map(([level,label])=>'<button type="button" class="pick-button '+(difficulty===level?"on":"")+'" data-difficulty="'+level+'" aria-pressed="'+(difficulty===level)+'" '+(!available.includes(level)?'disabled':'')+'>'+label+(!available.includes(level)?' · 준비 중':'')+'</button>').join("")+'</div><p class="today-panel-intro">기초: 기본 개념·공식 확인<br>표준: 식을 세우고 계산하기<br>도전: 조건 해석과 여러 단계 연결</p><p>원래 문제는 제외합니다. 선택한 난도에 다른 문제가 없으면 준비 중으로 표시합니다.</p><button type="button" class="today-primary" id="similarStart">이 난도로 풀기 →</button></section>';
     app.querySelectorAll("[data-difficulty]").forEach(button=>button.onclick=()=>{difficulty=button.dataset.difficulty;setupSimilar(note)});
-    document.getElementById("similarStart").onclick=()=>{const match=window.similarQuestion(note,difficulty);grade=String(note.grade);trackKey=match.key;questions=[match.question];index=0;correct=0;answers=[];window.GameScratch.reset();renderQuestion()};
+    const label=document.createElement("label");label.className="wrong-reason";label.textContent="세부 유형";const select=document.createElement("select");select.id="similarSubtype";select.innerHTML='<option value="">추천 · 원래 유형 우선</option>'+types.map(type=>'<option value="'+esc(type)+'">'+esc(type)+'</option>').join("");select.value=subtype;select.onchange=()=>{subtype=select.value};label.append(select);document.getElementById("similarStart").before(label);
+    document.getElementById("similarStart").onclick=()=>{const match=window.similarQuestion(note,difficulty,subtype);grade=String(note.grade);trackKey=match.key;questions=[match.question];index=0;correct=0;answers=[];window.GameScratch.reset();renderQuestion()};
   }
   function initialize(){
     if(window.StudentSync&&!window.StudentSync.getState().ready)return;

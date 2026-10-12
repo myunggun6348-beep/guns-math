@@ -2,6 +2,7 @@ const fs=require("fs"),path=require("path"),http=require("http"),assert=require(
 const {chromium}=require("C:/Users/User/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
 const root=path.join(__dirname,"..");
 const resetRequests=[];
+const sampleAnalysis={reasons:[{key:"calculation",name:"계산 실수",count:2},{key:"reading",name:"조건 해석",count:1}],hints:{reviewAttempts:3,hintUsed:2,hintSteps:4,soloCorrect:1},savedHintNotes:2};
 const json=(res,value)=>{res.setHeader("Content-Type","application/json");res.end(JSON.stringify(value))};
 const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,"http://localhost").pathname;
@@ -9,7 +10,7 @@ const server=http.createServer((req,res)=>{
     let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{
       const input=JSON.parse(body||"{}");
       if(input.action==="reset-password"){resetRequests.push(input);return json(res,{ok:true,id:input.id})}
-      json(res,{summary:{total:3,active7:2,today:1,activeWrong:3,inactive7:1,notStarted:1},classes:[{key:"2-3",grade:"2",className:"3",students:2,active7:2,today:1,activeWrong:3,average:60,inactive7:0,notStarted:0,weakConcepts:[{name:"미분",rate:38,students:2,weakStudents:2}]},{key:"1-1",grade:"1",className:"1",students:1,active7:0,today:0,activeWrong:0,average:null,inactive7:1,notStarted:1,weakConcepts:[]}],students:[{id:"student01",name:"민수",grade:"2",className:"3",track:"calc1",studyCount:8,todayDone:true,todayScore:4,average:80,activeWrong:2,mastered:3,weakest:{name:"미분",rate:50,attempts:4},lastAt:"2026-09-21T03:00:00Z",inactive7:false,notStarted:false},{id:"math02",name:"지수",grade:"1",className:"1",track:"common1",studyCount:0,todayDone:false,todayScore:null,average:null,activeWrong:0,mastered:0,weakest:null,lastAt:"",inactive7:true,notStarted:true},{id:"student03",name:"수빈",grade:"2",className:"3",track:"calc1",studyCount:4,todayDone:false,todayScore:null,average:40,activeWrong:1,mastered:0,weakest:{name:"미분",rate:25,attempts:4},lastAt:"2026-09-21T03:00:00Z",inactive7:false,notStarted:false}]});
+      json(res,{summary:{total:3,active7:2,today:1,activeWrong:3,inactive7:1,notStarted:1},classes:[{key:"2-3",grade:"2",className:"3",students:2,active7:2,today:1,activeWrong:3,average:60,inactive7:0,notStarted:0,analysis:sampleAnalysis,weakConcepts:[{name:"미분",rate:38,students:2,weakStudents:2}]},{key:"1-1",grade:"1",className:"1",students:1,active7:0,today:0,activeWrong:0,average:null,inactive7:1,notStarted:1,weakConcepts:[]}],students:[{id:"student01",name:"민수",grade:"2",className:"3",track:"calc1",studyCount:8,todayDone:true,todayScore:4,average:80,activeWrong:2,mastered:3,weakest:{name:"미분",rate:50,attempts:4},lastAt:"2026-09-21T03:00:00Z",inactive7:false,notStarted:false,analysis:sampleAnalysis},{id:"math02",name:"지수",grade:"1",className:"1",track:"common1",studyCount:0,todayDone:false,todayScore:null,average:null,activeWrong:0,mastered:0,weakest:null,lastAt:"",inactive7:true,notStarted:true},{id:"student03",name:"수빈",grade:"2",className:"3",track:"calc1",studyCount:4,todayDone:false,todayScore:null,average:40,activeWrong:1,mastered:0,weakest:{name:"미분",rate:25,attempts:4},lastAt:"2026-09-21T03:00:00Z",inactive7:false,notStarted:false}]});
     });return;
   }
   if(pathname==="/api/admin")return json(res,{좋음:true,목록:[],검토:false,labels:[],series:[],total:0});
@@ -39,6 +40,7 @@ const server=http.createServer((req,res)=>{
       await page.locator('[data-attention="all"]').click();assert.equal(await page.locator("#학생현황 .student-admin-row:not(.head)").count(),2);
       await page.locator("#학생반필터").selectOption("");await page.locator("#학생검색").fill("미분");assert.equal(await page.locator("#학생현황 .student-admin-row:not(.head)").count(),2);
       await page.locator("#학생검색").fill("student01");assert.equal(await page.locator("#학생현황 .student-admin-row:not(.head)").count(),1);
+      await page.locator(".student-learning-analysis summary").click();assert.match(await page.locator(".student-learning-analysis").innerText(),/계산 실수 2문제/);assert.match(await page.locator(".student-learning-analysis").innerText(),/확인 문제 3회.*힌트 사용 2회/);assert.match(await page.locator(".student-learning-analysis").innerText(),/혼자 맞힘 1회/);
       await page.locator(".student-reset-button").click();await page.waitForSelector("#studentResetForm");
       await page.locator('#studentResetForm [name="pin"]').fill("483927");await page.locator('#studentResetForm [name="confirm"]').fill("483928");
       const before=resetRequests.length;await page.locator('#studentResetForm [type="submit"]').click();assert.match(await page.locator("#studentResetForm [role=status]").innerText(),/서로 다릅니다/);assert.equal(resetRequests.length,before);

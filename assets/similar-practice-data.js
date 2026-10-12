@@ -141,14 +141,64 @@
       ["space","basic","두 점 (1,2,4), (5,6,8)의 중점의 z좌표는?","6","중점의 z좌표는 (4+8)/2=6입니다.","중점의 각 좌표는 두 점의 해당 좌표의 평균입니다.","z좌표만 묻고 있으므로 두 점의 세 번째 좌표를 더한 뒤 2로 나누세요."]
     ]
   };
+  const types={
+    common1:["인수분해","나머지정리","곱셈 공식","근과 계수","이차부등식","판별식","순열","조합"],
+    common2:["역함수","절댓값 그래프","무리함수 정의역","함숫값","원의 중심","두 점 거리","직선의 기울기","중점"],
+    algebra:["지수방정식","로그값","로그의 성질","특수각","단위원","주기","등차수열","등비수열"],
+    calc1:["연속함수 극한","유리식 극한","도함숫값","증가·감소","접선 기울기","다항함수 정적분","상수함수 정적분","다항함수 정적분"],
+    stats:["독립 시행","확률의 뜻","공 선택","확률의 덧셈","평균","분산","상대도수","표준편차"],
+    calc2:["등비수열 극한","무한등비급수","유리식 수열 극한","지수함수 미분","로그함수 미분","삼각함수 미분","로그함수 적분","다항함수 정적분"],
+    geometry:["포물선","타원","쌍곡선","성분 내적","수직과 내적","벡터 크기","공간 거리","공간 중점"]
+  };
+  const challengeTypes={poly:"미지계수",eq:"근의 부호",count:"조합과 역할",func:"역함수",geomeq:"원과 직선",explog:"로그방정식",trig:"삼각방정식",seq:"등차수열의 합",limit:"유리식 극한",diff:"극값",integ:"정적분과 넓이",prob:"비복원 추출",stat:"변환변수 분산",seqlim:"급수 항 변환",difflaw:"합성함수 미분",integlaw:"치환적분",conic:"초점 거리",vec:"수직과 내적",space:"중점과 거리"};
+  const supplementTypes={common1:["곱셈 공식","근과 계수","순열","조합"],algebra:["로그의 성질","주기","등차수열","등비수열"],calc1:["연속함수 극한","유리식 극한","접선 기울기","상수함수 정적분"],calc2:["등비수열 극한","지수함수 미분","지수함수 적분","다항함수 정적분"],geometry:["포물선","성분 내적","공간 거리","공간 중점"]};
+  const expanded={
+    common1:[
+      ["poly","나머지정리","일차다항식 f(x)를 x−1로 나눈 나머지는 2, x−2로 나눈 나머지는 5이다. f(3)의 값은?","8","f(x)=ax+b로 두면 a+b=2, 2a+b=5입니다. a=3, b=−1이므로 f(3)=8입니다.","나머지정리를 이용해 주어진 나머지를 함숫값으로 바꾸세요.","f(1)=2, f(2)=5입니다. 일차다항식의 두 계수를 연립방정식으로 구하세요."],
+      ["eq","판별식","x²−2kx+9=0이 중근을 갖고 k>0일 때 k의 값은?","3","D=4k²−36=0에서 k=±3입니다. k>0이므로 3입니다.","중근 조건은 판별식이 0이라는 뜻입니다.","D=(−2k)²−4×1×9를 세우고 k의 부호 조건을 적용하세요.",["−3","0","3","6","9"]],
+      ["count","조건부 순열","서로 다른 책 5권을 일렬로 놓는다. 특정한 두 책 A,B가 붙어 있는 경우의 수는?","48","A,B를 한 묶음으로 보면 4!가지이고 묶음 안의 순서는 2가지입니다. 4!×2=48입니다.","붙어 있어야 하는 두 책을 하나의 묶음으로 보세요.","묶음과 나머지 세 책을 배열한 뒤, 묶음 안에서 A,B의 순서를 바꾸는 경우도 곱하세요.",["12","24","36","48","120"]]
+    ],
+    common2:[
+      ["func","합성함수","f(x)=2x+1, g(x)=x²이다. (g∘f)(a)=25를 만족하는 a≥0의 값은?","2","(2a+1)²=25에서 2a+1=±5입니다. a=2 또는 −3인데 a≥0이므로 2입니다.","g∘f는 f를 먼저 적용한 뒤 그 결과에 g를 적용합니다.","먼저 (2a+1)²=25를 세우세요. 제곱근의 두 부호를 모두 고려한 뒤 a≥0 조건을 적용하세요."],
+      ["geomeq","수직인 직선","직선 y=2x+1에 수직이고 점 (2,3)을 지나는 직선의 y절편은?","4","수직인 직선의 기울기는 −1/2입니다. y=−x/2+b에 (2,3)을 넣으면 b=4입니다.","기울기가 존재하는 두 수직 직선은 기울기의 곱이 −1입니다.","새 기울기로 y=mx+b를 세운 뒤 주어진 점을 대입해 b를 구하세요."]
+    ],
+    algebra:[
+      ["explog","로그의 성질","양수 a,b에 대해 log₂a=3, log₂b=2일 때 log₂(a²/b)의 값은?","4","로그법칙에 따라 2log₂a−log₂b=2×3−2=4입니다.","거듭제곱은 계수로, 나눗셈은 로그의 차로 바꿀 수 있습니다.","2log₂a−log₂b로 바꾼 뒤 주어진 두 로그값을 대입하세요."],
+      ["trig","삼각함수 관계","θ가 제2사분면의 각이고 sin θ=3/5일 때 cos θ의 값은?","−4/5","sin²θ+cos²θ=1에서 cos²θ=16/25입니다. 제2사분면에서 코사인은 음수이므로 −4/5입니다.","sin²θ+cos²θ=1을 사용하세요.","코사인의 절댓값을 구한 뒤 제2사분면에서의 부호를 결정하세요.",["−4/5","4/5","−3/5","3/5","1/5"]],
+      ["seq","등비수열의 합","첫째항이 2, 공비가 3인 등비수열의 첫째항부터 제4항까지의 합은?","80","등비수열의 합은 2(3⁴−1)/(3−1)=80입니다.","일반항과 합의 공식을 구분하세요.","a=2, r=3, n=4를 Sₙ=a(rⁿ−1)/(r−1)에 대입하세요."]
+    ],
+    calc1:[
+      ["limit","연속 조건","x≠2에서 f(x)=(x²−a)/(x−2), f(2)=b이다. f가 x=2에서 연속일 때 a+b의 값은?","8","유한한 극한을 가지려면 4−a=0이므로 a=4입니다. 약분한 식 x+2의 극한은 4이므로 b=4, 합은 8입니다.","연속이려면 극한이 존재하고 그 값이 f(2)와 같아야 합니다.","분모가 0이 되는 곳에서 분자도 0이어야 합니다. a를 구한 뒤 약분한 식의 극한으로 b를 정하세요."],
+      ["diff","최대·최소","함수 f(x)=x³−3x의 구간 0≤x≤2에서 최댓값은?","2","f′(x)=3x²−3=0인 구간 안의 점은 x=1입니다. f(0)=0, f(1)=−2, f(2)=2를 비교하면 최댓값은 2입니다.","닫힌 구간의 최댓값은 양끝과 구간 안의 극값을 함께 비교합니다.","도함수가 0인 점을 찾고, 그 점과 x=0, x=2에서의 함숫값을 계산하세요.",["−2","0","1","2","4"]],
+      ["integ","미분과 적분 관계","F(x)=∫₁ˣ (t²+1) dt일 때 F′(2)의 값은?","5","적분과 미분의 관계에 따라 F′(x)=x²+1이므로 F′(2)=5입니다.","위끝이 x인 정적분으로 정의된 함수를 미분하는 성질을 사용하세요.","피적분함수의 t를 x로 바꾼 뒤 x=2를 대입하세요."]
+    ],
+    stats:[
+      ["prob","조건부확률","공정한 주사위를 던져 나온 눈이 2보다 크다는 것을 안다. 이 눈이 짝수일 조건부확률은?","1/2","가능한 눈은 3,4,5,6 네 가지이고 그중 짝수는 4,6 두 가지이므로 2/4=1/2입니다.","이미 알려진 조건을 만족하는 경우만 새 표본공간으로 생각하세요.","2보다 큰 눈을 나열한 뒤 그 안에서 짝수의 개수를 세세요."],
+      ["stat","이항분포","X가 이항분포 B(10,0.3)을 따를 때 E(X)+V(X)의 값은?",["5.1","51/10"],"평균은 np=3, 분산은 np(1−p)=2.1입니다. 합은 5.1입니다.","이항분포의 평균과 분산 공식을 각각 사용하세요.","n=10, p=0.3을 np와 np(1−p)에 넣고 두 값을 더하세요.",["3","4.2","5.1","6","9"]]
+    ],
+    calc2:[
+      ["seqlim","급수의 합","∑(n=1→∞) 1/(n(n+1))의 값은?","1","1/(n(n+1))=1/n−1/(n+1)이므로 제N항까지의 합은 1−1/(N+1)입니다. N→∞이면 1입니다.","부분분수로 바꾸면 이웃한 항들이 소거되는 구조를 찾을 수 있습니다.","1/n−1/(n+1)로 바꿔 부분합을 적고 마지막 남는 항의 극한을 구하세요.",["0","1/2","1","2","∞"]],
+      ["difflaw","곱의 미분","f(x)=xeˣ일 때 f′(0)의 값은?","1","곱의 미분법으로 f′(x)=eˣ+xeˣ입니다. x=0을 넣으면 1입니다.","두 함수의 곱은 각각을 따로 미분해 곱하는 것이 아닙니다.","(uv)′=u′v+uv′에 u=x, v=eˣ을 넣고 x=0을 대입하세요."],
+      ["integlaw","부분적분","∫₀¹ xeˣ dx의 값은?","1","부분적분하면 원시함수는 (x−1)eˣ입니다. 위끝과 아래끝의 차는 0−(−1)=1입니다.","다항식과 지수함수의 곱이므로 부분적분을 시도하세요.","u=x, dv=eˣdx로 두고 ∫u dv=uv−∫v du를 적용한 뒤 양끝 값을 계산하세요."]
+    ],
+    geometry:[
+      ["conic","타원의 정의","타원 x²/25+y²/9=1 위의 점 P와 두 초점 F₁,F₂에 대하여 PF₁+PF₂의 값은?","10","타원의 정의에서 두 초점까지 거리의 합은 장축 길이 2a입니다. a=5이므로 10입니다.","타원은 두 초점까지 거리의 합이 일정한 점들의 집합입니다.","표준형에서 긴 반지름 a를 구하세요. 거리의 합은 초점 사이의 거리가 아니라 2a입니다.",["6","8","10","16","25"]],
+      ["vec","벡터의 사잇각","a=(1,1), b=(2,0)의 사잇각을 θ라 할 때 cos θ의 값은?","√2/2","a·b=2, |a|=√2, |b|=2입니다. cos θ=2/(2√2)=√2/2입니다.","내적을 성분으로 구한 뒤 |a||b|cos θ와 연결하세요.","cos θ=(a·b)/(|a||b|)에 내적과 두 벡터의 크기를 각각 대입하세요.",["0","1/2","√2/2","√3/2","1"]],
+      ["space","정사영","점 P=(2,−3,6)의 xy평면 위 정사영을 H라 한다. 점 Q=(5,1,0)과 H 사이의 거리는?","5","정사영 H=(2,−3,0)입니다. HQ=√((5−2)²+(1+3)²)=√25=5입니다.","xy평면의 모든 점은 z좌표가 0입니다.","정사영에서 x,y좌표는 유지됩니다. H의 좌표를 구한 뒤 Q와의 좌표 차로 거리 공식을 적용하세요."]
+    ]
+  };
   window.SIMILAR_QUESTIONS={};
   Object.entries(window.TODAY_TRACKS).forEach(([key,track])=>{
-    const questions=track.questions.map((q,i)=>{const [difficulty,...hints]=guidance[key][i];return{...q,difficulty,hints:[window.TODAY_CONCEPTS[q.concept].about,...hints]}});
-    const challenge=extra[key].map(([concept,prompt,answers,explanation,...hints])=>({concept,prompt,type:"text",answers:Array.isArray(answers)?answers:[answers],explanation,difficulty:"challenge",hints:[window.TODAY_CONCEPTS[concept].about,...hints]}));
-    const added=(supplement[key]||[]).map(([concept,difficulty,prompt,answers,explanation,approach,step,choices])=>{
-      const accepted=Array.isArray(answers)?answers:[answers],q={concept,difficulty,prompt,explanation,hints:[window.TODAY_CONCEPTS[concept].about,approach,step]};
+    const questions=track.questions.map((q,i)=>{const [difficulty,...hints]=guidance[key][i];q.subtype=types[key][i];return{...q,difficulty,hints:[window.TODAY_CONCEPTS[q.concept].about,...hints]}});
+    const challenge=extra[key].map(([concept,prompt,answers,explanation,...hints])=>({concept,subtype:challengeTypes[concept],prompt,type:"text",answers:Array.isArray(answers)?answers:[answers],explanation,difficulty:"challenge",hints:[window.TODAY_CONCEPTS[concept].about,...hints]}));
+    const added=(supplement[key]||[]).map(([concept,difficulty,prompt,answers,explanation,approach,step,choices],i)=>{
+      const accepted=Array.isArray(answers)?answers:[answers],q={concept,subtype:supplementTypes[key][i],difficulty,prompt,explanation,hints:[window.TODAY_CONCEPTS[concept].about,approach,step]};
       return choices?{...q,type:"choice",choices,answer:choices.indexOf(accepted[0])}:{...q,type:"text",answers:accepted};
     });
-    window.SIMILAR_QUESTIONS[key]=questions.concat(challenge,added);
+    const variations=expanded[key].map(([concept,subtype,prompt,answers,explanation,approach,step,choices])=>{
+      const accepted=Array.isArray(answers)?answers:[answers],q={concept,subtype,difficulty:"challenge",prompt,explanation,hints:[window.TODAY_CONCEPTS[concept].about,approach,step]};
+      return choices?{...q,type:"choice",choices,answer:choices.indexOf(accepted[0])}:{...q,type:"text",answers:accepted};
+    });
+    window.SIMILAR_QUESTIONS[key]=questions.concat(challenge,added,variations);
   });
 })();

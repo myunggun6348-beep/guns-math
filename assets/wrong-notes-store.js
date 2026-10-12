@@ -31,7 +31,11 @@
     if(!data.conceptId&&!data.conceptName)return;
     const all=readStats(),key=statKey(data),row=window.StudyState.totals(all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""});
     row.name=data.conceptName||row.name;row.subject=data.subject||row.subject;row.conceptId=data.conceptId||row.conceptId;
-    const counter=row.devices[device]||{correct:0,wrong:0};counter[isCorrect?"correct":"wrong"]++;row.devices[device]=counter;row.lastAt=new Date().toISOString();all[key]=window.StudyState.totals(row);writeStats(all);
+    const counter=row.devices[device]||{correct:0,wrong:0};counter[isCorrect?"correct":"wrong"]++;
+    if(data.source==="similar"&&Number.isInteger(data.hintsUsed)&&data.hintsUsed>=0&&data.hintsUsed<=3){
+      counter.reviewAttempts=(counter.reviewAttempts||0)+1;counter.hintUsed=(counter.hintUsed||0)+(data.hintsUsed>0?1:0);counter.hintSteps=(counter.hintSteps||0)+data.hintsUsed;counter.soloCorrect=(counter.soloCorrect||0)+(isCorrect&&data.hintsUsed===0?1:0);
+    }
+    row.devices[device]=counter;row.lastAt=new Date().toISOString();all[key]=window.StudyState.totals(row);writeStats(all);
   }
   function stats(){
     return Object.values(readStats()).map(row=>({...row,rate:row.attempts?Math.round(row.correct/row.attempts*100):0}))
@@ -63,8 +67,10 @@
       grade:data.grade||"",subject:data.subject||"",conceptId:data.conceptId||"",conceptName:data.conceptName||"",
       prompt:data.prompt||"",type:data.type||"text",choices:Array.isArray(data.choices)?data.choices:[],
       correctAnswer:String(data.correctAnswer??""),userAnswer:String(data.userAnswer??""),explanation:data.explanation||"",
+      acceptedAnswers:Array.isArray(data.acceptedAnswers)?data.acceptedAnswers.slice(0,20).map(String):[],
       solutionImage:solutionImage(data.solutionImage),
       difficulty:["basic","standard","challenge"].includes(data.difficulty)?data.difficulty:"",hintsUsed:Number.isInteger(data.hintsUsed)&&data.hintsUsed>=0&&data.hintsUsed<=3?data.hintsUsed:0,
+      subtype:typeof data.subtype==="string"?data.subtype.slice(0,40):"",
       reviewHref:data.reviewHref||"",updatedAt:now,...review({},false,now),attempts:index>=0?(items[index].attempts||0)+1:1,
       createdAt:index>=0?items[index].createdAt:now
     };
@@ -77,7 +83,7 @@
     items[index]={...items[index],updatedAt:now,userAnswer:String(userAnswer??items[index].userAnswer),attempts:(items[index].attempts||0)+1,
       ...review(items[index],isCorrect,now)};
     if(!write(items))return false;
-    track(items[index],isCorrect);return true;
+    track({...items[index],source:"retry"},isCorrect);return true;
   }
   const reasons={concept:"개념이 헷갈렸어요",reading:"조건을 잘못 읽었어요",calculation:"계산 실수였어요",time:"시간이 부족했어요",unsure:"아직 이유를 모르겠어요"};
   function setReason(id,reason){

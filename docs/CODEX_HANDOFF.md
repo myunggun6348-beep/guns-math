@@ -71,9 +71,20 @@
 
 학생 학습 업그레이드를 이어가며, 기본 문항 56개 중 20개에서 원문을 제외하면 일부 난도의 대체 문항이 없는 것을 확인했다. 기초·표준 보강 문항 20개(오지선다 10개·주관식 10개)와 3단계 힌트·해설을 추가해 확인 문제은행을 95문항으로 늘렸다. 현재 기본 56문항 모두 기초·표준·도전의 다른 문항에 연결된다. 추가 문항은 `assets/similar-practice-data.js`의 `supplement`에 있으며 오늘의 5문제에는 추가하지 않는다. `scripts/check-similar-practice.cjs`에서 보강 정답과 기본 문항의 모든 난도 연결을 검사한다. 새로 저장한 확인 문제의 오답은 일부 난도가 준비 중일 수 있다. 다음 작업 전 실제 최신 Git 커밋과 배포 상태를 다시 확인한다.
 
+## 세 가지 통합 업그레이드
+
+사용자가 확인 문제 보강·선생님 분석·개인별 학습을 모두 요청하여 진행했다. 확인 문제에 19개 도전 문항을 추가해 총 114문항으로 늘리고, 모든 문항에 세부 유형을 부여했다. 난도 다음에 유형을 선택하며 추천은 원래 유형을 우선한다. 114문항 모두 원문을 제외한 세 난도 대체 문항을 가진다. 유형별로는 특정 난도만 제공할 수 있다.
+
+선생님 방 학생별 분석은 현재 보관한 오답의 원인과 확인 문제 힌트 사용을 보여준다. 반 카드에도 원인·힌트 요약을 표시한다. `StudyState` 기기별 카운터에 `reviewAttempts`, `hintUsed`, `hintSteps`, `soloCorrect`를 더해 정답 시도도 힌트 현황에 포함하고 재전송 중복 없이 합산한다. 새 집계는 이 기능 적용 후의 확인 문제만 포함한다. 오답 재풀이의 기존 `hintsUsed`를 새 확인 문제 사용으로 중복 합산하지 않는다. 과거 전체 힌트 사용률은 복원하지 않는다.
+
+`assets/daily-selection.js`는 해당 과목의 취약 개념과 예정일이 된 오답을 우선하여 5문제를 구성한다. 집중 문항을 최대 3개 먼저 고르고 다른 개념과 미선택 문제로 균형을 맞춘다. 기록이 없으면 기존 균형 구성을 쓴다. 완료 기록에 `questionPrompts`와 `focusConcepts`를 추가해 완료한 당일 세트를 유지한다. 구버전 완료 기록은 기존 날짜별 선정 방식을 유지한다. 기존 점수·복습 일정·로컬 필기 보존을 검증했다.
+
+관련 검사: `check-expanded-questions.cjs`, `check-personal-daily.cjs`, `check-similar-practice.cjs`, `check-student-attention.cjs`, `check-admin-students.cjs`, `check-study-sync.cjs`, `check-spaced-review.cjs`.
+
 ## 관련 파일 목록
 
-- `assets/today-data.js`: 기본 문항·개념·과목, `window.similarQuestion(note, difficulty)`
+- `assets/today-data.js`: 기본 문항·개념·과목, `window.similarQuestion(note, difficulty, subtype)`
+- `assets/daily-selection.js`: 개인별 오늘의 5문제 선정·완료한 당일 문항 유지
 - `assets/similar-practice-data.js`: 문항별 난도·힌트와 도전 문항, `window.SIMILAR_QUESTIONS`
 - `assets/today.js`: 기존 5문제와 확인 문제 화면, 난도 선택·힌트·오답 원인 UI
 - `today.html`, `wrong-notes.html`: 데이터와 스크립트 로딩
@@ -110,7 +121,7 @@ git diff --check
 - 힌트·난도 안내표는 내장 문항 순서에 맞춰져 있으므로 문항 순서 변경 시 함께 수정하고 검사한다.
 - 난도별 문항 수가 적어서 일부 원문에서는 특정 난도가 준비 중으로 표시될 수 있다.
 - 개념 단위로 연결하므로 세부 유형까지 동일하다고 설명하지 않는다.
-- 다음 아이디어로 선생님 방 오답 원인 집계, 힌트 없이 다시 맞힌 개념 표시, 반 취약 개념별 주간 과제를 제안했으나 사용자는 아직 작업을 요청하지 않았다.
+- 선생님 방 오답 원인·힌트 집계와 개인별 학습은 요청받아 구현했다. 반 취약 개념별 주간 과제는 아직 요청받지 않았다.
 
 ## 새 Codex 대화에 넣을 시작 문장
 

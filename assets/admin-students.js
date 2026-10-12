@@ -4,13 +4,14 @@
   if(!root)return;
   const resetDialog=document.createElement("dialog");resetDialog.className="student-account-dialog";resetDialog.setAttribute("aria-label","학생 비밀번호 초기화");document.body.append(resetDialog);
   let resetting=false;resetDialog.addEventListener("cancel",event=>{if(resetting)event.preventDefault()});
-  const tracks={common1:"공통수학1",common2:"공통수학2",algebra:"대수",calc1:"미적분Ⅰ",probability:"확률과 통계",geometry:"기하",calc2:"미적분Ⅱ"};
+  const tracks={common1:"공통수학1",common2:"공통수학2",algebra:"대수",calc1:"미적분Ⅰ",probability:"확률과 통계",stats:"확률과 통계",geometry:"기하",calc2:"미적분Ⅱ"};
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   const when=value=>{if(!value)return"학습 기록 없음";const date=new Date(value);if(Number.isNaN(date.getTime()))return value;return new Intl.DateTimeFormat("ko-KR",{timeZone:"Asia/Seoul",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}).format(date)};
   /* 가입만 하고 한 번도 안 온 학생은 '학습 기록 없음'으로만 보여서 누군지 알 수가
      없었습니다. 계정 만든 날은 이미 받아 오고 있었는데 화면에 안 쓰고 있었습니다. */
   const 가입날=value=>{if(!value)return"가입일 모름";const date=new Date(value);if(Number.isNaN(date.getTime()))return"가입일 모름";return"가입 "+new Intl.DateTimeFormat("ko-KR",{timeZone:"Asia/Seoul",year:"2-digit",month:"numeric",day:"numeric"}).format(date)};
   let students=[],attention="all";
+  const hintText=analysis=>{const hints=analysis?.hints;return hints?.reviewAttempts?'확인 문제 '+hints.reviewAttempts+'회 · 힌트 사용 '+hints.hintUsed+'회 ('+Math.round(hints.hintUsed/hints.reviewAttempts*100)+'%) · 혼자 맞힘 '+hints.soloCorrect+'회'+(hints.hintUsed?' · 사용 시 평균 '+(hints.hintSteps/hints.hintUsed).toFixed(1)+'단계':''):'확인 문제 힌트 누적 집계 전'};
   function draw(){
     const query=search.value.trim().toLowerCase();
     const matched=students.filter(student=>{
@@ -24,6 +25,10 @@
     list.innerHTML='<div class="student-admin-table"><div class="student-admin-row head"><span>학생</span><span>학년·반·과목</span><span>학습</span><span>오답</span><span>취약 개념</span><span>최근 활동 · 가입</span></div>'+shown.map(student=>'<article class="student-admin-row"><span class="student-admin-name"><b>'+esc(student.name||student.id)+'</b><small>'+esc(student.id)+'</small></span><span data-col="학년·반·과목">'+(student.grade?'고'+esc(student.grade)+(student.className?' '+esc(student.className)+'반':' · 반 미설정'):'미설정')+'<small>'+esc(tracks[student.track]||student.track||'과목 미설정')+'</small></span><span data-col="학습"><b>'+(student.todayDone?'오늘 '+student.todayScore+'/5':'누적 '+student.studyCount+'회')+'</b><small>'+(student.average===null?'평균 기록 없음':'전체 평균 '+student.average+'%')+'</small></span><span data-col="오답"><b>'+student.activeWrong+'문제</b><small>완료 '+student.mastered+'</small></span><span data-col="취약 개념">'+(student.weakest?'<b>'+esc(student.weakest.name)+'</b><small>정답률 '+student.weakest.rate+'% · '+student.weakest.attempts+'회</small>':'<small>기록 없음</small>')+'</span><span data-col="최근 활동"><b>'+esc(when(student.lastAt))+'</b><small>'+esc(가입날(student.joinedAt))+'</small></span></article>').join('')+'</div>';
     list.querySelectorAll(".student-admin-name").forEach((span,index)=>{const button=document.createElement("button");button.type="button";button.className="student-reset-button";button.textContent="비밀번호 초기화";button.onclick=()=>openReset(shown[index]);span.append(button)});
     list.querySelectorAll(".student-admin-name").forEach((span,index)=>{const student=shown[index];if(student.notStarted||student.inactive7){const badge=document.createElement("span");badge.className="student-attention-badge";badge.textContent=student.notStarted?(student.inactive7?"시작 전 · 7일 미학습":"아직 시작 안 함"):"7일 미학습";span.append(badge)}});
+    list.querySelectorAll(".student-admin-name").forEach((span,index)=>{
+      const analysis=shown[index].analysis,details=document.createElement("details");details.className="student-learning-analysis";
+      details.innerHTML='<summary>오답·힌트 분석 보기</summary><p>보관된 오답 원인: '+((analysis?.reasons||[]).filter(reason=>reason.count>0).map(reason=>esc(reason.name)+' '+reason.count+'문제').join(' · ')||'기록 없음')+'</p><p>'+esc(hintText(analysis))+'</p><small>원인은 학생 선택값입니다. 힌트 누적 집계는 기능 적용 후 확인 문제만 포함합니다.'+(analysis?.savedHintNotes?' 보관된 오답 중 힌트 사용 기록 '+analysis.savedHintNotes+'문제.':'')+'</small>';span.append(details);
+    });
   }
   function openReset(student){
     if(resetting)return;
@@ -50,6 +55,7 @@
       const concepts=document.createElement("span");concepts.className="student-common-concepts";
       concepts.innerHTML=(item.weakConcepts||[]).length?'<b>반 공통 취약 개념</b>'+item.weakConcepts.map(concept=>'<small>'+esc(concept.name)+' · 집중 복습 '+concept.weakStudents+'/'+concept.students+'명 · 평균 '+concept.rate+'%</small>').join(''):esc(item.key==='unset'?'반을 등록하면 공통 취약 개념을 확인할 수 있습니다.':'공통 취약 개념: 표시 기준에 해당하는 기록 없음');
       button.append(concepts);
+      const analysis=item.analysis,reason=(analysis?.reasons||[]).filter(row=>row.key!=='unrecorded'&&row.count>0).sort((a,b)=>b.count-a.count)[0],insight=document.createElement("small");insight.className="student-class-analysis";insight.textContent=(reason?'많이 기록한 원인: '+reason.name+' '+reason.count+'문제 · ':'')+hintText(analysis);button.append(insight);
     });
     filter.innerHTML='<option value="">전체 학생</option>'+classes.map(item=>'<option value="'+esc(item.key)+'">'+esc(label(item))+'</option>').join('');
     if(classes.some(item=>item.key===selectedClass))filter.value=selectedClass;

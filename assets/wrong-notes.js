@@ -75,7 +75,7 @@
     slot.querySelector(".retry-submit").addEventListener("click",()=>{
       const answerValue=input?input.value:value,status=slot.querySelector(".retry-status");
       if(!String(answerValue).trim()){status.textContent="답을 먼저 입력해 주세요.";status.className="retry-status wrong";return}
-      const ok=norm(answerValue)===norm(note.correctAnswer);
+      const accepted=Array.isArray(note.acceptedAnswers)&&note.acceptedAnswers.length?note.acceptedAnswers:[note.correctAnswer];const ok=accepted.some(answer=>norm(answerValue)===norm(answer));
       if(!store.attempt(id,ok,answerValue)){status.textContent="풀이 기록을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.";return}
       slot.querySelector(".retry-submit").disabled=true;
       if(ok){const saved=store.all().find(x=>x.id===id);status.textContent=saved.mastered?"정답입니다. 마지막 확인을 마쳐 복습 완료했습니다.":"정답입니다. "+dateText(saved.nextReviewAt)+"에 다시 확인하세요.";status.className="retry-status correct";toast(saved.mastered?"복습을 완료했습니다.":"다음 복습 일정을 저장했습니다.");const link=similarLink(saved);if(link){slot.querySelector(".retry-box").insertAdjacentHTML("beforeend",link);const back=document.createElement("button");back.type="button";back.className="wrong-button";back.textContent="복습 목록으로";back.onclick=draw;slot.querySelector(".retry-box").append(back)}else setTimeout(draw,1200)}

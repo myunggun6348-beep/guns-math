@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),{select}=require('../assets/daily-selection');
+const env={window:{}};vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../assets/today-data.js'),'utf8'),env);
+const base={questions:env.window.TODAY_TRACKS.common1.questions,trackKey:'common1',date:'2026-10-12',grade:'1',now:Date.parse('2026-10-12T03:00:00Z')};
+const normal=select(base);assert.equal(normal.questions.length,5);assert.equal(new Set(normal.questions.map(q=>q.concept)).size,3);assert.equal(normal.focus.length,0);assert.deepEqual(select(base),normal);
+const stats=[{conceptId:'poly',attempts:4,correct:0},{conceptId:'eq',attempts:10,correct:9},{conceptId:'diff',attempts:20,correct:0}];
+const tailored=select({...base,stats});assert.deepEqual(tailored.focus,['poly']);assert.equal(tailored.questions.filter(q=>q.concept==='poly').length,3);assert.equal(tailored.questions.length,5);assert.equal(new Set(tailored.questions.map(q=>q.prompt)).size,5);assert.deepEqual(select({...base,stats}),tailored);
+const record={questionPrompts:tailored.questions.map(q=>q.prompt),focusConcepts:tailored.focus};
+const retry=select({...base,stats:[{conceptId:'eq',attempts:10,correct:0}],record});assert.deepEqual(retry.questions,tailored.questions);assert.deepEqual(retry.focus,['poly']);assert.equal(retry.reused,true);
+assert.deepEqual(select({...base,stats,record:{correct:3,total:5}}).questions,normal.questions);
+assert.equal(select({...base,record:{...record,focusConcepts:'invalid'}}).focus.length,0);
+const due={grade:'1',conceptId:'eq',prompt:base.questions[3].prompt,mastered:false,nextReviewAt:'2026-10-11T00:00:00Z'};
+assert.ok(select({...base,notes:[due]}).questions.some(q=>q.prompt===due.prompt));assert.deepEqual(select({...base,notes:[{...due,grade:'2'}]}).focus,[]);assert.deepEqual(select({...base,notes:[{...due,nextReviewAt:'2026-10-13T00:00:00Z'}]}).focus,[]);assert.deepEqual(select({...base,notes:[{...due,mastered:true}]}).focus,[]);
+const allWeak=['poly','eq','count'].map(conceptId=>({conceptId,attempts:5,correct:0}));assert.equal(select({...base,stats:allWeak}).questions.length,5);
+console.log('맞춤 5문제 검사 통과: 취약 개념 우선·균형·중복 방지·동일 날짜 재풀이·기존 기록·복습일·학년 분리');

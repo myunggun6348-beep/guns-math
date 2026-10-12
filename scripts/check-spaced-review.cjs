@@ -24,4 +24,5 @@ store.record(q,false);assert.equal(note().reviewStage,0);assert.equal(note().mas
 const before=JSON.stringify(note());fail=true;assert.equal(store.attempt(id,true,'1'),false);assert.equal(JSON.stringify(note()),before);fail=false;
 const countBefore=store.all().length;fail=true;assert.equal(store.record({...q,prompt:'저장 실패 검사',difficulty:'challenge',hintsUsed:3},false),false);assert.equal(store.all().length,countBefore);fail=false;
 values.set('math-wrong-notes-v1',JSON.stringify([{id:'legacy',mastered:true}]));assert.equal(store.count().mastered,1);assert.equal(store.count().due,0);
+const confirmation={...q,source:'similar',hintsUsed:2};store.record(confirmation,false);store.record({...confirmation,hintsUsed:0},true);store.attempt(store.idFor(confirmation),false,'2');const metrics=store.stats().find(row=>row.key==='poly');assert.equal(metrics.reviewAttempts,2);assert.equal(metrics.hintUsed,1);assert.equal(metrics.hintSteps,2);assert.equal(metrics.soloCorrect,1);
 console.log('간격 복습 검사 통과: 1·3·7일, 조기 연습, 오답 초기화, 완료·기존 기록, 동기화, 저장 실패');

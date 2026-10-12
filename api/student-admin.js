@@ -10,6 +10,13 @@ function rate(row) {
   return attempts ? Math.round(correct / attempts * 100) : 0;
 }
 function newest(...values) { return values.filter(Boolean).map(String).sort().reverse()[0] || ""; }
+const reasonNames={concept:"개념 부족",reading:"조건 해석",calculation:"계산 실수",time:"시간 부족",unsure:"아직 모름",unrecorded:"미기록"};
+const safeCount=value=>Number.isSafeInteger(value)&&value>=0?value:0;
+function studyAnalysis(notes,stats){
+  const reasons=Object.entries(reasonNames).map(([key,name])=>({key,name,count:notes.filter(note=>(Object.hasOwn(reasonNames,note.wrongReason)&&note.wrongReason!=="unrecorded"?note.wrongReason:"unrecorded")===key).length}));
+  const hints=stats.reduce((sum,row)=>{["reviewAttempts","hintUsed","hintSteps","soloCorrect"].forEach(key=>sum[key]+=safeCount(row[key]));return sum},{reviewAttempts:0,hintUsed:0,hintSteps:0,soloCorrect:0});
+  return{reasons,hints,savedHintNotes:notes.filter(note=>safeCount(note.hintsUsed)>0).length};
+}
 
 async function accountIds() {
   let cursor = "0", keys = [], rounds = 0;
@@ -49,7 +56,7 @@ module.exports = async (req, res) => {
       if (!accountRaw) continue;
       const account = JSON.parse(accountRaw), data = dataRaw ? JSON.parse(dataRaw) : {};
       const records = Array.isArray(data.records) ? data.records : [];
-      const notes = Array.isArray(data.notes) ? data.notes : [];
+      const notes = Array.isArray(data.notes) ? data.notes.filter(note=>note&&typeof note==="object") : [];
       const stats = data.stats && typeof data.stats === "object" ? Object.values(data.stats).filter(row=>row&&typeof row==="object") : [];
       const weak = stats.filter(row => Number(row.attempts) > 0).sort((a, b) => rate(a) - rate(b) || Number(b.attempts) - Number(a.attempts))[0] || null;
       const todayRecords = records.filter(row => row.date === today);
@@ -72,16 +79,18 @@ module.exports = async (req, res) => {
         studyCount: records.length, todayDone: todayRecords.length > 0, todayScore: todayRecords.length ? Math.max(...todayRecords.map(row => Number(row.correct) || 0)) : null,
         average: totalQuestions ? Math.round(totalCorrect / totalQuestions * 100) : null, activeWrong: notes.filter(note => !note.mastered).length, mastered: notes.filter(note => note.mastered).length,
         weakest: weak ? { name: weak.name || "기타", rate: rate(weak), attempts: Number(weak.attempts) || 0 } : null,
+        analysis:studyAnalysis(notes,stats),
       });
     }
     students.sort((a, b) => String(b.lastAt).localeCompare(String(a.lastAt)) || a.id.localeCompare(b.id));
     const groups = new Map();
     students.forEach(student => {
       const key = student.grade && student.className ? `${student.grade}-${student.className}` : "unset";
-      const row = groups.get(key) || { key, grade: student.grade || "", className: student.className || "", students: 0, active7: 0, today: 0, activeWrong: 0, scoreSum: 0, scoreCount: 0,inactive7:0,notStarted:0 };
+      const row = groups.get(key) || { key, grade: student.grade || "", className: student.className || "", students: 0, active7: 0, today: 0, activeWrong: 0, scoreSum: 0, scoreCount: 0,inactive7:0,notStarted:0,analysis:studyAnalysis([],[]) };
       row.students++; if (Date.parse(student.lastAt) >= weekAgo) row.active7++; if (student.todayDone) row.today++; row.activeWrong += student.activeWrong;
       if (student.average !== null) { row.scoreSum += student.average; row.scoreCount++; }
       if(student.inactive7)row.inactive7++;if(student.notStarted)row.notStarted++;
+      row.analysis.reasons.forEach((reason,index)=>reason.count+=student.analysis.reasons[index].count);Object.keys(row.analysis.hints).forEach(key=>row.analysis.hints[key]+=student.analysis.hints[key]);row.analysis.savedHintNotes+=student.analysis.savedHintNotes;
       groups.set(key, row);
     });
     const classes = [...groups.values()].map(({ scoreSum, scoreCount, ...row }) => ({ ...row, average: scoreCount ? Math.round(scoreSum / scoreCount) : null,

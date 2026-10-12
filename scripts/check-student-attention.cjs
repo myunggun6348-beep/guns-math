@@ -13,6 +13,8 @@ function seed(id,className,joined,stats){
 async function request(password){const result={};await handler({method:"POST",body:{password},headers:{}},{setHeader(){},status(code){result.code=code;return this},json(data){result.data=data}});return result}
 (async()=>{
   seed("active01","3",20,{correct:1,days:1});seed("idle0001","3",20,{correct:2,days:8});seed("never001","3",20);seed("new00001","3",1);seed("other001","4",20,{correct:0,days:1});seed("edge0001","3",20,{correct:4,days:7});seed("unset001","",20,{correct:0,days:1});seed("unset002","",20,{correct:0,days:1});
+  const active=JSON.parse(values.get('student:data:active01'));active.notes=[{id:'a',wrongReason:'calculation',hintsUsed:2},{id:'b',wrongReason:'reading',hintsUsed:0},{id:'c',wrongReason:'unknown'},null];Object.assign(active.stats.diff,{reviewAttempts:3,hintUsed:2,hintSteps:5,soloCorrect:1});values.set('student:data:active01',JSON.stringify(active));
+  const idle=JSON.parse(values.get('student:data:idle0001'));idle.notes=[{id:'d',wrongReason:'calculation',hintsUsed:3}];Object.assign(idle.stats.diff,{reviewAttempts:2,hintUsed:1,hintSteps:3,soloCorrect:1});values.set('student:data:idle0001',JSON.stringify(idle));
   const originalNow=Date.now;Date.now=()=>now;
   try{
     assert.equal((await request("wrong")).code,401);
@@ -23,6 +25,8 @@ async function request(password){const result={};await handler({method:"POST",bo
     const cohort=data.classes.find(row=>row.key==="2-3");assert.equal(cohort.inactive7,2);assert.equal(cohort.notStarted,2);assert.equal(cohort.weakConcepts.length,1);assert.equal(cohort.weakConcepts[0].weakStudents,2);assert.equal(cohort.weakConcepts[0].students,3);assert.equal(cohort.weakConcepts[0].rate,58);
     assert.equal(data.classes.find(row=>row.key==="2-4").weakConcepts.length,0,"한 학생의 결과가 반 공통 취약 개념으로 표시됨");
     assert.equal(data.classes.find(row=>row.key==="unset").weakConcepts.length,0,"반 미설정 학생을 하나의 반으로 묶음");
+    const analysis=data.students.find(row=>row.id==='active01').analysis;assert.equal(analysis.reasons.find(r=>r.key==='calculation').count,1);assert.equal(analysis.reasons.find(r=>r.key==='unrecorded').count,1);assert.equal(analysis.hints.hintUsed,2);assert.equal(analysis.hints.soloCorrect,1);assert.equal(analysis.savedHintNotes,1);
+    assert.equal(cohort.analysis.hints.reviewAttempts,5);assert.equal(cohort.analysis.hints.hintSteps,8);assert.equal(cohort.analysis.reasons.find(r=>r.key==='calculation').count,2);assert.equal(data.classes.find(row=>row.key==='2-4').analysis.hints.reviewAttempts,0);
     assert.equal(JSON.stringify(data).includes('"hash"'),false);assert.equal(JSON.stringify(data).includes('"salt"'),false);
     console.log("학생 관심 현황 검사 통과: 7일 경계·신규 가입 제외·미시작 구분, 반별 공통 취약 개념과 평균, 반 분리, 관리자 보호");
   }finally{Date.now=originalNow}

@@ -97,14 +97,23 @@ const TODAY_TRACKS={
 };
 window.TODAY_CONCEPTS=TODAY_CONCEPTS;
 window.TODAY_TRACKS=TODAY_TRACKS;
-window.similarQuestion=function(note,difficulty){
-  if(!note||!note.conceptId||!["1","2","3"].includes(String(note.grade)))return null;
+(function(){
   const normalize=text=>String(text||"").replace(/\s+/g,"").replace(/[−–—]/g,"-");
-  const available=Object.entries(TODAY_TRACKS).filter(([,track])=>track.grades.includes(String(note.grade)));
-  available.sort(([a,x],[b,y])=>Number(b===note.sourceKey||y.title===note.subject)-Number(a===note.sourceKey||x.title===note.subject));
-  for(const [key,track] of available){
-    const candidates=(window.SIMILAR_QUESTIONS?.[key]||track.questions).filter(q=>q.concept===note.conceptId&&normalize(q.prompt)!==normalize(note.prompt)&&(!difficulty||q.difficulty===difficulty));
-    if(candidates.length)return{key,question:candidates[(Number(note.attempts)||0)%candidates.length]};
+  function candidates(note,difficulty,subtype){
+    if(!note||!note.conceptId||!["1","2","3"].includes(String(note.grade)))return[];
+    const available=Object.entries(TODAY_TRACKS).filter(([,track])=>track.grades.includes(String(note.grade)));
+    available.sort(([a,x],[b,y])=>Number(b===note.sourceKey||y.title===note.subject)-Number(a===note.sourceKey||x.title===note.subject));
+    for(const [key,track] of available){
+      const rows=(window.SIMILAR_QUESTIONS?.[key]||track.questions).filter(q=>q.concept===note.conceptId&&normalize(q.prompt)!==normalize(note.prompt)&&(!difficulty||q.difficulty===difficulty)&&(!subtype||q.subtype===subtype));
+      if(rows.length)return rows.map(question=>({key,question}));
+    }
+    return[];
   }
-  return null;
-};
+  window.similarTypes=(note,difficulty)=>[...new Set(candidates(note,difficulty).map(row=>row.question.subtype).filter(Boolean))];
+  window.similarQuestion=function(note,difficulty,subtype){
+    let rows=candidates(note,difficulty,subtype);if(!rows.length)return null;
+    const originalType=note.subtype||Object.values(window.SIMILAR_QUESTIONS||{}).flat().find(q=>normalize(q.prompt)===normalize(note.prompt))?.subtype;
+    const same=rows.filter(row=>row.question.subtype===originalType);if(!subtype&&same.length)rows=same;
+    return rows[Math.max(0,Math.floor(Number(note.attempts)||0))%rows.length];
+  };
+})();
