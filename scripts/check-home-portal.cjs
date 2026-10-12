@@ -134,7 +134,8 @@ const server=http.createServer((req,res)=>{
         localStorage.setItem("math-wrong-notes-v1",JSON.stringify([{id:"a",mastered:false},{id:"b",mastered:false}]));
       });
       await page.reload({waitUntil:"networkidle"});
-      assert.equal(await page.locator(".home-main-action").getAttribute("href"),"wrong-notes.html");
+      assert.equal(await page.locator(".home-main-action").getAttribute("href"),"wrong-notes.html?view=due");
+      assert.match(await page.locator(".home-main-action").innerText(),/오늘 복습할 2문제/);
       /* 고른 뒤에는 가입 이야기를 다시 꺼내지 않습니다. 기록이 쌓이면 '이 기기에만
          있습니다' 하는 줄을 띄운 적이 있는데, 닫을 수가 없어 잔소리가 됐습니다. */
       assert.equal(await page.locator(".home-keep").count(),0,"공부하는 학생에게 가입하라고 또 붙어 있습니다");

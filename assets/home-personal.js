@@ -106,10 +106,10 @@
     const today=all.find(row=>row.date===dateKey(new Date())),average=recent.length?Math.round(recent.reduce((sum,row)=>sum+(Number(row.correct)||0)/(Number(row.total)||5)*100,0)/recent.length):0,run=streak(all);
     const wrong=window.WrongNotes?.count?.()||{active:0,mastered:0};
     const greeting=profile.name?esc(profile.name)+"님, 오늘도 한 걸음씩":"오늘의 수학 공부";
-    const review=today&&wrong.active>0;
-    const actionHref=review?'wrong-notes.html':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
-    const actionTitle=review?'남은 오답 '+wrong.active+'문제 복습하기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
-    const actionDescription=review?'오늘 학습은 마쳤어요. 틀린 문제를 다시 풀어 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
+    const review=wrong.due>0;
+    const actionHref=review?'wrong-notes.html?view=due':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
+    const actionTitle=review?'오늘 복습할 '+wrong.due+'문제 풀기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
+    const actionDescription=review?'복습할 날짜가 된 문제를 먼저 확인해 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
 
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">오늘</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
       '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small><b>시작하기 →</b></a>'+

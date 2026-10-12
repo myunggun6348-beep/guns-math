@@ -82,6 +82,10 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-file-archive.cjs` | 자료실의 학년 저장·필터·모바일 배치 |
 | `node scripts\check-escape.js` | 수학 탈출의 문항 조합·채점·기록 |
 | `node scripts\check-study-sync.cjs` | 필기 보존·오답 삭제 전파·여러 기기 합산·재전송·동시 저장 충돌 |
+| `node scripts\check-spaced-review.cjs` | 간격 복습 1·3·7일, 조기 연습·오답 초기화·기존 기록 보존·동기화 |
+| `node scripts\check-spaced-review-ui.cjs` | PC·모바일 오늘 복습 필터·일정 안내·정답 숨김 |
+
+오답은 처음 다시 맞히면 1일 뒤, 예정일에 맞히면 그 시점에서 3일 뒤, 다시 맞히면 7일 뒤 확인하며 마지막 정답에서 완료됩니다. 예정일 전 연습은 단계를 올리지 않고, 틀리면 처음부터 다시 시작합니다. 기존 완료 기록은 유지하며 로그인 시 복습 일정도 함께 동기화됩니다. 홈의 ‘지금 할 공부’와 오답노트의 ‘오늘 복습’에서 예정일이 지난 문제를 확인합니다.
 | `node scripts\check-student-reset.cjs` | 선생님 비밀번호 초기화 권한·학습 기록 보존·기존 로그인 해제 |
 | `node scripts\check-student-attention.cjs` | 미학습 7일 경계·신규 가입 제외·반 공통 취약 개념 집계 |
 | `node scripts\check-admin-password.cjs` | 선생님 방 암호 — 바꾸기·여벌 열쇠·되돌리기 (인터넷 필요 없음) |

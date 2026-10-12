@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
+const {merge}=require('../assets/study-state');
+let now=Date.parse('2026-10-12T03:00:00Z'),fail=false;
+class Clock extends Date{constructor(...args){super(...(args.length?args:[now]))}static now(){return now}}
+const values=new Map(),context=vm.createContext({Date:Clock,crypto:crypto.webcrypto,CustomEvent:class{},localStorage:{getItem:key=>values.get(key)||null,setItem:(key,value)=>{if(fail)throw Error('quota');values.set(key,value)}}});
+context.window=context;context.dispatchEvent=()=>{};
+for(const file of ['study-state','wrong-notes-store'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../assets/'+file+'.js'),'utf8'),context);
+const store=context.WrongNotes,q={source:'test',prompt:'x+1=2',correctAnswer:'1',conceptId:'poly'};
+store.record(q,false);const id=store.idFor(q),note=()=>store.all().find(x=>x.id===id);
+assert.equal(store.count().due,1);
+store.attempt(id,true,'1');assert.equal(note().reviewStage,1);assert.equal(note().mastered,false);assert.equal(store.count().due,0);
+const dueAt=note().nextReviewAt;store.attempt(id,true,'1');store.record(q,true);assert.equal(note().reviewStage,1);assert.equal(note().nextReviewAt,dueAt);
+now=Date.parse(dueAt);assert.equal(store.count().due,1);store.attempt(id,true,'1');assert.equal(note().reviewStage,2);assert.equal(Date.parse(note().nextReviewAt)-Date.parse(note().lastReviewAt),3*86400000);
+now=Date.parse(note().nextReviewAt);store.attempt(id,false,'2');assert.equal(note().reviewStage,0);assert.equal(store.count().due,1);
+store.attempt(id,true,'1');now=Date.parse(note().nextReviewAt);store.attempt(id,true,'1');now=Date.parse(note().nextReviewAt);store.attempt(id,true,'1');assert.equal(note().reviewStage,3);assert.equal(Date.parse(note().nextReviewAt)-Date.parse(note().lastReviewAt),7*86400000);
+const saved=JSON.parse(JSON.stringify(note()));assert.equal(merge({notes:[saved]},{notes:[{...saved,reviewStage:1,updatedAt:'2026-10-01T00:00:00Z'}]}).notes[0].reviewStage,3);
+now=Date.parse(note().nextReviewAt);store.attempt(id,true,'1');assert.equal(note().mastered,true);assert.equal(store.count().due,0);
+store.record(q,false);assert.equal(note().reviewStage,0);assert.equal(note().mastered,false);
+const before=JSON.stringify(note());fail=true;assert.equal(store.attempt(id,true,'1'),false);assert.equal(JSON.stringify(note()),before);fail=false;
+values.set('math-wrong-notes-v1',JSON.stringify([{id:'legacy',mastered:true}]));assert.equal(store.count().mastered,1);assert.equal(store.count().due,0);
+console.log('간격 복습 검사 통과: 1·3·7일, 조기 연습, 오답 초기화, 완료·기존 기록, 동기화, 저장 실패');

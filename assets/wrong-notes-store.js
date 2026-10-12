@@ -44,11 +44,18 @@
   function hash(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
   function idFor(data){return hash([data.source||"",data.sourceKey||"",data.prompt||""].join("|"))}
   function solutionImage(value){const image=String(value||"");return /^data:image\/(?:png|webp|jpeg);base64,/.test(image)&&image.length<350000?image:""}
+  function due(note){return !note.mastered&&(!note.nextReviewAt||Date.parse(note.nextReviewAt)<=Date.now())}
+  function review(note,isCorrect,now){
+    if(!isCorrect)return{reviewStage:0,nextReviewAt:"",lastReviewAt:now,mastered:false,masteredAt:"",lastWrongAt:now};
+    if(note.mastered||!due(note))return{};
+    const stage=Math.min(4,(Number(note.reviewStage)||0)+1),days=[1,3,7][stage-1];
+    return{reviewStage:stage,lastReviewAt:now,nextReviewAt:days?new Date(Date.parse(now)+days*86400000).toISOString():"",mastered:stage===4,masteredAt:stage===4?now:""};
+  }
   function record(data,isCorrect){
     track(data,isCorrect);
     const items=read(),id=idFor(data),index=items.findIndex(x=>x.id===id),now=operationTime(id);
     if(isCorrect){
-      if(index>=0){items[index]={...items[index],updatedAt:now,mastered:true,masteredAt:now,attempts:(items[index].attempts||0)+1};write(items)}
+      if(index>=0){items[index]={...items[index],...review(items[index],true,now),updatedAt:now,attempts:(items[index].attempts||0)+1};write(items)}
       return index>=0;
     }
     const note={
@@ -57,7 +64,7 @@
       prompt:data.prompt||"",type:data.type||"text",choices:Array.isArray(data.choices)?data.choices:[],
       correctAnswer:String(data.correctAnswer??""),userAnswer:String(data.userAnswer??""),explanation:data.explanation||"",
       solutionImage:solutionImage(data.solutionImage),
-      reviewHref:data.reviewHref||"",updatedAt:now,mastered:false,lastWrongAt:now,attempts:index>=0?(items[index].attempts||0)+1:1,
+      reviewHref:data.reviewHref||"",updatedAt:now,...review({},false,now),attempts:index>=0?(items[index].attempts||0)+1:1,
       createdAt:index>=0?items[index].createdAt:now
     };
     if(index>=0)items.splice(index,1);
@@ -66,10 +73,10 @@
   function attempt(id,isCorrect,userAnswer){
     const items=read(),index=items.findIndex(x=>x.id===id);if(index<0)return false;
     const now=operationTime(id);
-    track(items[index],isCorrect);
     items[index]={...items[index],updatedAt:now,userAnswer:String(userAnswer??items[index].userAnswer),attempts:(items[index].attempts||0)+1,
-      mastered:Boolean(isCorrect),masteredAt:isCorrect?now:"",lastWrongAt:isCorrect?items[index].lastWrongAt:now};
-    write(items);return true;
+      ...review(items[index],isCorrect,now)};
+    if(!write(items))return false;
+    track(items[index],isCorrect);return true;
   }
   function updateSolution(id,value){
     const image=solutionImage(value),items=read(),index=items.findIndex(x=>x.id===id);if(!image||index<0)return false;
@@ -78,6 +85,6 @@
   function removeIds(ids){const deleted=deletions();ids.forEach(id=>deleted[id]=operationTime(id));try{localStorage.setItem(DELETED_KEY,JSON.stringify(deleted))}catch{return false}return write(read().filter(note=>!ids.includes(note.id)))}
   function remove(id){return removeIds([id])}
   function clearMastered(){return removeIds(read().filter(note=>note.mastered).map(note=>note.id))}
-  function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,mastered:items.filter(x=>x.mastered).length}}
-  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,idFor,stats,performance};
+  function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,due:items.filter(due).length,mastered:items.filter(x=>x.mastered).length}}
+  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,due,idFor,stats,performance};
 })();

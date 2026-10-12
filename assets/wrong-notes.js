@@ -3,7 +3,7 @@
   "use strict";
   const app=document.getElementById("wrongApp"),store=window.WrongNotes;
   let filter=new URLSearchParams(location.search).get("view")||"active",conceptFilter="";
-  if(!["active","mastered","all"].includes(filter))filter="active";
+  if(!["due","active","mastered","all"].includes(filter))filter="active";
   const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   const norm=v=>String(v).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"");
   const solutionImage=v=>/^data:image\/(?:png|webp|jpeg);base64,/.test(String(v||""))?String(v):"";
@@ -23,12 +23,14 @@
   }
   function draw(){
     const counts=store.count(),all=store.all();
-    let items=filter==="active"?all.filter(x=>!x.mastered):filter==="mastered"?all.filter(x=>x.mastered):all;
+    let items=filter==="due"?all.filter(store.due):filter==="active"?all.filter(x=>!x.mastered):filter==="mastered"?all.filter(x=>x.mastered):all;
     if(conceptFilter)items=items.filter(x=>noteKey(x)===conceptFilter);
     const selected=store.stats().find(x=>x.key===conceptFilter);
     const summary='<div class="wrong-summary"><div class="wrong-stat"><b>'+counts.active+'</b><span>복습 필요</span></div><div class="wrong-stat"><b>'+counts.mastered+'</b><span>복습 완료</span></div><div class="wrong-stat"><b>'+counts.all+'</b><span>전체 기록</span></div></div>';
     const tools='<div class="wrong-tools"><div><div class="wrong-tabs"><button class="wrong-tab '+(filter==="active"?"on":"")+'" data-filter="active">복습 필요</button><button class="wrong-tab '+(filter==="mastered"?"on":"")+'" data-filter="mastered">복습 완료</button><button class="wrong-tab '+(filter==="all"?"on":"")+'" data-filter="all">전체</button></div>'+(selected?'<button class="concept-filter-clear" id="clearConcept">'+esc(selected.name)+'만 보는 중 ×</button>':'')+'</div>'+(counts.mastered?'<button class="wrong-clear" id="clearMastered">완료 기록 정리</button>':'')+'</div>';
     app.innerHTML=dashboard()+summary+tools+(items.length?'<div class="wrong-list">'+items.map(card).join("")+'</div>':empty(selected));
+    const dueTab=document.createElement("button");dueTab.type="button";dueTab.className="wrong-tab"+(filter==="due"?" on":"");dueTab.dataset.filter="due";dueTab.textContent="오늘 복습 "+counts.due+"문제";app.querySelector(".wrong-tabs").prepend(dueTab);
+    app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered)return;const label=document.createElement("p");label.className="retry-status";label.textContent=note.reviewStage?"복습 확인 "+note.reviewStage+"/4 · "+(store.due(note)?"오늘 다시 풀 차례":dateText(note.nextReviewAt)+" 다시 확인"):"다시 맞힌 뒤 1일·3일·7일 간격으로 확인합니다.";element.querySelector(".wrong-card-top").after(label)});
     window.MathView?.typeset(app);
     app.querySelectorAll("[data-concept]").forEach(btn=>btn.addEventListener("click",()=>{conceptFilter=conceptFilter===btn.dataset.concept?"":btn.dataset.concept;draw()}));
     app.querySelectorAll("[data-filter]").forEach(btn=>btn.addEventListener("click",()=>{filter=btn.dataset.filter;draw()}));
@@ -53,6 +55,7 @@
   }
   function openRetry(id){
     const note=store.all().find(x=>x.id===id),slot=document.getElementById("retry-"+id);if(!note||!slot)return;
+    const cardElement=slot.closest(".wrong-card");cardElement.querySelector(".wrong-detail").open=false;cardElement.querySelector(".wrong-answer").hidden=true;
     const answer=note.type==="choice"
       ? '<div class="retry-choices">'+note.choices.map((x,i)=>'<button class="retry-choice" data-value="'+esc(x)+'"><b>'+(i+1)+'.</b> <span data-math>'+esc(x)+'</span></button>').join("")+'</div>'
       : '<div class="retry-answer"><input class="retry-input" aria-label="답 입력" placeholder="답을 입력하세요"></div>';
@@ -65,9 +68,10 @@
       const answerValue=input?input.value:value,status=slot.querySelector(".retry-status");
       if(!String(answerValue).trim()){status.textContent="답을 먼저 입력해 주세요.";status.className="retry-status wrong";return}
       const ok=norm(answerValue)===norm(note.correctAnswer);
-      store.attempt(id,ok,answerValue);
-      if(ok){status.textContent="정답입니다. 복습 완료로 이동합니다.";status.className="retry-status correct";toast("한 문제를 복습 완료했습니다.");setTimeout(draw,650)}
-      else{status.textContent="아직 다릅니다. 정답과 해설을 확인하고 다시 도전하세요.";status.className="retry-status wrong"}
+      if(!store.attempt(id,ok,answerValue)){status.textContent="풀이 기록을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.";return}
+      slot.querySelector(".retry-submit").disabled=true;
+      if(ok){const saved=store.all().find(x=>x.id===id);status.textContent=saved.mastered?"정답입니다. 마지막 확인을 마쳐 복습 완료했습니다.":"정답입니다. "+dateText(saved.nextReviewAt)+"에 다시 확인하세요.";status.className="retry-status correct";toast(saved.mastered?"복습을 완료했습니다.":"다음 복습 일정을 저장했습니다.");setTimeout(draw,1200)}
+      else{status.textContent="아직 다릅니다. 해설을 확인한 뒤 다시 풀어 보세요. 복습 단계는 처음부터 시작합니다.";status.className="retry-status wrong";slot.querySelector(".retry-submit").disabled=false}
     });
   }
   window.addEventListener("wrong-work-message",event=>toast(event.detail));
