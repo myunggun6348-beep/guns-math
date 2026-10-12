@@ -97,13 +97,13 @@ const TODAY_TRACKS={
 };
 window.TODAY_CONCEPTS=TODAY_CONCEPTS;
 window.TODAY_TRACKS=TODAY_TRACKS;
-window.similarQuestion=function(note){
+window.similarQuestion=function(note,difficulty){
   if(!note||!note.conceptId||!["1","2","3"].includes(String(note.grade)))return null;
   const normalize=text=>String(text||"").replace(/\s+/g,"").replace(/[−–—]/g,"-");
   const available=Object.entries(TODAY_TRACKS).filter(([,track])=>track.grades.includes(String(note.grade)));
   available.sort(([a,x],[b,y])=>Number(b===note.sourceKey||y.title===note.subject)-Number(a===note.sourceKey||x.title===note.subject));
   for(const [key,track] of available){
-    const candidates=track.questions.filter(q=>q.concept===note.conceptId&&normalize(q.prompt)!==normalize(note.prompt));
+    const candidates=(window.SIMILAR_QUESTIONS?.[key]||track.questions).filter(q=>q.concept===note.conceptId&&normalize(q.prompt)!==normalize(note.prompt)&&(!difficulty||q.difficulty===difficulty));
     if(candidates.length)return{key,question:candidates[(Number(note.attempts)||0)%candidates.length]};
   }
   return null;

@@ -64,11 +64,12 @@
       prompt:data.prompt||"",type:data.type||"text",choices:Array.isArray(data.choices)?data.choices:[],
       correctAnswer:String(data.correctAnswer??""),userAnswer:String(data.userAnswer??""),explanation:data.explanation||"",
       solutionImage:solutionImage(data.solutionImage),
+      difficulty:["basic","standard","challenge"].includes(data.difficulty)?data.difficulty:"",hintsUsed:Number.isInteger(data.hintsUsed)&&data.hintsUsed>=0&&data.hintsUsed<=3?data.hintsUsed:0,
       reviewHref:data.reviewHref||"",updatedAt:now,...review({},false,now),attempts:index>=0?(items[index].attempts||0)+1:1,
       createdAt:index>=0?items[index].createdAt:now
     };
     if(index>=0)items.splice(index,1);
-    items.unshift(note);write(items);return true;
+    items.unshift(note);return write(items);
   }
   function attempt(id,isCorrect,userAnswer){
     const items=read(),index=items.findIndex(x=>x.id===id);if(index<0)return false;
@@ -78,6 +79,12 @@
     if(!write(items))return false;
     track(items[index],isCorrect);return true;
   }
+  const reasons={concept:"개념이 헷갈렸어요",reading:"조건을 잘못 읽었어요",calculation:"계산 실수였어요",time:"시간이 부족했어요",unsure:"아직 이유를 모르겠어요"};
+  function setReason(id,reason){
+    if(reason!==""&&!Object.hasOwn(reasons,reason))return false;
+    const items=read(),index=items.findIndex(note=>note.id===id);if(index<0)return false;
+    items[index]={...items[index],wrongReason:reason,updatedAt:operationTime(id)};return write(items);
+  }
   function updateSolution(id,value){
     const image=solutionImage(value),items=read(),index=items.findIndex(x=>x.id===id);if(!image||index<0)return false;
     items[index]={...items[index],feedbackImage:image,feedbackAt:new Date().toISOString()};return write(items);
@@ -86,5 +93,5 @@
   function remove(id){return removeIds([id])}
   function clearMastered(){return removeIds(read().filter(note=>note.mastered).map(note=>note.id))}
   function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,due:items.filter(due).length,mastered:items.filter(x=>x.mastered).length}}
-  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,due,idFor,stats,performance};
+  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,due,idFor,stats,performance,reasons,setReason};
 })();

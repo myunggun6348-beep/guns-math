@@ -14,8 +14,14 @@ now=Date.parse(dueAt);assert.equal(store.count().due,1);store.attempt(id,true,'1
 now=Date.parse(note().nextReviewAt);store.attempt(id,false,'2');assert.equal(note().reviewStage,0);assert.equal(store.count().due,1);
 store.attempt(id,true,'1');now=Date.parse(note().nextReviewAt);store.attempt(id,true,'1');now=Date.parse(note().nextReviewAt);store.attempt(id,true,'1');assert.equal(note().reviewStage,3);assert.equal(Date.parse(note().nextReviewAt)-Date.parse(note().lastReviewAt),7*86400000);
 const saved=JSON.parse(JSON.stringify(note()));assert.equal(merge({notes:[saved]},{notes:[{...saved,reviewStage:1,updatedAt:'2026-10-01T00:00:00Z'}]}).notes[0].reviewStage,3);
+assert.equal(store.setReason(id,'calculation'),true);assert.equal(note().wrongReason,'calculation');assert.equal(note().nextReviewAt,saved.nextReviewAt);assert.equal(note().reviewStage,saved.reviewStage);
+assert.equal(store.setReason(id,'invalid'),false);assert.equal(note().wrongReason,'calculation');
+assert.equal(merge({notes:[JSON.parse(JSON.stringify(note()))]},{notes:[saved]}).notes[0].wrongReason,'calculation');
+fail=true;assert.equal(store.setReason(id,'reading'),false);assert.equal(note().wrongReason,'calculation');fail=false;
+assert.equal(store.setReason(id,''),true);assert.equal(note().wrongReason,'');
 now=Date.parse(note().nextReviewAt);store.attempt(id,true,'1');assert.equal(note().mastered,true);assert.equal(store.count().due,0);
 store.record(q,false);assert.equal(note().reviewStage,0);assert.equal(note().mastered,false);
 const before=JSON.stringify(note());fail=true;assert.equal(store.attempt(id,true,'1'),false);assert.equal(JSON.stringify(note()),before);fail=false;
+const countBefore=store.all().length;fail=true;assert.equal(store.record({...q,prompt:'저장 실패 검사',difficulty:'challenge',hintsUsed:3},false),false);assert.equal(store.all().length,countBefore);fail=false;
 values.set('math-wrong-notes-v1',JSON.stringify([{id:'legacy',mastered:true}]));assert.equal(store.count().mastered,1);assert.equal(store.count().due,0);
 console.log('간격 복습 검사 통과: 1·3·7일, 조기 연습, 오답 초기화, 완료·기존 기록, 동기화, 저장 실패');

@@ -33,6 +33,12 @@
     const dueTab=document.createElement("button");dueTab.type="button";dueTab.className="wrong-tab"+(filter==="due"?" on":"");dueTab.dataset.filter="due";dueTab.textContent="오늘 복습 "+counts.due+"문제";app.querySelector(".wrong-tabs").prepend(dueTab);
     app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered)return;const label=document.createElement("p");label.className="retry-status";label.textContent=note.reviewStage?"복습 확인 "+note.reviewStage+"/4 · "+(store.due(note)?"오늘 다시 풀 차례":dateText(note.nextReviewAt)+" 다시 확인"):"다시 맞힌 뒤 1일·3일·7일 간격으로 확인합니다.";element.querySelector(".wrong-card-top").after(label)});
     app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered||note.reviewStage>0)element.querySelector(".wrong-card-actions").insertAdjacentHTML("afterbegin",similarLink(note))});
+    app.querySelectorAll("[data-card]").forEach(element=>{
+      const note=all.find(x=>x.id===element.dataset.card),label=document.createElement("label");label.className="wrong-reason";label.textContent="오답 원인 (선택 사항)";
+      const select=document.createElement("select");select.innerHTML='<option value="">아직 기록하지 않았어요</option>'+Object.entries(store.reasons).map(([key,text])=>'<option value="'+key+'">'+esc(text)+'</option>').join("");select.value=note.wrongReason||"";
+      select.onchange=()=>{if(store.setReason(note.id,select.value)){note.wrongReason=select.value;toast("오답 원인을 저장했습니다.")}else{select.value=note.wrongReason||"";toast("저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.")}};label.append(select);element.querySelector(".wrong-detail").before(label);
+      if(note.difficulty||note.hintsUsed){const info=document.createElement("small");info.textContent=({basic:"기초",standard:"표준",challenge:"도전"}[note.difficulty]||"")+(note.hintsUsed?" · 힌트 "+note.hintsUsed+"단계 사용":"");label.append(info)}
+    });
     window.MathView?.typeset(app);
     app.querySelectorAll("[data-concept]").forEach(btn=>btn.addEventListener("click",()=>{conceptFilter=conceptFilter===btn.dataset.concept?"":btn.dataset.concept;draw()}));
     app.querySelectorAll("[data-filter]").forEach(btn=>btn.addEventListener("click",()=>{filter=btn.dataset.filter;draw()}));
