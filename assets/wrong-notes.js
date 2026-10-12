@@ -36,9 +36,9 @@
     app.querySelectorAll("[data-annotate]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.open(btn.dataset.annotate,draw)));
     app.querySelectorAll("[data-download]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.download(btn.dataset.download)));
     app.querySelectorAll("[data-share]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.share(btn.dataset.share)));
-    app.querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click",()=>{store.remove(btn.dataset.remove);toast("오답 기록을 지웠습니다.");draw()}));
+    app.querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click",()=>{toast(store.remove(btn.dataset.remove)?"오답 기록을 지웠습니다.":"삭제 내용을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.");draw()}));
     document.getElementById("clearConcept")?.addEventListener("click",()=>{conceptFilter="";draw()});
-    document.getElementById("clearMastered")?.addEventListener("click",()=>{store.clearMastered();toast("완료한 기록을 정리했습니다.");draw()});
+    document.getElementById("clearMastered")?.addEventListener("click",()=>{toast(store.clearMastered()?"완료한 기록을 정리했습니다.":"정리 내용을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.");draw()});
   }
   function card(note){
     const concept=note.conceptName?'<span class="wrong-tag">'+esc(note.conceptName)+'</span>':"";
@@ -71,5 +71,6 @@
     });
   }
   window.addEventListener("wrong-work-message",event=>toast(event.detail));
+  window.addEventListener("student-sync-applied",draw);
   draw();
 })();

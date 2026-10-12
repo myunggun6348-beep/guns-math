@@ -46,7 +46,10 @@
         '<button type="button" class="student-logout" id="studentLogout">로그아웃</button>' +
       '</form>';
     창.querySelector("#studentSyncNow").onclick = () => 맞춤.sync();
-    창.querySelector("#studentLogout").onclick = async () => { await 맞춤.logout(); 창.close(); };
+    창.querySelector("#studentLogout").onclick = async () => {
+      try { await 맞춤.logout(); 창.close(); }
+      catch (error) { const 상태=창.querySelector(".student-sync-status");if(상태)상태.textContent=error.message; }
+    };
   }
 
   /* ---------- 가입 / 로그인 ---------- */
@@ -152,15 +155,18 @@
   }
 
   function 그리기(형편 = 맞춤.getState()) {
-    단추.hidden = !형편.signedIn;
+    단추.hidden = !형편.signedIn && !형편.error;
     if (형편.signedIn) {
       단추.textContent = (형편.student.name || 형편.student.id) + " · 내 기록";
       단추.classList.add("signed-in");
       if (창.open) 들어온뒤(형편);
+    } else if (형편.error) {
+      단추.textContent="다시 로그인";단추.classList.remove("signed-in");
+      if(창.open&&창.querySelector(".student-sync-status")){들어가기전("login");창.querySelector(".student-account-error").textContent=형편.error;}
     }
   }
 
-  단추.onclick = () => { 들어온뒤(맞춤.getState()); 창.showModal(); };
+  단추.onclick = () => { const 형편=맞춤.getState();if(형편.signedIn)들어온뒤(형편);else 들어가기전("login");창.showModal(); };
 
   // 홈의 '가입하고 시작' 단추가 이걸 부릅니다
   window.StudentAccountUI = {

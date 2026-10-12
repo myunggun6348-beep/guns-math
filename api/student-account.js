@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { 준비됨, 명령 } = require("./_redis");
+const {safeState,merge}=require("../assets/study-state");
 
 const COOKIE = "math_student_session";
 const SESSION_DAYS = 30;
@@ -65,34 +66,8 @@ async function openSession(res, id) {
   await 명령("SET", sessionKey(token), id, "EX", SESSION_DAYS * 86400);
   setCookie(res, token, SESSION_DAYS * 86400);
 }
-function safeState(value) {
-  const source = value && typeof value === "object" ? value : {};
-  const records = Array.isArray(source.records) ? source.records.slice(0, 120) : [];
-  const notes = Array.isArray(source.notes) ? source.notes.slice(0, 200).map(({ solutionImage, feedbackImage, ...note }) => note) : [];
-  const stats = source.stats && typeof source.stats === "object" && !Array.isArray(source.stats) ? source.stats : {};
-  const profile = source.profile && typeof source.profile === "object" ? source.profile : null;
-  const pref = source.pref && typeof source.pref === "object" ? source.pref : null;
-  return { profile, pref, records, notes, stats, updatedAt: new Date().toISOString() };
-}
-function newer(a, b) {
-  const stamp = x => String(x?.masteredAt || x?.lastWrongAt || x?.finishedAt || x?.createdAt || "");
-  return stamp(b) > stamp(a) ? b : a;
-}
-function merge(local, remote) {
-  const a = safeState(remote), b = safeState(local);
-  const unique = (items, key) => [...items.reduce((map, item) => {
-    const id = key(item); if (!id) return map;
-    map.set(id, map.has(id) ? newer(map.get(id), item) : item); return map;
-  }, new Map()).values()];
-  const records = unique([...a.records, ...b.records], x => `${x.date}|${x.grade}|${x.track}`).sort((x, y) => String(y.finishedAt || y.date).localeCompare(String(x.finishedAt || x.date))).slice(0, 120);
-  const notes = unique([...a.notes, ...b.notes], x => x.id).sort((x, y) => String(y.lastWrongAt || y.createdAt).localeCompare(String(x.lastWrongAt || x.createdAt))).slice(0, 200);
-  const stats = { ...a.stats };
-  Object.entries(b.stats).forEach(([key, row]) => {
-    const old = stats[key];
-    stats[key] = !old ? row : { ...old, ...row, attempts: Math.max(Number(old.attempts) || 0, Number(row.attempts) || 0), correct: Math.max(Number(old.correct) || 0, Number(row.correct) || 0), wrong: Math.max(Number(old.wrong) || 0, Number(row.wrong) || 0), lastAt: String(old.lastAt || "") > String(row.lastAt || "") ? old.lastAt : row.lastAt };
-  });
-  return { profile: b.profile || a.profile, pref: b.pref || a.pref, records, notes, stats, updatedAt: new Date().toISOString() };
-}
+// 다른 기기가 먼저 저장했으면 최신 기록을 다시 읽어 합친다.
+const COMPARE_AND_SET="local old=redis.call('GET',KEYS[1]); if (old or '')~=ARGV[1] then return 0 end; redis.call('SET',KEYS[1],ARGV[2]); return 1";
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
@@ -147,12 +122,18 @@ module.exports = async (req, res) => {
     }
     if (action === "sync") {
       if (!session) return res.status(401).json({ error: "다시 로그인해 주세요." });
-      const raw = JSON.stringify(input.data || {});
+      if(input.studentId!==session.id)return res.status(409).json({error:"다른 창에서 계정이 바뀌었거나 이전 화면을 사용 중입니다. 새로고침 후 다시 맞춰 주세요."});
+      const incoming=safeState(input.data);
+      const raw = JSON.stringify(incoming);
       if (Buffer.byteLength(raw) > MAX_BODY) return res.status(413).json({ error: "동기화할 학습 기록이 너무 큽니다." });
-      const remoteRaw = await 명령("GET", dataKey(session.id));
-      const merged = merge(input.data, remoteRaw ? JSON.parse(remoteRaw) : {});
-      await 명령("SET", dataKey(session.id), JSON.stringify(merged));
-      return res.status(200).json({ ok: true, data: merged });
+      for(let retry=0;retry<5;retry++){
+        const remoteRaw=await 명령("GET",dataKey(session.id));
+        const merged={...merge(incoming,remoteRaw?JSON.parse(remoteRaw):{}),updatedAt:new Date().toISOString()};
+        const serialized=JSON.stringify(merged);
+        if(Buffer.byteLength(serialized)>MAX_BODY)return res.status(413).json({error:"계정의 학습 기록 용량이 가득 찼습니다. 기기의 기록은 그대로 보관됩니다."});
+        if(await 명령("EVAL",COMPARE_AND_SET,1,dataKey(session.id),remoteRaw||"",serialized))return res.status(200).json({ok:true,data:merged});
+      }
+      return res.status(503).json({error:"다른 기기에서 기록을 저장하고 있습니다. 잠시 뒤 다시 맞춰 주세요."});
     }
     return res.status(400).json({ error: "요청을 확인해 주세요." });
   } catch (error) {

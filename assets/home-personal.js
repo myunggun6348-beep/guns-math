@@ -28,8 +28,8 @@
   let profile=initial();
   function save(next){
     const classNumber=Math.min(20,Math.max(0,Number(next.className)||0));
-    profile={name:String(next.name||"").trim().slice(0,20),grade:String(next.grade),className:classNumber?String(classNumber):"",track:next.track};
-    localStorage.setItem(KEY,JSON.stringify(profile));localStorage.setItem("today-study-pref",JSON.stringify({grade:profile.grade,track:profile.track}));window.StudentSync?.changed();render();
+    profile={name:String(next.name||"").trim().slice(0,20),grade:String(next.grade),className:classNumber?String(classNumber):"",track:next.track,updatedAt:new Date().toISOString()};
+    localStorage.setItem(KEY,JSON.stringify(profile));localStorage.setItem("today-study-pref",JSON.stringify({grade:profile.grade,track:profile.track,updatedAt:profile.updatedAt}));window.StudentSync?.changed();render();
   }
   // 가입 창이 학년·과목을 먼저 적어 둘 때 씁니다 (그래야 가입 직후 계정으로 올라갑니다)
   window.HomeProfile={저장:save};

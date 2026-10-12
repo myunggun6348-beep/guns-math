@@ -1,6 +1,7 @@
 const fs=require("fs"),path=require("path"),http=require("http"),assert=require("assert");
 const {chromium}=require("C:/Users/User/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
 const root=path.join(__dirname,"..");
+const {merge}=require("../assets/study-state");
 const 계정={만든것:{},지금:null,기록:{}};   // 학생 계정 흉내가 쓰는 기억 (검사 한 판 동안만)
 const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,"http://localhost").pathname;
@@ -25,7 +26,7 @@ const server=http.createServer((req,res)=>{
         계정.지금={id:받은.id,name:있는것.name};
         res.end(JSON.stringify({signedIn:true,student:계정.지금,data:계정.기록}));return;
       }
-      if(받은.action==="sync"){계정.기록=받은.data||{};res.end(JSON.stringify({ok:true,data:계정.기록}));return}
+      if(받은.action==="sync"){계정.기록=merge(받은.data||{},계정.기록);res.end(JSON.stringify({ok:true,data:계정.기록}));return}
       if(받은.action==="logout"){계정.지금=null;res.end('{"ok":true}');return}
       res.writeHead(400).end('{"error":"모르는 요청"}');
     });
@@ -180,6 +181,12 @@ const server=http.createServer((req,res)=>{
       assert.equal(계정.기록?.profile?.name,"민수");
       assert.equal(계정.기록?.profile?.track,"algebra","고2 기본 과목이 안 정해졌습니다");
       await 가입.close();
+      const 새기기=await browser.newPage({viewport:{width:390,height:844}});
+      await 새기기.goto("http://127.0.0.1:5198/today.html",{waitUntil:"networkidle"});
+      await 새기기.waitForSelector('[data-grade="2"].on');
+      assert.equal(await 새기기.locator('[data-track="algebra"]').getAttribute("class"),"pick-button on","새 기기의 기본값이 계정 과목을 덮어썼습니다");
+      assert.equal(계정.기록.pref.grade,"2");
+      await 새기기.close();
     }
 
     /* 홈에서 뺀 수학 탈출이 실제로 게임 목록 안에 있어야 합니다.

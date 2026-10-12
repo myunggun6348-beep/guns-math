@@ -1,7 +1,9 @@
 
 (function(){
   "use strict";
-  const KEY="math-wrong-notes-v1",STATS_KEY="math-concept-stats-v1";
+  const KEY="math-wrong-notes-v1",STATS_KEY="math-concept-stats-v1",DELETED_KEY="math-wrong-deletions-v1",device=crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  function deletions(){try{const value=JSON.parse(localStorage.getItem(DELETED_KEY)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return{}}}
+  function operationTime(id){const note=read().find(row=>row.id===id);return new Date(Math.max(Date.now(),Date.parse(window.StudyState.noteStamp(note||{}))||0,Date.parse(deletions()[id])||0)+1).toISOString()}
   function read(){try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
   function persist(items){localStorage.setItem(KEY,JSON.stringify(items));window.StudentSync?.changed();window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
   function write(items){
@@ -27,9 +29,9 @@
   function writeStats(value){try{localStorage.setItem(STATS_KEY,JSON.stringify(value));window.StudentSync?.changed();return true}catch{return false}}
   function track(data,isCorrect){
     if(!data.conceptId&&!data.conceptName)return;
-    const all=readStats(),key=statKey(data),row=all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""};
+    const all=readStats(),key=statKey(data),row=window.StudyState.totals(all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""});
     row.name=data.conceptName||row.name;row.subject=data.subject||row.subject;row.conceptId=data.conceptId||row.conceptId;
-    row.attempts++;if(isCorrect)row.correct++;else row.wrong++;row.lastAt=new Date().toISOString();all[key]=row;writeStats(all);
+    const counter=row.devices[device]||{correct:0,wrong:0};counter[isCorrect?"correct":"wrong"]++;row.devices[device]=counter;row.lastAt=new Date().toISOString();all[key]=window.StudyState.totals(row);writeStats(all);
   }
   function stats(){
     return Object.values(readStats()).map(row=>({...row,rate:row.attempts?Math.round(row.correct/row.attempts*100):0}))
@@ -44,9 +46,9 @@
   function solutionImage(value){const image=String(value||"");return /^data:image\/(?:png|webp|jpeg);base64,/.test(image)&&image.length<350000?image:""}
   function record(data,isCorrect){
     track(data,isCorrect);
-    const items=read(),id=idFor(data),index=items.findIndex(x=>x.id===id),now=new Date().toISOString();
+    const items=read(),id=idFor(data),index=items.findIndex(x=>x.id===id),now=operationTime(id);
     if(isCorrect){
-      if(index>=0){items[index]={...items[index],mastered:true,masteredAt:now,attempts:(items[index].attempts||0)+1};write(items)}
+      if(index>=0){items[index]={...items[index],updatedAt:now,mastered:true,masteredAt:now,attempts:(items[index].attempts||0)+1};write(items)}
       return index>=0;
     }
     const note={
@@ -55,7 +57,7 @@
       prompt:data.prompt||"",type:data.type||"text",choices:Array.isArray(data.choices)?data.choices:[],
       correctAnswer:String(data.correctAnswer??""),userAnswer:String(data.userAnswer??""),explanation:data.explanation||"",
       solutionImage:solutionImage(data.solutionImage),
-      reviewHref:data.reviewHref||"",mastered:false,lastWrongAt:now,attempts:index>=0?(items[index].attempts||0)+1:1,
+      reviewHref:data.reviewHref||"",updatedAt:now,mastered:false,lastWrongAt:now,attempts:index>=0?(items[index].attempts||0)+1:1,
       createdAt:index>=0?items[index].createdAt:now
     };
     if(index>=0)items.splice(index,1);
@@ -63,9 +65,9 @@
   }
   function attempt(id,isCorrect,userAnswer){
     const items=read(),index=items.findIndex(x=>x.id===id);if(index<0)return false;
-    const now=new Date().toISOString();
+    const now=operationTime(id);
     track(items[index],isCorrect);
-    items[index]={...items[index],userAnswer:String(userAnswer??items[index].userAnswer),attempts:(items[index].attempts||0)+1,
+    items[index]={...items[index],updatedAt:now,userAnswer:String(userAnswer??items[index].userAnswer),attempts:(items[index].attempts||0)+1,
       mastered:Boolean(isCorrect),masteredAt:isCorrect?now:"",lastWrongAt:isCorrect?items[index].lastWrongAt:now};
     write(items);return true;
   }
@@ -73,8 +75,9 @@
     const image=solutionImage(value),items=read(),index=items.findIndex(x=>x.id===id);if(!image||index<0)return false;
     items[index]={...items[index],feedbackImage:image,feedbackAt:new Date().toISOString()};return write(items);
   }
-  function remove(id){write(read().filter(x=>x.id!==id))}
-  function clearMastered(){write(read().filter(x=>!x.mastered))}
+  function removeIds(ids){const deleted=deletions();ids.forEach(id=>deleted[id]=operationTime(id));try{localStorage.setItem(DELETED_KEY,JSON.stringify(deleted))}catch{return false}return write(read().filter(note=>!ids.includes(note.id)))}
+  function remove(id){return removeIds([id])}
+  function clearMastered(){return removeIds(read().filter(note=>note.mastered).map(note=>note.id))}
   function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,mastered:items.filter(x=>x.mastered).length}}
   window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,idFor,stats,performance};
 })();

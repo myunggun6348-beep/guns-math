@@ -61,8 +61,8 @@
   }
   function updateUrl(){
     const u=new URL(location.href);u.searchParams.set("grade",grade);u.searchParams.set("subject",trackKey);history.replaceState(null,"",u);
-    localStorage.setItem("today-study-pref",JSON.stringify({grade,track:trackKey}));
-    window.StudentSync?.changed();
+    let previous={};try{previous=JSON.parse(localStorage.getItem("today-study-pref")||"{}")||{}}catch{}
+    if(previous.grade!==grade||previous.track!==trackKey){localStorage.setItem("today-study-pref",JSON.stringify({grade,track:trackKey,updatedAt:new Date().toISOString()}));window.StudentSync?.changed()}
   }
   function setup(){
     window.GameScratch.destroy();updateUrl();
@@ -147,5 +147,13 @@
     document.getElementById("retryToday").addEventListener("click",start);
     document.getElementById("changeToday").addEventListener("click",setup);
   }
-  setup();
+  function initialize(){
+    if(window.StudentSync&&!window.StudentSync.getState().ready)return;
+    let pref={};try{pref=JSON.parse(localStorage.getItem("today-study-pref")||"{}")||{}}catch{}
+    grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):(pref.grade||"1");
+    trackKey=params.get("subject")||pref.track||"common1";
+    if(!tracks[trackKey]||!tracks[trackKey].grades.includes(grade))trackKey=Object.keys(tracks).find(key=>tracks[key].grades.includes(grade));
+    window.removeEventListener("student-account-change",initialize);setup();
+  }
+  window.addEventListener("student-account-change",initialize);initialize();
 })();
