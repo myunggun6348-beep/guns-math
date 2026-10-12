@@ -1,0 +1,16 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const values=new Map();let fail=false;
+const env={module:{exports:{}},localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>{if(fail)throw Error('quota');values.set(k,v)},removeItem:k=>values.delete(k)},window:{dispatchEvent(){}},document:{body:{classList:{remove(){}}}}};vm.createContext(env);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../assets/study-draft.js'),'utf8'),env);const store=env.module.exports;
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../assets/game-scratch.js'),'utf8'),env);const ink=env.window.GameScratch;
+const stroke={color:'#172033',width:4,points:[{x:.2,y:.3},{x:.4,y:.5}]};assert.equal(ink.restore({pages:[{key:0,strokes:[stroke]}]}),true);const snapshot=JSON.stringify(ink.snapshot());assert.equal(ink.restore({pages:[{key:0,strokes:[{...stroke,width:100}]}]}),false);assert.equal(JSON.stringify(ink.snapshot()),snapshot);
+const q={type:'text',concept:'poly',prompt:'x+1=2',answers:['1'],explanation:'양변에서 1을 빼세요.'},draft={grade:'1',trackKey:'common1',date:'2026-10-12',questions:Array.from({length:5},(_,i)=>({...q,prompt:q.prompt+i})),index:0,answers:[],selected:null,locked:false,hintCount:0,input:'내 답',ink:ink.snapshot()};
+assert.equal(store.save('student-minsu','daily-1-common1',draft),true);assert.equal(store.load('student-minsu','daily-1-common1').input,'내 답');assert.equal(store.load('student-other01','daily-1-common1'),null);assert.equal(store.load('guest','daily-1-common1'),null);
+const previous=JSON.stringify(store.load('student-minsu','daily-1-common1'));fail=true;assert.equal(store.save('student-minsu','daily-1-common1',{...draft,input:'변경'}),false);assert.equal(JSON.stringify(store.load('student-minsu','daily-1-common1')),previous);fail=false;
+assert.equal(store.save('student-minsu','daily-1-common1',{...draft,input:'x'.repeat(2100000)}),false);assert.equal(JSON.stringify(store.load('student-minsu','daily-1-common1')),previous);
+assert.equal(store.save('student-minsu','daily-1-common1',{...draft,index:9}),false);assert.equal(store.save('../other','daily-1-common1',draft),false);assert.equal(store.save('student-minsu','foreign',draft),false);
+const locked={...draft,locked:true,answers:[{concept:'poly',correct:true,userAnswer:'1'}]};assert.equal(store.save('student-minsu','daily-1-common1',locked),true);assert.equal(store.load('student-minsu','daily-1-common1').locked,true);
+assert.equal(store.remove('student-minsu','daily-1-common1'),true);assert.equal(store.load('student-minsu','daily-1-common1'),null);
+assert.equal(store.save('student-guest','daily-1-common1',draft),true);assert.equal(store.load('guest','daily-1-common1'),null);
+values.set('math-study-draft-v1:guest:daily-1-common1','{broken');assert.equal(store.load('guest','daily-1-common1'),null);
+console.log('임시 풀이 검사 통과: 답·편집 가능한 필기·계정 분리·채점 상태·잘못된 기록·저장 실패 보존');

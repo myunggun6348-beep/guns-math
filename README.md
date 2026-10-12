@@ -91,6 +91,8 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-similar-practice.cjs` | 난도 3종·단계별 힌트·도전 정답 검산·오답 원인, PC·모바일 채점·기존 일정/오늘 점수 보존 |
 | `node scripts\check-expanded-questions.cjs` | 114문항의 세부 유형·세 난도 대체 문항·확장 문항 검산 |
 | `node scripts\check-personal-daily.cjs` | 취약 개념·복습일 우선, 균형·중복 방지·완료한 당일 세트 유지 |
+| `node scripts\check-study-draft.cjs` | 임시 풀이 검증·계정 분리·필기 복원·저장 실패 보존 |
+| `node scripts\check-study-resume-ui.cjs` | PC·모바일 이어하기·중복 채점 방지·오답/결과 저장 재시도 |
 
 | `node scripts\check-student-reset.cjs` | 선생님 비밀번호 초기화 권한·학습 기록 보존·기존 로그인 해제 |
 | `node scripts\check-student-attention.cjs` | 미학습 7일 경계·신규 가입 제외·반 공통 취약 개념 집계 |
@@ -101,6 +103,8 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\verify-exam-library.cjs` | 진짜 브라우저로 자료실을 열어 확인 (먼저 `폰으로 보기.bat` 으로 서버를 켜 둘 것) |
 
 ### 학습과 분석
+
+오늘의 5문제와 비슷한 확인 문제는 답안·선택지·현재 문항·열어 본 힌트·채점 상태·펜 필기를 자동 저장합니다. 다시 접속하면 ‘풀던 문제 이어하기’를 표시하며 필기도 계속 편집할 수 있습니다. 날짜가 바뀌어도 시작한 날짜와 문제를 유지합니다. 학생 계정과 비회원 풀이를 분리하고, 완료하면 임시 풀이를 정리합니다. ‘처음부터 새로 풀기’는 기존 임시 풀이를 대체합니다. 임시 풀이는 같은 기기·브라우저에만 보관하며 다른 기기로 동기화하지 않습니다. 저장 공간이 부족하면 기존 필기를 삭제하지 않고 안내하며, 오답이나 결과 저장에 실패하면 임시 풀이를 유지하고 재시도합니다.
 
 오답은 처음 다시 맞히면 1일 뒤, 예정일에 맞히면 그 시점에서 3일 뒤, 다시 맞히면 7일 뒤 확인하며 마지막 정답에서 완료됩니다. 예정일 전 연습은 단계를 올리지 않고, 틀리면 처음부터 다시 시작합니다. 기존 완료 기록은 유지하며 로그인 시 복습 일정도 함께 동기화됩니다. 홈의 ‘지금 할 공부’와 오답노트의 ‘오늘 복습’에서 예정일이 지난 문제를 확인합니다.
 

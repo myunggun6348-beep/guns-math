@@ -7,9 +7,7 @@
   function read(){try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
   function persist(items){localStorage.setItem(KEY,JSON.stringify(items));window.StudentSync?.changed();window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
   function write(items){
-    const saved=items.slice(0,200);try{return persist(saved)}catch{}
-    for(let i=saved.length-1;i>=0;i--){if(saved[i].feedbackImage||saved[i].solutionImage){saved[i]={...saved[i],feedbackImage:"",solutionImage:""};try{return persist(saved)}catch{}}}
-    return false;
+    try{return persist(items.slice(0,200))}catch{return false}
   }
   function statKey(data){return data.conceptId||("name:"+(data.conceptName||"기타"))}
   function readStats(){
@@ -55,11 +53,14 @@
     const stage=Math.min(4,(Number(note.reviewStage)||0)+1),days=[1,3,7][stage-1];
     return{reviewStage:stage,lastReviewAt:now,nextReviewAt:days?new Date(Date.parse(now)+days*86400000).toISOString():"",mastered:stage===4,masteredAt:stage===4?now:""};
   }
-  function record(data,isCorrect){
-    track(data,isCorrect);
-    const items=read(),id=idFor(data),index=items.findIndex(x=>x.id===id),now=operationTime(id);
+  function record(data,isCorrect,countAttempt=true){
+    const items=read(),id=idFor(data),index=items.findIndex(x=>x.id===id),now=typeof data.attemptAt==="string"&&Number.isFinite(Date.parse(data.attemptAt))?new Date(data.attemptAt).toISOString():operationTime(id);
+    const attemptId=typeof data.attemptId==="string"&&/^[a-z0-9-]{1,80}$/.test(data.attemptId)?data.attemptId:"";
+    if(attemptId&&index>=0&&items[index].lastAttemptId===attemptId)return true;
+    if(countAttempt)track(data,isCorrect);
+    if(data.attemptAt&&((index>=0&&window.StudyState.noteStamp(items[index])>=now)||(deletions()[id]||"")>=now))return true;
     if(isCorrect){
-      if(index>=0){items[index]={...items[index],...review(items[index],true,now),updatedAt:now,attempts:(items[index].attempts||0)+1};write(items)}
+      if(index>=0){items[index]={...items[index],...review(items[index],true,now),updatedAt:now,lastAttemptId:attemptId,attempts:(items[index].attempts||0)+1};write(items)}
       return index>=0;
     }
     const note={
@@ -71,6 +72,7 @@
       solutionImage:solutionImage(data.solutionImage),
       difficulty:["basic","standard","challenge"].includes(data.difficulty)?data.difficulty:"",hintsUsed:Number.isInteger(data.hintsUsed)&&data.hintsUsed>=0&&data.hintsUsed<=3?data.hintsUsed:0,
       subtype:typeof data.subtype==="string"?data.subtype.slice(0,40):"",
+      lastAttemptId:attemptId,
       reviewHref:data.reviewHref||"",updatedAt:now,...review({},false,now),attempts:index>=0?(items[index].attempts||0)+1:1,
       createdAt:index>=0?items[index].createdAt:now
     };
@@ -99,5 +101,5 @@
   function remove(id){return removeIds([id])}
   function clearMastered(){return removeIds(read().filter(note=>note.mastered).map(note=>note.id))}
   function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,due:items.filter(due).length,mastered:items.filter(x=>x.mastered).length}}
-  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,due,idFor,stats,performance,reasons,setReason};
+  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,due,idFor,stats,performance,reasons,setReason,attemptTime:operationTime};
 })();

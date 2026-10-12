@@ -3,3 +3,5 @@
 .similar-hints{margin:16px 0 22px}.similar-hints ol{padding-left:24px;line-height:1.65}.similar-hints li{margin:10px 0}.similar-hints button:disabled,.pick-button:disabled{opacity:.55;cursor:not-allowed}
 
 .today-personal-guide{font-size:14px;line-height:1.5;padding:12px;border-radius:10px;background:var(--canvas)}
+
+.today-resume{margin:20px 0;padding:18px;border:1px solid var(--hairline);border-radius:12px;background:var(--canvas)}.today-resume h3{margin:0 0 8px}.today-resume small{display:block;margin-top:12px;line-height:1.5}.today-draft-status{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
