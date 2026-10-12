@@ -3,7 +3,7 @@ const {chromium}=require('C:/Users/User/.cache/codex-runtimes/codex-primary-runt
 const root=path.join(__dirname,'..'),data={window:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'assets/today-data.js'),'utf8'),data);
 vm.runInNewContext(fs.readFileSync(path.join(root,'assets/similar-practice-data.js'),'utf8'),data);
 const bank=data.window.TODAY_TRACKS,choose=data.window.similarQuestion;
-for(const [key,track] of Object.entries(bank))for(const q of track.questions){const result=choose({grade:track.grades[0],sourceKey:key,conceptId:q.concept,prompt:q.prompt});assert.ok(result);assert.equal(result.key,key);assert.equal(result.question.concept,q.concept);assert.notEqual(result.question.prompt,q.prompt)}
+for(const [key,track] of Object.entries(bank))for(const q of track.questions){const note={grade:track.grades[0],sourceKey:key,conceptId:q.concept,prompt:q.prompt},result=choose(note);assert.ok(result);assert.equal(result.key,key);assert.equal(result.question.concept,q.concept);assert.notEqual(result.question.prompt,q.prompt);for(const level of ['basic','standard','challenge']){const alternative=choose(note,level);assert.ok(alternative,'대체 문항 없음: '+key+':'+q.concept+':'+level);assert.notEqual(alternative.question.prompt,q.prompt);assert.equal(alternative.question.difficulty,level)}}
 assert.equal(choose({grade:'9',conceptId:'poly'}),null);assert.equal(choose({grade:'1',conceptId:'unknown'}),null);
 for(const [key,questions] of Object.entries(data.window.SIMILAR_QUESTIONS))for(const q of questions){
   assert.ok(['basic','standard','challenge'].includes(q.difficulty));assert.equal(q.hints.length,3);assert.ok(q.hints.every(h=>typeof h==='string'&&h.length>10&&h!==q.explanation));
@@ -12,6 +12,20 @@ for(const [key,questions] of Object.entries(data.window.SIMILAR_QUESTIONS))for(c
   assert.equal(choose(note,'unknown'),null);
 }
 const source=bank.common1.questions[0];
+const addedAnswers={
+  common1:['x²+6x+9',10,4*3,8*7*6/(3*2*1)],
+  algebra:[Math.log(9)/Math.log(3)+Math.log(27)/Math.log(3),'2π/3',5+7*3,3*2**5],
+  calc1:[2*3-1,3+3,2*4,3*(5-2)],
+  calc2:[0,2,'eˣ+C',2**2-0**2],
+  geometry:['(3,0)',2*0+0*5,Math.sqrt(2**2+3**2+6**2),(4+8)/2]
+};
+let addedCount=0;
+for(const [key,questions] of Object.entries(data.window.SIMILAR_QUESTIONS)){
+  const originalPrompts=new Set(bank[key].questions.map(q=>q.prompt)),added=questions.filter(q=>q.difficulty!=='challenge'&&!originalPrompts.has(q.prompt));
+  assert.equal(added.length,(addedAnswers[key]||[]).length);
+  added.forEach((q,i)=>{addedCount++;const actual=q.type==='choice'?q.choices[q.answer]:q.answers[0],expected=addedAnswers[key][i];assert.ok(typeof expected==='number'?Math.abs(Number(actual)-expected)<1e-12:actual===expected);if(q.type==='choice'){assert.equal(q.choices.length,5);assert.ok(q.answer>=0&&q.answer<5);assert.equal(new Set(q.choices).size,5)}});
+}
+assert.equal(addedCount,20);
 const challengeAnswers={
   poly:2**3-2*2+3,
   eq:Array.from({length:20},(_,k)=>k).filter(k=>k>0&&36-4*k>0).length,
@@ -56,8 +70,8 @@ const server=http.createServer((req,res)=>{const name=new URL(req.url,'http://lo
     if(width===1280){
       await page.goto('http://127.0.0.1:5202/today.html?review=original');await page.locator('[data-difficulty="basic"]').click();await page.locator('#similarStart').click();
       const basic=choose(original,'basic').question;assert.equal(basic.type,'choice');await page.locator('.daily-choice').nth(basic.answer).click();await page.locator('#choiceSubmit').click();assert.equal(await page.locator('#showHint').isDisabled(),true);assert.equal(await page.locator('#hintSteps li').count(),0);await page.locator('#dailyNext').click();
-      await page.evaluate(()=>localStorage.setItem('math-wrong-notes-v1',JSON.stringify([{id:'onlybasic',grade:'2',conceptId:'limit',sourceKey:'calc1',prompt:window.SIMILAR_QUESTIONS.calc1.find(q=>q.concept==='limit'&&q.difficulty==='basic').prompt}])));
-      await page.goto('http://127.0.0.1:5202/today.html?review=onlybasic');assert.equal(await page.locator('[data-difficulty="basic"]').isDisabled(),true);assert.equal(await page.locator('[data-difficulty="standard"]').isDisabled(),false);
+      await page.evaluate(()=>localStorage.setItem('math-wrong-notes-v1',JSON.stringify([{id:'onlychallenge',grade:'2',conceptId:'limit',sourceKey:'calc1',prompt:window.SIMILAR_QUESTIONS.calc1.find(q=>q.concept==='limit'&&q.difficulty==='challenge').prompt}])));
+      await page.goto('http://127.0.0.1:5202/today.html?review=onlychallenge');assert.equal(await page.locator('[data-difficulty="challenge"]').isDisabled(),true);assert.equal(await page.locator('[data-difficulty="standard"]').isDisabled(),false);
       await page.goto('http://127.0.0.1:5202/today.html?grade=1&subject=common1');await page.locator('#todayStart').click();
       for(let i=0;i<5;i++){
         await page.waitForSelector('.daily-question');const prompt=await page.locator('.daily-question').evaluate(el=>{const copy=el.cloneNode(true);copy.querySelectorAll('.math-expression').forEach(span=>span.replaceWith(span.dataset.source));return copy.textContent}),q=bank.common1.questions.find(row=>row.prompt===prompt);assert.ok(q);
