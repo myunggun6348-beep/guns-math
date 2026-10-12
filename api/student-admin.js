@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ok:true,id});
     }
     if(received.action&&received.action!=="list")return res.status(400).json({error:"지원하지 않는 작업입니다."});
-    const keys = await accountIds(), today = koreaDate(), students = [];
+    const keys = await accountIds(), today = koreaDate(), students = [],weekAgo=Date.now()-7*86400000,classConcepts=new Map();
     for (const key of keys) {
       const id = key.slice("student:account:".length);
       const [accountRaw, dataRaw] = await Promise.all([명령("GET", key), 명령("GET", `student:data:${id}`)]);
@@ -50,35 +50,47 @@ module.exports = async (req, res) => {
       const account = JSON.parse(accountRaw), data = dataRaw ? JSON.parse(dataRaw) : {};
       const records = Array.isArray(data.records) ? data.records : [];
       const notes = Array.isArray(data.notes) ? data.notes : [];
-      const stats = data.stats && typeof data.stats === "object" ? Object.values(data.stats) : [];
+      const stats = data.stats && typeof data.stats === "object" ? Object.values(data.stats).filter(row=>row&&typeof row==="object") : [];
       const weak = stats.filter(row => Number(row.attempts) > 0).sort((a, b) => rate(a) - rate(b) || Number(b.attempts) - Number(a.attempts))[0] || null;
       const todayRecords = records.filter(row => row.date === today);
       const recent = records.slice().sort((a, b) => String(b.finishedAt || b.date).localeCompare(String(a.finishedAt || a.date)))[0];
       const totalQuestions = records.reduce((sum, row) => sum + (Number(row.total) || 5), 0);
       const totalCorrect = records.reduce((sum, row) => sum + (Number(row.correct) || 0), 0);
+      const grade=String(data.profile?.grade||data.pref?.grade||""),className=String(data.profile?.className||""),groupKey=grade&&className?`${grade}-${className}`:"unset";
+      const lastAt=newest(recent?.finishedAt,...stats.map(row=>row.lastAt),...notes.map(note=>note.masteredAt||note.lastWrongAt||note.createdAt));
+      const notStarted=!lastAt&&records.length===0&&!stats.some(row=>Number(row.attempts)>0)&&notes.length===0;
+      const inactive7=Date.parse(account.createdAt)<weekAgo&&(!lastAt||Date.parse(lastAt)<weekAgo);
+      const concepts=classConcepts.get(groupKey)||new Map(),seen=new Set();
+      stats.filter(row=>Number(row.attempts)>0).forEach(row=>{
+        const key=row.conceptId||row.key||`${row.subject||""}|${row.name||"기타"}`;if(seen.has(key))return;seen.add(key);
+        const concept=concepts.get(key)||{key,name:row.name||"기타",students:0,weakStudents:0,rateSum:0};
+        concept.students++;concept.rateSum+=rate(row);if(rate(row)<60)concept.weakStudents++;concepts.set(key,concept);
+      });classConcepts.set(groupKey,concepts);
       students.push({
-        id, name: account.name || "", grade: String(data.profile?.grade || data.pref?.grade || ""), className: String(data.profile?.className || ""), track: String(data.profile?.track || data.pref?.track || ""),
-        joinedAt: account.createdAt || "", lastAt: newest(recent?.finishedAt, ...stats.map(row => row.lastAt), ...notes.map(note => note.masteredAt || note.lastWrongAt || note.createdAt)),
+        id, name: account.name || "", grade, className, track: String(data.profile?.track || data.pref?.track || ""),
+        joinedAt: account.createdAt || "", lastAt,notStarted,inactive7,
         studyCount: records.length, todayDone: todayRecords.length > 0, todayScore: todayRecords.length ? Math.max(...todayRecords.map(row => Number(row.correct) || 0)) : null,
         average: totalQuestions ? Math.round(totalCorrect / totalQuestions * 100) : null, activeWrong: notes.filter(note => !note.mastered).length, mastered: notes.filter(note => note.mastered).length,
         weakest: weak ? { name: weak.name || "기타", rate: rate(weak), attempts: Number(weak.attempts) || 0 } : null,
       });
     }
     students.sort((a, b) => String(b.lastAt).localeCompare(String(a.lastAt)) || a.id.localeCompare(b.id));
-    const weekAgo = Date.now() - 7 * 86400000;
     const groups = new Map();
     students.forEach(student => {
       const key = student.grade && student.className ? `${student.grade}-${student.className}` : "unset";
-      const row = groups.get(key) || { key, grade: student.grade || "", className: student.className || "", students: 0, active7: 0, today: 0, activeWrong: 0, scoreSum: 0, scoreCount: 0 };
+      const row = groups.get(key) || { key, grade: student.grade || "", className: student.className || "", students: 0, active7: 0, today: 0, activeWrong: 0, scoreSum: 0, scoreCount: 0,inactive7:0,notStarted:0 };
       row.students++; if (Date.parse(student.lastAt) >= weekAgo) row.active7++; if (student.todayDone) row.today++; row.activeWrong += student.activeWrong;
       if (student.average !== null) { row.scoreSum += student.average; row.scoreCount++; }
+      if(student.inactive7)row.inactive7++;if(student.notStarted)row.notStarted++;
       groups.set(key, row);
     });
-    const classes = [...groups.values()].map(({ scoreSum, scoreCount, ...row }) => ({ ...row, average: scoreCount ? Math.round(scoreSum / scoreCount) : null }))
+    const classes = [...groups.values()].map(({ scoreSum, scoreCount, ...row }) => ({ ...row, average: scoreCount ? Math.round(scoreSum / scoreCount) : null,
+      weakConcepts:row.key==="unset"?[]:[...(classConcepts.get(row.key)||new Map()).values()].filter(concept=>concept.students>=2&&concept.weakStudents>=2).map(({rateSum,...concept})=>({...concept,rate:Math.round(rateSum/concept.students)})).sort((a,b)=>b.weakStudents-a.weakStudents||a.rate-b.rate||a.name.localeCompare(b.name,"ko")).slice(0,3)
+    }))
       .sort((a, b) => a.key === "unset" ? 1 : b.key === "unset" ? -1 : Number(a.grade) - Number(b.grade) || Number(a.className) - Number(b.className));
     return res.status(200).json({
       generatedAt: new Date().toISOString(),
-      summary: { total: students.length, active7: students.filter(s => Date.parse(s.lastAt) >= weekAgo).length, today: students.filter(s => s.todayDone).length, activeWrong: students.reduce((sum, s) => sum + s.activeWrong, 0) },
+      summary: { total: students.length, active7: students.filter(s => Date.parse(s.lastAt) >= weekAgo).length, today: students.filter(s => s.todayDone).length, activeWrong: students.reduce((sum, s) => sum + s.activeWrong, 0),inactive7:students.filter(s=>s.inactive7).length,notStarted:students.filter(s=>s.notStarted).length },
       classes, students,
     });
   } catch (error) {

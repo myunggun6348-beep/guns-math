@@ -83,6 +83,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-escape.js` | 수학 탈출의 문항 조합·채점·기록 |
 | `node scripts\check-study-sync.cjs` | 필기 보존·오답 삭제 전파·여러 기기 합산·재전송·동시 저장 충돌 |
 | `node scripts\check-student-reset.cjs` | 선생님 비밀번호 초기화 권한·학습 기록 보존·기존 로그인 해제 |
+| `node scripts\check-student-attention.cjs` | 미학습 7일 경계·신규 가입 제외·반 공통 취약 개념 집계 |
 | `node scripts\check-admin-password.cjs` | 선생님 방 암호 — 바꾸기·여벌 열쇠·되돌리기 (인터넷 필요 없음) |
 | `node scripts\check-phone.cjs` | 휴대폰 3종 — 가로 넘침·누르기 작은 단추·아이폰 확대·콘솔 오류 |
 | `node scripts\check-hidden.cjs` | 숨긴 칸이 정말 숨겨졌는지 (전체 15쪽) |
@@ -219,6 +220,10 @@ chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
   선생님 방 → 학생 학습 현황 → 학생별 **비밀번호 초기화**에서 새 숫자 비밀번호를 두 번 입력한다.
   가입과 같은 숫자 6~12자리 규칙을 적용하고, 기존 로그인 세션을 해제한다. 새 비밀번호는
   지문만 저장하며 기존 학습 기록은 유지한다. 새 비밀번호는 선생님이 해당 학생에게 직접 전달한다.
+  학생 현황에서는 최근 7일 미학습과 아직 시작하지 않은 학생을 따로 골라 볼 수 있다.
+  신규 가입 학생은 가입 7일 후부터 미학습에 포함한다. 반 공통 취약 개념은 해당 개념을
+  푼 학생 중 정답률 60% 미만인 학생이 2명 이상일 때 상위 3개를 표시한다. 평균은 학생별
+  정답률의 평균이며, 반이 없는 학생은 공통 개념 집계에서 제외한다. 이 표시는 학습 지도용이며 알림을 전송하지 않는다.
   나중에 알게 되는 편이 훨씬 나쁘다. 질문(`ask.html`)은 계정과 엮여 있지 않아
   그대로 익명이다.
 
