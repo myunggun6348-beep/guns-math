@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const values=new Map();let fail=false;
-const env={module:{exports:{}},localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>{if(fail)throw Error('quota');values.set(k,v)},removeItem:k=>values.delete(k)},window:{dispatchEvent(){}},document:{body:{classList:{remove(){}}}}};vm.createContext(env);
+const env={module:{exports:{}},localStorage:{get length(){return values.size},key:i=>[...values.keys()][i]||null,getItem:k=>values.get(k)||null,setItem:(k,v)=>{if(fail)throw Error('quota');values.set(k,v)},removeItem:k=>values.delete(k)},window:{dispatchEvent(){}},document:{body:{classList:{remove(){}}}}};vm.createContext(env);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../assets/study-draft.js'),'utf8'),env);const store=env.module.exports;
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../assets/game-scratch.js'),'utf8'),env);const ink=env.window.GameScratch;
 const stroke={color:'#172033',width:4,points:[{x:.2,y:.3},{x:.4,y:.5}]};assert.equal(ink.restore({pages:[{key:0,strokes:[stroke]}]}),true);const snapshot=JSON.stringify(ink.snapshot());assert.equal(ink.restore({pages:[{key:0,strokes:[{...stroke,width:100}]}]}),false);assert.equal(JSON.stringify(ink.snapshot()),snapshot);
@@ -12,5 +12,7 @@ assert.equal(store.save('student-minsu','daily-1-common1',{...draft,index:9}),fa
 const locked={...draft,locked:true,answers:[{concept:'poly',correct:true,userAnswer:'1'}]};assert.equal(store.save('student-minsu','daily-1-common1',locked),true);assert.equal(store.load('student-minsu','daily-1-common1').locked,true);
 assert.equal(store.remove('student-minsu','daily-1-common1'),true);assert.equal(store.load('student-minsu','daily-1-common1'),null);
 assert.equal(store.save('student-guest','daily-1-common1',draft),true);assert.equal(store.load('guest','daily-1-common1'),null);
+assert.equal(store.list('student-guest').length,1);assert.equal(store.list('guest').length,0);assert.equal(store.list('../other').length,0);
+values.set('math-study-draft-v1:student-guest:daily-2-math1',JSON.stringify({...store.load('student-guest','daily-1-common1'),updatedAt:'2099-01-01T00:00:00Z'}));assert.equal(store.list('student-guest').length,1);
 values.set('math-study-draft-v1:guest:daily-1-common1','{broken');assert.equal(store.load('guest','daily-1-common1'),null);
 console.log('임시 풀이 검사 통과: 답·편집 가능한 필기·계정 분리·채점 상태·잘못된 기록·저장 실패 보존');

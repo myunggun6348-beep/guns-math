@@ -38,6 +38,7 @@
       if(!window.GameScratch.restore(saved.ink)){saveStatus("저장된 필기를 읽지 못했습니다. 기존 임시 기록은 유지했습니다.");return}
       grade=saved.grade;trackKey=saved.trackKey;studyDate=saved.date;runId=saved.runId||crypto.randomUUID();questions=saved.questions;index=saved.index;answers=saved.answers;correct=answers.filter(a=>a.correct).length;dailyFocus=Array.isArray(saved.dailyFocus)?saved.dailyFocus:[];runOwner=owner();runSlot=slot();active=true;renderQuestion(saved);
     };
+    if(params.get("resume")==="1"){params.delete("resume");const url=new URL(location.href);url.searchParams.delete("resume");history.replaceState(null,"",url);box.querySelector("button").click()}
   }
   function records(){
     try{return JSON.parse(localStorage.getItem("today-study-records")||"[]")}catch{return[]}

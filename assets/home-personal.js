@@ -20,6 +20,13 @@
   const valid=(grade,track)=>["1","2","3"].includes(String(grade))&&tracks[track]?.grades.includes(String(grade));
   const records=()=>{const value=read("today-study-records",[]);return Array.isArray(value)?value:[]};
   const 로그인했나=()=>Boolean(window.StudentSync?.getState?.().signedIn);
+  function resume(){
+    const state=window.StudentSync?.getState();if(state&&!state.ready)return null;
+    const owner=state?.signedIn?"student-"+state.student.id:"guest",notes=window.WrongNotes?.all()||[];
+    const row=window.StudyDraft?.list(owner).find(({slot,draft})=>valid(draft.grade,draft.trackKey)&&draft.questions.every(q=>window.TODAY_CONCEPTS?.[q.concept])&&(!slot.startsWith("similar-")||notes.some(note=>note.id===slot.slice(8))));
+    if(!row)return null;const {slot,draft}=row,similar=slot.startsWith("similar-");
+    return{grade:draft.grade,track:draft.trackKey,href:'today.html?'+(similar?'review='+encodeURIComponent(slot.slice(8)):'grade='+draft.grade+'&subject='+encodeURIComponent(draft.trackKey))+'&resume=1',description:esc(tracks[draft.trackKey].title)+' · '+(similar?'확인 문제':(draft.index+1)+' / '+draft.questions.length+'문항')+' · 답과 필기를 이어서 볼 수 있어요.'};
+  }
   function initial(){
     const own=read(KEY,null);if(own&&valid(own.grade,own.track))return own;
     const pref=read("today-study-pref",null);if(pref&&valid(pref.grade,pref.track))return{name:"",grade:String(pref.grade),track:pref.track};
@@ -50,15 +57,15 @@
      다시 그려지면서 안의 것이 지워지니, 그림을 붙잡아 두었다가 그릴 때마다 다시 넣습니다. */
   const 그림=document.querySelector(".hero-figure");
   function 그림넣기(){const 자리=root.querySelector(".home-start-art");if(그림&&자리)자리.appendChild(그림)}
-  function 갈래(){
+  function 갈래(pending){
     root.hidden=false;root.innerHTML='<div class="home-personal-shell setup">'+
       '<div class="home-start-card'+(그림?' has-art':'')+'">'+
         '<div class="home-start-art"></div>'+
         '<div class="home-start-body">'+
         '<h2>고등학교 수학, 한곳에서</h2>'+
-        '<p class="home-setup-lead">하루 5분, 학년에 맞춘 5문제부터 풀어 보세요. 틀린 문제는 오답노트에 저절로 모입니다. 가입 없이 바로 쓸 수 있습니다.</p>'+
+        '<p class="home-setup-lead">'+(pending?pending.description:'하루 5분, 학년에 맞춘 5문제부터 풀어 보세요. 틀린 문제는 오답노트에 저절로 모입니다. 가입 없이 바로 쓸 수 있습니다.')+'</p>'+
         '<div class="home-start-actions">'+
-          '<a class="btn btn-primary home-start-go" href="today.html">오늘의 5문제 풀기 →</a>'+
+          '<a class="btn btn-primary home-start-go" href="'+(pending?pending.href:'today.html')+'">'+(pending?'풀던 문제 이어하기':'오늘의 5문제 풀기')+' →</a>'+
           '<a class="home-start-browse" href="#more">다른 것 둘러보기</a>'+
         '</div>'+
         '<div class="home-join">'+
@@ -97,9 +104,11 @@
   }
 
   function render(){
+    const pending=resume();
+    if(pending&&로그인했나()&&!valid(profile?.grade,profile?.track))profile={name:"",grade:pending.grade,track:pending.track};
     if(!profile||!valid(profile.grade,profile.track)){
       // 로그인은 했는데 학년·과목이 아직 없으면, 문 두 개가 아니라 고르는 칸을 보여 줍니다
-      로그인했나()?setup():갈래();
+      로그인했나()&&!pending?setup():갈래(pending);
       return;
     }
     const track=tracks[profile.track],all=records().filter(row=>String(row.grade)===profile.grade&&row.track===profile.track),recent=all.slice(0,7);
@@ -107,12 +116,12 @@
     const wrong=window.WrongNotes?.count?.()||{active:0,mastered:0};
     const greeting=profile.name?esc(profile.name)+"님, 오늘도 한 걸음씩":"오늘의 수학 공부";
     const review=wrong.due>0;
-    const actionHref=review?'wrong-notes.html?view=due':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
-    const actionTitle=review?'오늘 복습할 '+wrong.due+'문제 풀기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
-    const actionDescription=review?'복습할 날짜가 된 문제를 먼저 확인해 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
+    const actionHref=pending?pending.href:review?'wrong-notes.html?view=due':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
+    const actionTitle=pending?'풀던 문제 이어하기':review?'오늘 복습할 '+wrong.due+'문제 풀기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
+    const actionDescription=pending?pending.description:review?'복습할 날짜가 된 문제를 먼저 확인해 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
 
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">오늘</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
-      '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small><b>시작하기 →</b></a>'+
+      '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small><b>'+(pending?'이어서 풀기':'시작하기')+' →</b></a>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>복습 대기 <b>'+wrong.active+'문제</b></span></div>'+
       '</div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
@@ -120,4 +129,5 @@
   window.addEventListener("wrong-notes-change",render);
   window.addEventListener("student-account-change",render);
   window.addEventListener("student-sync-applied",()=>{profile=initial();render()});render();
+  window.addEventListener("pageshow",()=>{profile=initial();render()});window.addEventListener("storage",render);
 })();
