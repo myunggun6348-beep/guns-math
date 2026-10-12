@@ -5,6 +5,7 @@
   const tracks=window.TODAY_TRACKS||{};
   const concepts=window.TODAY_CONCEPTS||{};
   const params=new URLSearchParams(location.search);
+  const reviewId=params.get("review"),similarMode=Boolean(reviewId);
   let saved={};try{saved=JSON.parse(localStorage.getItem("today-study-pref")||"{}")}catch{}
   let grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):(saved.grade||"1");
   let trackKey=params.get("subject")||saved.track||"common1";
@@ -57,6 +58,7 @@
     return count;
   }
   function hero(){
+    if(similarMode)return '<header class="page-head g-study"><div class="page-head-text"><h1>비슷한 문제로 확인하기</h1><p>복습한 개념을 다른 문제에서도 적용할 수 있는지 확인해 보세요.</p></div></header>';
     return '<header class="page-head g-study"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></span><div class="page-head-text"><h1>오늘의 학습</h1><p>학년과 과목을 고르면 오늘 풀 5문제를 준비합니다. 결과에서 부족한 개념을 바로 복습하고 관련 기출로 이어갈 수 있습니다.</p></div><span class="page-head-meta">'+dateLabel+'</span></header>';
   }
   function updateUrl(){
@@ -94,7 +96,7 @@
     const answer=q.type==="choice"
       ? '<div class="daily-choices">'+q.choices.map((c,i)=>'<button type="button" class="daily-choice" data-choice="'+i+'"><b>'+(i+1)+'.</b> <span data-math>'+esc(c)+'</span></button>').join("")+'</div>'
       : '<div class="daily-answer"><label class="sr-status" for="dailyInput">답 입력</label><input id="dailyInput" class="daily-input" autocomplete="off" inputmode="text" placeholder="답을 입력하세요"><button type="button" class="today-primary" id="textSubmit">제출</button></div>';
-    app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / 5</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)*20)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question" data-math>'+esc(q.prompt)+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
+    app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / '+questions.length+'</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)/questions.length*100)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question" data-math>'+esc(q.prompt)+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
     window.MathView?.typeset(app);
     window.GameScratch.mount(index);
     if(q.type==="choice"){
@@ -120,17 +122,18 @@
     }
     locked=true;if(isCorrect)correct++;
     const track=tracks[trackKey],meta=concepts[q.concept];
-    window.WrongNotes?.record({source:"today",sourceKey:trackKey,sourceTitle:"오늘의 학습 · "+track.title,grade,subject:track.title,conceptId:q.concept,conceptName:meta.name,prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"today.html?grade="+grade+"&subject="+trackKey,solutionImage:isCorrect?"":window.GameScratch.capture(index)},isCorrect);
+    window.WrongNotes?.record({source:similarMode?"similar":"today",sourceKey:trackKey,sourceTitle:(similarMode?"비슷한 문제 확인 · ":"오늘의 학습 · ")+track.title,grade,subject:track.title,conceptId:q.concept,conceptName:meta.name,prompt:q.prompt,type:q.type,choices:q.choices||[],correctAnswer:q.type==="choice"?q.choices[q.answer]:q.answers[0],userAnswer,explanation:q.explanation,reviewHref:"today.html?grade="+grade+"&subject="+trackKey,solutionImage:isCorrect?"":window.GameScratch.capture(index)},isCorrect);
     answers.push({concept:q.concept,correct:isCorrect});
     app.querySelectorAll(".daily-choice,.daily-input,#textSubmit,#choiceSubmit").forEach(el=>el.disabled=true);
     const slot=document.getElementById("feedbackSlot");
     slot.innerHTML='<div class="daily-feedback '+(isCorrect?"":"wrong")+'" role="status" data-math><strong>'+(isCorrect?"정답입니다.":"이 개념을 결과에서 다시 연결해 드릴게요.")+'</strong>'+esc(q.explanation)+'</div>';
     window.MathView?.typeset(slot);
     const actions=app.querySelector(".daily-actions");
-    actions.innerHTML='<button type="button" class="today-primary" id="dailyNext">'+(index===4?"결과 확인":"다음 문제")+'</button>';
-    const next=document.getElementById("dailyNext");next.addEventListener("click",()=>{index++;if(index>=5)finish();else renderQuestion()});next.focus();
+    actions.innerHTML='<button type="button" class="today-primary" id="dailyNext">'+(index===questions.length-1?"결과 확인":"다음 문제")+'</button>';
+    const next=document.getElementById("dailyNext");next.addEventListener("click",()=>{index++;if(index>=questions.length)finish();else renderQuestion()});next.focus();
   }
   function finish(){
+    if(similarMode){window.GameScratch.destroy();app.innerHTML=hero()+'<section class="today-panel"><h2>'+(correct?'다른 문제에서도 개념을 적용했어요.':'이 개념을 조금 더 확인해 봅시다.')+'</h2><p>이번 결과는 개념 학습 기록에 반영했습니다.'+(correct?'':' 틀린 문제는 오답노트에 저장했습니다.')+' 원래 문제의 복습 일정은 유지됩니다.</p><a class="today-primary" href="wrong-notes.html">오답노트로 돌아가기 →</a></section>';return}
     window.GameScratch.destroy();saveRecord();
     const track=tracks[trackKey];
     const ids=[...new Set(answers.map(a=>a.concept))];
@@ -153,7 +156,13 @@
     grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):(pref.grade||"1");
     trackKey=params.get("subject")||pref.track||"common1";
     if(!tracks[trackKey]||!tracks[trackKey].grades.includes(grade))trackKey=Object.keys(tracks).find(key=>tracks[key].grades.includes(grade));
-    window.removeEventListener("student-account-change",initialize);setup();
+    window.removeEventListener("student-account-change",initialize);
+    if(similarMode){
+      const note=window.WrongNotes.all().find(row=>row.id===reviewId),match=window.similarQuestion(note);
+      if(!match){app.innerHTML=hero()+'<section class="today-panel"><h2>이 기록에 연결할 다른 문제를 준비하고 있습니다.</h2><a class="today-primary" href="wrong-notes.html">오답노트로 돌아가기 →</a></section>';return}
+      grade=String(note.grade);trackKey=match.key;questions=[match.question];window.GameScratch.reset();renderQuestion();return;
+    }
+    setup();
   }
   window.addEventListener("student-account-change",initialize);initialize();
 })();

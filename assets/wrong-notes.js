@@ -11,6 +11,7 @@
   function toast(text){const el=document.getElementById("wrongToast");el.textContent=text;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800)}
   function dateText(value){try{return new Intl.DateTimeFormat("ko-KR",{month:"long",day:"numeric"}).format(new Date(value))}catch{return""}}
   function level(rate){return rate<60?{text:"집중 복습",cls:"focus"}:rate<80?{text:"보완",cls:"review"}:{text:"안정",cls:"stable"}}
+  function similarLink(note){return window.similarQuestion?.(note)?'<a class="wrong-button primary" data-similar href="today.html?review='+encodeURIComponent(note.id)+'">비슷한 문제로 확인하기 →</a>':""}
   function dashboard(){
     const rows=store.stats(),perf=store.performance();
     if(!rows.length)return '<section class="concept-dashboard empty"><div><span class="wrong-kicker">개념 진단</span><h2>개념별 학습 진단</h2><p>문제를 풀면 개념별 정답률과 취약 순위가 여기에 쌓입니다.</p></div><a class="wrong-link" href="today.html">오늘의 학습 시작 →</a></section>';
@@ -31,6 +32,7 @@
     app.innerHTML=dashboard()+summary+tools+(items.length?'<div class="wrong-list">'+items.map(card).join("")+'</div>':empty(selected));
     const dueTab=document.createElement("button");dueTab.type="button";dueTab.className="wrong-tab"+(filter==="due"?" on":"");dueTab.dataset.filter="due";dueTab.textContent="오늘 복습 "+counts.due+"문제";app.querySelector(".wrong-tabs").prepend(dueTab);
     app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered)return;const label=document.createElement("p");label.className="retry-status";label.textContent=note.reviewStage?"복습 확인 "+note.reviewStage+"/4 · "+(store.due(note)?"오늘 다시 풀 차례":dateText(note.nextReviewAt)+" 다시 확인"):"다시 맞힌 뒤 1일·3일·7일 간격으로 확인합니다.";element.querySelector(".wrong-card-top").after(label)});
+    app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered||note.reviewStage>0)element.querySelector(".wrong-card-actions").insertAdjacentHTML("afterbegin",similarLink(note))});
     window.MathView?.typeset(app);
     app.querySelectorAll("[data-concept]").forEach(btn=>btn.addEventListener("click",()=>{conceptFilter=conceptFilter===btn.dataset.concept?"":btn.dataset.concept;draw()}));
     app.querySelectorAll("[data-filter]").forEach(btn=>btn.addEventListener("click",()=>{filter=btn.dataset.filter;draw()}));
@@ -70,7 +72,7 @@
       const ok=norm(answerValue)===norm(note.correctAnswer);
       if(!store.attempt(id,ok,answerValue)){status.textContent="풀이 기록을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.";return}
       slot.querySelector(".retry-submit").disabled=true;
-      if(ok){const saved=store.all().find(x=>x.id===id);status.textContent=saved.mastered?"정답입니다. 마지막 확인을 마쳐 복습 완료했습니다.":"정답입니다. "+dateText(saved.nextReviewAt)+"에 다시 확인하세요.";status.className="retry-status correct";toast(saved.mastered?"복습을 완료했습니다.":"다음 복습 일정을 저장했습니다.");setTimeout(draw,1200)}
+      if(ok){const saved=store.all().find(x=>x.id===id);status.textContent=saved.mastered?"정답입니다. 마지막 확인을 마쳐 복습 완료했습니다.":"정답입니다. "+dateText(saved.nextReviewAt)+"에 다시 확인하세요.";status.className="retry-status correct";toast(saved.mastered?"복습을 완료했습니다.":"다음 복습 일정을 저장했습니다.");const link=similarLink(saved);if(link){slot.querySelector(".retry-box").insertAdjacentHTML("beforeend",link);const back=document.createElement("button");back.type="button";back.className="wrong-button";back.textContent="복습 목록으로";back.onclick=draw;slot.querySelector(".retry-box").append(back)}else setTimeout(draw,1200)}
       else{status.textContent="아직 다릅니다. 해설을 확인한 뒤 다시 풀어 보세요. 복습 단계는 처음부터 시작합니다.";status.className="retry-status wrong";slot.querySelector(".retry-submit").disabled=false}
     });
   }
