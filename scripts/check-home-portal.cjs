@@ -101,6 +101,8 @@ const server=http.createServer((req,res)=>{
       await page.waitForSelector('#studentAccountForm [name="id"]');
       assert.equal(await page.locator('#studentAccountForm [name="confirm"]').isVisible(),false);
       assert.equal(await page.locator('#studentAccountForm [name="grade"]').isVisible(),false);
+      await page.locator('#studentRecovery').click();assert.match(await page.locator('.student-recovery-section').last().innerText(),/초기화/);await page.locator('#findStudentId').click();assert.match(await page.locator('#studentIdResult').innerText(),/아이디가 없습니다/);
+      await page.evaluate(()=>localStorage.setItem('math-student-data-owner','sample123'));await page.locator('#findStudentId').click();assert.match(await page.locator('#studentIdResult').innerText(),/sample123/);await page.getByRole('button',{name:'이 아이디로 로그인',exact:true}).click();assert.equal(await page.locator('#studentAccountForm [name="id"]').inputValue(),'sample123');await page.evaluate(()=>localStorage.removeItem('math-student-data-owner'));
       await page.locator(".student-dialog-close").click();
       assert.equal(await page.locator(".student-account-dialog").evaluate(el=>el.open),false);
       const overflow=await page.evaluate(()=>({wide:document.documentElement.scrollWidth>innerWidth,width:innerWidth,scroll:document.documentElement.scrollWidth,items:[...document.querySelectorAll("body *")].map(el=>({tag:el.tagName,cls:el.className,right:el.getBoundingClientRect().right,width:el.getBoundingClientRect().width})).filter(x=>x.right>innerWidth+1).slice(0,8)}));

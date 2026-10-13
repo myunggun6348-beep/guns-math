@@ -74,6 +74,19 @@
     return 맞는것 ? 맞는것[0] : "";
   }
 
+  function 계정찾기() {
+    창.innerHTML='<div class="student-account-card"><form method="dialog"><button class="student-dialog-close" aria-label="닫기">×</button></form><span class="eyebrow">로그인 도움</span><h2>아이디·비밀번호 찾기</h2><section class="student-recovery-section"><h3>아이디를 잊었나요?</h3><p>이 브라우저에서 마지막으로 사용한 아이디를 확인할 수 있습니다. 공용 기기에서는 다른 학생의 아이디일 수 있습니다.</p><button type="button" class="student-secondary-action" id="findStudentId">이 기기의 마지막 아이디 확인</button><p id="studentIdResult" role="status"></p></section><section class="student-recovery-section"><h3>비밀번호를 잊었나요?</h3><p>선생님에게 이름·학년·반과 아이디를 알려 주고 비밀번호 초기화를 요청하세요. 아이디도 모르면 선생님이 학생 목록에서 확인할 수 있습니다.</p><p>선생님이 학생을 확인한 뒤 새 비밀번호를 전달합니다. 학습 기록은 유지되며 이전 로그인은 해제됩니다. 기존 비밀번호를 알려 줄 필요는 없습니다.</p><small>학생이 직접 비밀번호를 재설정하는 기능은 아직 제공하지 않습니다.</small></section><button type="button" class="btn btn-primary" id="recoveryBack">로그인으로 돌아가기</button></div>';
+    창.querySelector('#recoveryBack').onclick=()=>들어가기전('login');
+    창.querySelector('#findStudentId').onclick=()=>{
+      let id='';try{id=localStorage.getItem('math-student-data-owner')||''}catch{}
+      const result=창.querySelector('#studentIdResult');
+      result.replaceChildren();
+      if(!/^[a-z0-9]{4,16}$/.test(id)){result.textContent='이 브라우저에 사용했던 아이디가 없습니다. 전에 로그인한 기기에서 확인하거나 선생님에게 이름·학년·반을 알려 주세요.';return}
+      result.textContent='마지막으로 사용한 아이디: '+id+' · 본인 아이디인지 확인하세요.';
+      const use=document.createElement('button');use.type='button';use.className='student-text-action';use.textContent='이 아이디로 로그인';use.onclick=()=>{들어가기전('login');창.querySelector('[name="id"]').value=id;창.querySelector('[name="pin"]').focus()};result.append(use);
+    };
+  }
+
   function 들어가기전(모드) {
     const 만드나 = 모드 !== "login";
     창.innerHTML =
@@ -107,11 +120,13 @@
         '</form>' +
         '<button type="button" class="student-text-action" id="studentSwap">' +
           (만드나 ? '이미 계정이 있어요 · 로그인' : '계정 만들기') + '</button>' +
+        (만드나 ? '' : '<button type="button" class="student-text-action" id="studentRecovery">아이디·비밀번호 찾기</button>') +
       '</div>';
 
     const 폼 = 창.querySelector("#studentAccountForm");
     const 오류 = 창.querySelector(".student-account-error");
     창.querySelector("#studentSwap").onclick = () => 들어가기전(만드나 ? "login" : "register");
+    창.querySelector('#studentRecovery')?.addEventListener('click',계정찾기);
 
 
     폼.onsubmit = async 사건 => {
