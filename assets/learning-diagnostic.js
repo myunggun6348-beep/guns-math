@@ -30,5 +30,9 @@
     if(window.StudentSync?.canUseLocal?.()===false)return null;
     try{return window.DiagnosticAnalysis.summary(JSON.parse(localStorage.getItem(key)||'null'),Date.now(),window.WrongNotes.stats(),window.WrongNotes.all()).find(row=>row.grade===String(grade)&&row.track===track)?.recommendation||null}catch{return null}
   }
-  window.LearningDiagnostic={read,select,save,weak,recommendation};
+  function weeklyPlan(grade,track){
+    if(window.StudentSync?.canUseLocal?.()===false)return null;
+    try{const diagnostics=window.DiagnosticAnalysis.summary(JSON.parse(localStorage.getItem(key)||'null'),Date.now(),window.WrongNotes.stats(),window.WrongNotes.all());return window.DiagnosticAnalysis.weeklyPlan({grade,track,diagnostics,notes:window.WrongNotes.all()})}catch{return null}
+  }
+  window.LearningDiagnostic={read,select,save,weak,recommendation,weeklyPlan};
 })();

@@ -41,5 +41,25 @@ function summary(profile,now=Date.now(),stats=[],notes=[]){
     const selected=choices.sort((a,b)=>a.priority-b.priority)[0];if(!selected)return null;
     const {priority,...resultView}=selected;return resultView;
   }
-  return{summary};
+  function weeklyPlan({grade,track,diagnostics=[],notes=[],now=Date.now()}){
+    if(!Object.hasOwn(TODAY_TRACKS,track))return null;
+    grade=String(grade);const course=TODAY_TRACKS[track];if(!course.grades.includes(grade)||!Number.isFinite(now))return null;
+    const day=at=>new Date(at+9*3600000).toISOString().slice(0,10),start=day(now),midnight=Date.parse(start+'T00:00:00+09:00');
+    const report=diagnostics.find(row=>row.grade===grade&&row.track===track),next=report?.recommendation;
+    const ids=[...new Set(course.questions.map(q=>q.concept))],focus=next?.conceptId||ids[0];
+    const remaining=(report?.concepts||[]).filter(c=>c.id!==focus).sort((a,b)=>Number(b.recheck>0)-Number(a.recheck>0));
+    const other=remaining[0],second=other?recommend({grade,track,concepts:[other]},notes,now):null,secondId=second?.conceptId||ids.find(id=>id!==focus)||focus;
+    const level=next?.level||'basic',secondLevel=second?.level||'basic',base='grade='+grade+'&subject='+track;
+    const map=id=>'map.html?grade='+grade+'&n='+id,practice=(id,difficulty)=>'today.html?'+base+'&practice='+id+'&difficulty='+difficulty;
+    const lesson=(kind,id,level)=>({kind,conceptId:id,level,title:TODAY_CONCEPTS[id].name+(kind==='concept'?' 개념 살펴보기':' '+({basic:'기초',standard:'표준',challenge:'도전'}[level])+' 1문항'),href:kind==='concept'?map(id):practice(id,level),minutes:kind==='concept'?4:3,description:kind==='concept'?'설명을 읽고 핵심 내용을 풀이판에 적용할 준비를 해요.':'원하는 난도를 골라 풀이판에 풀고 답을 확인해요.'});
+    const activities=[report?(next?.unlearned?lesson('concept',focus,level):lesson('practice',focus,level)):{kind:'diagnostic',title:'학습 진단 5문항',href:'today.html?diagnostic=1&'+base,minutes:5,description:'어떤 개념부터 시작할지 확인해요. 아직 배우지 않은 문제는 따로 표시하세요.'},lesson('concept',focus,level),lesson('practice',focus,level),{kind:'daily',title:course.title+' 오늘의 5문제',href:'today.html?'+base,minutes:5,description:'다른 개념도 함께 풀며 균형을 맞춰요.'},lesson('concept',secondId,secondLevel),lesson('practice',secondId,secondLevel),{kind:'reflection',title:'한 주의 복습 성과 돌아보기',href:'index.html?weekly=review#homePersonal',minutes:3,description:'홈의 주간 복습 성과에서 다시 맞힌 개념과 다음에 확인할 것을 살펴봐요.'}];
+    const due=notes.filter(note=>note&&String(note.grade)===grade&&note.sourceKey===track&&ids.includes(note.conceptId)&&!note.mastered&&(!note.nextReviewAt||typeof note.nextReviewAt==='string'&&Number.isFinite(Date.parse(note.nextReviewAt))));
+    const days=activities.map((activity,index)=>{
+      const date=day(midnight+index*86400000),reviews=due.filter(note=>{const scheduled=note.nextReviewAt?day(Date.parse(note.nextReviewAt)):start;return (scheduled<start?start:scheduled)===date});
+      const reviewTarget=Math.min(2,reviews.length);
+      return{date,...activity,reviewCount:reviews.length,reviewTarget,reviewConcepts:[...new Set(reviews.map(n=>TODAY_CONCEPTS[n.conceptId].name))],reviewHref:'wrong-notes.html?view=active',reviewMinutes:reviewTarget*2};
+    });
+    return{grade,track,title:course.title,startsOn:start,endsOn:days[6].date,reason:next?.reason||'진단 전 기본 계획입니다. 학년·과목에 맞춰 시작하고, 진단 후 추천을 반영해요.',days};
+  }
+  return{summary,weeklyPlan};
 });

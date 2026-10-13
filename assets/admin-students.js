@@ -26,6 +26,10 @@
     const level={basic:'기초',standard:'표준',challenge:'도전'};
     return '<section class="learning-next"><h4>다음 추천 학습 · '+esc(next.name)+'</h4><p>'+esc(next.reason)+'</p><p>학생 홈 안내: '+(next.review?'오답 먼저 복습하기':next.unlearned?'개념 설명 먼저 보기':esc(level[next.level])+' 1문항 풀기')+'</p><p><a href="'+esc(next.mapHref)+'">개념 지도 보기</a> · <a href="'+esc(next.pastHref)+'">관련 기출 보기</a></p></section>';
   }
+  function weeklyPlanView(plan){
+    if(!plan)return '<p>학생의 학년·과목 설정을 확인하면 계획을 볼 수 있습니다.</p>';
+    return '<p>고'+esc(plan.grade)+' · '+esc(plan.title)+' · '+esc(plan.startsOn)+' ~ '+esc(plan.endsOn)+' · 한국 시간</p><p>'+esc(plan.reason)+'</p><ol class="study-plan-days">'+plan.days.map((day,index)=>'<li><span class="study-plan-date">'+(index===0?'오늘':esc(day.date.slice(5)))+'<small>약 '+(day.minutes+day.reviewMinutes)+'분</small></span><div>'+(day.reviewCount?'<p><b>오답 복습부터 · 예정 '+day.reviewCount+'문제</b><br>'+day.reviewConcepts.map(esc).join(' · ')+' · 먼저 '+day.reviewTarget+'문제</p>':'')+'<b>'+esc(day.title)+'</b><p>'+esc(day.description)+'</p></div></li>').join('')+'</ol><p>학생 홈에 표시되는 계획입니다. 학습 결과와 복습 일정에 따라 갱신되며 완료 기록이나 선생님의 과제 배정은 아닙니다.</p>';
+  }
   function draw(){
     const query=search.value.trim().toLowerCase();
     const matched=students.filter(student=>{
@@ -50,6 +54,7 @@
     list.querySelectorAll('.student-admin-row:not(.head)').forEach((row,index)=>{
       const diagnostics=shown[index].diagnostics||[],details=document.createElement('details');details.className='review-weekly student-diagnostic-analysis';
       details.innerHTML='<summary>학습 진단 결과 · '+(diagnostics.length?diagnostics.length+'과목':'기록 없음')+'</summary>'+(diagnostics.length?'<p>과목별 최근 완료 진단입니다. 재확인과 미학습을 구분하며 오늘의 점수·오답 집계에는 포함하지 않습니다.</p>'+diagnostics.map(result=>'<section class="student-diagnostic-course"><h3>고'+esc(result.grade)+' · '+esc(result.title)+'</h3><p>진단 완료 '+esc(when(result.completedAt))+' · 한국 시간</p><p><b>정답 '+result.correct+' · 재확인 '+result.recheck+' · 미학습 '+result.unlearned+'</b></p><table><caption>개념별 진단 결과</caption><thead><tr><th scope="col">개념</th><th scope="col">정답</th><th scope="col">재확인</th><th scope="col">미학습</th></tr></thead><tbody>'+result.concepts.map(concept=>'<tr><th scope="row"><a href="map.html?grade='+encodeURIComponent(result.grade)+'&n='+encodeURIComponent(concept.id)+'">'+esc(concept.name)+'</a></th><td>'+concept.correct+'</td><td>'+concept.recheck+'</td><td>'+concept.unlearned+'</td></tr>').join('')+'</tbody></table><p>재확인할 개념: '+(result.concepts.filter(c=>c.recheck>0).map(c=>'<a href="past-practice.html?grade='+encodeURIComponent(result.grade)+'&concept='+encodeURIComponent(c.id)+'">'+esc(c.name)+' 기출 보기</a>').join(' · ')||'없음')+'</p>'+progressView(result)+recommendationView(result)+'</section>').join('')+'<small>5문항으로 확인한 결과이므로 학습 지도 참고자료로 활용하세요. 미학습은 취약 개념으로 분류하지 않습니다.</small>':'<p>계정에 동기화된 완료 진단이 없습니다. 학생은 홈의 ‘나의 학습 진단’에서 시작할 수 있습니다.</p>');row.append(details);
+      const week=document.createElement('details');week.className='review-weekly student-weekly-plan';week.innerHTML='<summary>앞으로 7일 학습 계획</summary>'+weeklyPlanView(shown[index].weeklyPlan);row.append(week);
     });
   }
   function openReset(student){

@@ -2,7 +2,7 @@ const { 준비됨, 명령 } = require("./_redis");
 const { passwordMatches } = require("./_admin-auth");
 const crypto=require("crypto");
 const {reviewSummary}=require('../assets/study-state');
-const {summary:diagnosticSummary}=require('../assets/diagnostic-analysis');
+const {summary:diagnosticSummary,weeklyPlan}=require('../assets/diagnostic-analysis');
 const {새PIN문제,digest}=require("./_student-auth");
 
 function input(req) { return typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {}); }
@@ -66,7 +66,7 @@ module.exports = async (req, res) => {
       const totalQuestions = records.reduce((sum, row) => sum + (Number(row.total) || 5), 0);
       const totalCorrect = records.reduce((sum, row) => sum + (Number(row.correct) || 0), 0);
       const grade=String(data.profile?.grade||data.pref?.grade||""),className=String(data.profile?.className||""),groupKey=grade&&className?`${grade}-${className}`:"unset";
-      const diagnostics=diagnosticSummary(data.profile,reviewNow,stats,notes);
+      const diagnostics=diagnosticSummary(data.profile,reviewNow,stats,notes),trackKey=String(data.profile?.track||data.pref?.track||'');
       const lastAt=newest(recent?.finishedAt,...stats.map(row=>row.lastAt),...notes.map(note=>note.masteredAt||note.lastWrongAt||note.createdAt),...diagnostics.map(row=>row.completedAt));
       const notStarted=!lastAt&&records.length===0&&!stats.some(row=>Number(row.attempts)>0)&&notes.length===0;
       const inactive7=Date.parse(account.createdAt)<weekAgo&&(!lastAt||Date.parse(lastAt)<weekAgo);
@@ -82,7 +82,7 @@ module.exports = async (req, res) => {
         studyCount: records.length, todayDone: todayRecords.length > 0, todayScore: todayRecords.length ? Math.max(...todayRecords.map(row => Number(row.correct) || 0)) : null,
         average: totalQuestions ? Math.round(totalCorrect / totalQuestions * 100) : null, activeWrong: notes.filter(note => !note.mastered).length, mastered: notes.filter(note => note.mastered).length,
         weakest: weak ? { name: weak.name || "기타", rate: rate(weak), attempts: Number(weak.attempts) || 0 } : null,
-        analysis:studyAnalysis(notes,stats),review:reviewSummary(notes,reviewNow),diagnostics,
+        analysis:studyAnalysis(notes,stats),review:reviewSummary(notes,reviewNow),diagnostics,weeklyPlan:weeklyPlan({grade,track:trackKey,diagnostics,notes,now:reviewNow}),
       });
     }
     students.sort((a, b) => String(b.lastAt).localeCompare(String(a.lastAt)) || a.id.localeCompare(b.id));
