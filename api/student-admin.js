@@ -1,6 +1,7 @@
 const { 준비됨, 명령 } = require("./_redis");
 const { passwordMatches } = require("./_admin-auth");
 const crypto=require("crypto");
+const {reviewSummary}=require('../assets/study-state');
 const {새PIN문제,digest}=require("./_student-auth");
 
 function input(req) { return typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {}); }
@@ -49,7 +50,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ok:true,id});
     }
     if(received.action&&received.action!=="list")return res.status(400).json({error:"지원하지 않는 작업입니다."});
-    const keys = await accountIds(), today = koreaDate(), students = [],weekAgo=Date.now()-7*86400000,classConcepts=new Map();
+    const keys = await accountIds(), today = koreaDate(), students = [],reviewNow=Date.now(),weekAgo=reviewNow-7*86400000,classConcepts=new Map();
     for (const key of keys) {
       const id = key.slice("student:account:".length);
       const [accountRaw, dataRaw] = await Promise.all([명령("GET", key), 명령("GET", `student:data:${id}`)]);
@@ -79,7 +80,7 @@ module.exports = async (req, res) => {
         studyCount: records.length, todayDone: todayRecords.length > 0, todayScore: todayRecords.length ? Math.max(...todayRecords.map(row => Number(row.correct) || 0)) : null,
         average: totalQuestions ? Math.round(totalCorrect / totalQuestions * 100) : null, activeWrong: notes.filter(note => !note.mastered).length, mastered: notes.filter(note => note.mastered).length,
         weakest: weak ? { name: weak.name || "기타", rate: rate(weak), attempts: Number(weak.attempts) || 0 } : null,
-        analysis:studyAnalysis(notes,stats),
+        analysis:studyAnalysis(notes,stats),review:reviewSummary(notes,reviewNow),
       });
     }
     students.sort((a, b) => String(b.lastAt).localeCompare(String(a.lastAt)) || a.id.localeCompare(b.id));

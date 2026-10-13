@@ -16,9 +16,11 @@ async function request(password){const result={};await handler({method:"POST",bo
   const active=JSON.parse(values.get('student:data:active01'));active.notes=[{id:'a',wrongReason:'calculation',hintsUsed:2},{id:'b',wrongReason:'reading',hintsUsed:0},{id:'c',wrongReason:'unknown'},null];Object.assign(active.stats.diff,{reviewAttempts:3,hintUsed:2,hintSteps:5,soloCorrect:1});values.set('student:data:active01',JSON.stringify(active));
   const idle=JSON.parse(values.get('student:data:idle0001'));idle.notes=[{id:'d',wrongReason:'calculation',hintsUsed:3}];Object.assign(idle.stats.diff,{reviewAttempts:2,hintUsed:1,hintSteps:3,soloCorrect:1});values.set('student:data:idle0001',JSON.stringify(idle));
   const originalNow=Date.now;Date.now=()=>now;
+  Object.assign(active.notes[0],{conceptId:'diff',conceptName:'미분',reviewStage:4,mastered:true,lastWrongAt:iso(2),lastReviewAt:iso(0)});Object.assign(active.notes[1],{conceptId:'diff',conceptName:'미분',reviewStage:1,mastered:false,lastWrongAt:iso(2),lastReviewAt:iso(1),nextReviewAt:iso(-1)});values.set('student:data:active01',JSON.stringify(active));
   try{
     assert.equal((await request("wrong")).code,401);
     const result=await request("attention-test-password");assert.equal(result.code,200);const data=result.data;
+    const review=data.students.find(row=>row.id==='active01').review;assert.equal(review.confirmed,2);assert.equal(review.completed,1);assert.equal(review.due,1);assert.equal(review.active,2);assert.equal(review.days.length,7);assert.equal(review.concepts[0].name,'미분');assert.equal(data.students.find(row=>row.id==='idle0001').review.confirmed,0);assert.equal(JSON.stringify(review).includes('solutionImage'),false);assert.equal(JSON.stringify(review).includes('prompt'),false);
     assert.equal(data.summary.inactive7,2);assert.equal(data.summary.notStarted,2);
     assert.equal(data.students.find(row=>row.id==="new00001").inactive7,false,"가입 7일 전 학생이 미학습 처리됨");
     assert.equal(data.students.find(row=>row.id==="edge0001").inactive7,false,"정확히 7일 경계의 학습이 빠짐");

@@ -101,7 +101,6 @@
   function remove(id){return removeIds([id])}
   function clearMastered(){return removeIds(read().filter(note=>note.mastered).map(note=>note.id))}
   function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,due:items.filter(due).length,mastered:items.filter(x=>x.mastered).length}}
-  // shortcut: 보관 중인 노트의 마지막 복습만 집계하며 전체 복습 이력이 필요하면 이벤트 기록을 추가한다.
-  function recentReviews(now=Date.now()){return read().filter(note=>{const at=Date.parse(note.lastReviewAt),wrongAt=Date.parse(note.lastWrongAt);return Number.isInteger(note.reviewStage)&&note.reviewStage>=1&&note.reviewStage<=4&&at>wrongAt&&at>=now-7*86400000&&at<=now+1000}).sort((a,b)=>Date.parse(b.lastReviewAt)-Date.parse(a.lastReviewAt))}
+  function recentReviews(now=Date.now()){return window.StudyState.recentReviews(read(),now)}
   window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,due,idFor,stats,performance,reasons,setReason,attemptTime:operationTime,recentReviews};
 })();

@@ -29,6 +29,10 @@
       const analysis=shown[index].analysis,details=document.createElement("details");details.className="student-learning-analysis";
       details.innerHTML='<summary>오답·힌트 분석 보기</summary><p>보관된 오답 원인: '+((analysis?.reasons||[]).filter(reason=>reason.count>0).map(reason=>esc(reason.name)+' '+reason.count+'문제').join(' · ')||'기록 없음')+'</p><p>'+esc(hintText(analysis))+'</p><small>원인은 학생 선택값입니다. 힌트 누적 집계는 기능 적용 후 확인 문제만 포함합니다.'+(analysis?.savedHintNotes?' 보관된 오답 중 힌트 사용 기록 '+analysis.savedHintNotes+'문제.':'')+'</small>';span.append(details);
     });
+    list.querySelectorAll('.student-admin-name').forEach((span,index)=>{
+      const review=shown[index].review,details=document.createElement('details');details.className='review-weekly student-review-analysis';
+      details.innerHTML='<summary>주간 복습 성과 보기</summary>'+(review?'<p>'+esc(review.startDate)+' ~ '+esc(review.endDate)+' · 한국 시간</p><p>정답 확인 '+review.confirmed+'문제 · 최종 완료 '+review.completed+'문제</p><p>오늘 복습 '+review.due+'문제 · 전체 미완료 '+review.active+'문제</p><table><caption>날짜별 마지막 복습 확인</caption><thead><tr><th scope="col">날짜</th><th scope="col">정답 확인</th><th scope="col">최종 완료</th></tr></thead><tbody>'+review.days.map(day=>'<tr><th scope="row">'+esc(day.date.slice(5))+'</th><td>'+day.confirmed+'</td><td>'+day.completed+'</td></tr>').join('')+'</tbody></table><ul>'+review.concepts.map(row=>'<li>'+esc(row.name)+' · 확인 '+row.confirmed+' · 완료 '+row.completed+'</li>').join('')+'</ul><small>계정에 동기화된 보관 중인 오답별 마지막 확인 기준입니다. 삭제·재오답 기록과 비회원 학습은 포함하지 않으며 전체 시도 횟수가 아닙니다.</small>':'<p>집계 정보를 새로고침해 주세요.</p>');span.append(details);
+    });
   }
   function openReset(student){
     if(resetting)return;

@@ -139,11 +139,13 @@
     const recovered=window.StudentSync&&!window.StudentSync.getState().ready?[]:window.WrongNotes.recentReviews(),completed=recovered.filter(note=>note.mastered&&note.reviewStage===4).length;
     const names=[...new Set(recovered.map(note=>window.TODAY_CONCEPTS?.[note.conceptId]?.name||note.conceptName||'수학'))];
     const growth=recovered.length?'<section class="review-growth" aria-label="최근 복습 성과"><strong>최근 7일 동안 오답 '+recovered.length+'문제를 다시 맞혔어요.</strong><p>'+names.slice(0,3).map(esc).join(' · ')+(names.length>3?' 외 '+(names.length-3)+'개':'')+(completed?' · 마지막 확인까지 완료 '+completed+'문제':'')+'</p><small>보관 중인 오답의 마지막 복습 확인 기준입니다.</small></section>':'';
+    const weekly=window.StudentSync&&!window.StudentSync.getState().ready?null:window.StudyState.reviewSummary(window.WrongNotes.all());
+    const weekView=weekly?'<details class="review-weekly"><summary>주간 복습 성과 보기</summary><p>'+weekly.startDate+' ~ '+weekly.endDate+' · 한국 시간</p><p>정답 확인 '+weekly.confirmed+'문제 · 최종 완료 '+weekly.completed+'문제 · 오늘 복습 '+weekly.due+'문제</p><table><caption>날짜별 마지막 복습 확인</caption><thead><tr><th scope="col">날짜</th><th scope="col">정답 확인</th><th scope="col">최종 완료</th></tr></thead><tbody>'+weekly.days.map(day=>'<tr><th scope="row">'+day.date.slice(5)+'</th><td>'+day.confirmed+'문제</td><td>'+day.completed+'문제</td></tr>').join('')+'</tbody></table><ul>'+weekly.concepts.map(row=>'<li>'+esc(window.TODAY_CONCEPTS?.[row.conceptId]?.name||row.name)+' · 정답 확인 '+row.confirmed+' · 최종 완료 '+row.completed+'</li>').join('')+'</ul><small>'+(weekly.confirmed?'':'이번 기간에 보관된 복습 정답 확인이 없습니다. ')+'현재 보관 중인 오답별 마지막 확인을 한 번 집계합니다. 삭제하거나 다시 틀린 노트는 제외하며, 전체 시도 횟수가 아닙니다.</small></details>':'';
 
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">오늘</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
       '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':'시작하기')+' →</b></a>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>오늘 복습할 문제 <b>'+wrong.due+'문제</b></span><span>전체 미완료 오답 <b>'+wrong.active+'문제</b></span></div>'+
-      growth+'</div>';
+      growth+weekView+'</div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
   }
   window.addEventListener("wrong-notes-change",render);
