@@ -21,6 +21,11 @@
     }).join('');
     return '<details class="student-diagnostic-progress"><summary>진단 이후 학습 변화</summary><p>같은 학년·과목·개념의 오늘의 문제·확인 문제를 비교합니다. 문항별 진단 이후 첫 기록 중 힌트 없는 풀이를 정답률에 포함하며, 힌트 사용과 오답 재풀이는 따로 표시합니다.</p>'+cards+'<p>기능 적용 후 보관된 개념별 최근 50회 기준입니다. 미학습은 진단 정답률에서 제외합니다. 문항과 난도가 달라 변화량만으로 실력 향상을 단정하지 않습니다. 재진단하면 최근 진단 완료 이후부터 비교합니다.</p></details>';
   }
+  function recommendationView(result){
+    const next=result.recommendation;if(!next)return '';
+    const level={basic:'기초',standard:'표준',challenge:'도전'};
+    return '<section class="learning-next"><h4>다음 추천 학습 · '+esc(next.name)+'</h4><p>'+esc(next.reason)+'</p><p>학생 홈 안내: '+(next.review?'오답 먼저 복습하기':next.unlearned?'개념 설명 먼저 보기':esc(level[next.level])+' 1문항 풀기')+'</p><p><a href="'+esc(next.mapHref)+'">개념 지도 보기</a> · <a href="'+esc(next.pastHref)+'">관련 기출 보기</a></p></section>';
+  }
   function draw(){
     const query=search.value.trim().toLowerCase();
     const matched=students.filter(student=>{
@@ -44,7 +49,7 @@
     });
     list.querySelectorAll('.student-admin-row:not(.head)').forEach((row,index)=>{
       const diagnostics=shown[index].diagnostics||[],details=document.createElement('details');details.className='review-weekly student-diagnostic-analysis';
-      details.innerHTML='<summary>학습 진단 결과 · '+(diagnostics.length?diagnostics.length+'과목':'기록 없음')+'</summary>'+(diagnostics.length?'<p>과목별 최근 완료 진단입니다. 재확인과 미학습을 구분하며 오늘의 점수·오답 집계에는 포함하지 않습니다.</p>'+diagnostics.map(result=>'<section class="student-diagnostic-course"><h3>고'+esc(result.grade)+' · '+esc(result.title)+'</h3><p>진단 완료 '+esc(when(result.completedAt))+' · 한국 시간</p><p><b>정답 '+result.correct+' · 재확인 '+result.recheck+' · 미학습 '+result.unlearned+'</b></p><table><caption>개념별 진단 결과</caption><thead><tr><th scope="col">개념</th><th scope="col">정답</th><th scope="col">재확인</th><th scope="col">미학습</th></tr></thead><tbody>'+result.concepts.map(concept=>'<tr><th scope="row"><a href="map.html?grade='+encodeURIComponent(result.grade)+'&n='+encodeURIComponent(concept.id)+'">'+esc(concept.name)+'</a></th><td>'+concept.correct+'</td><td>'+concept.recheck+'</td><td>'+concept.unlearned+'</td></tr>').join('')+'</tbody></table><p>재확인할 개념: '+(result.concepts.filter(c=>c.recheck>0).map(c=>'<a href="past-practice.html?grade='+encodeURIComponent(result.grade)+'&concept='+encodeURIComponent(c.id)+'">'+esc(c.name)+' 기출 보기</a>').join(' · ')||'없음')+'</p>'+progressView(result)+'</section>').join('')+'<small>5문항으로 확인한 결과이므로 학습 지도 참고자료로 활용하세요. 미학습은 취약 개념으로 분류하지 않습니다.</small>':'<p>계정에 동기화된 완료 진단이 없습니다. 학생은 홈의 ‘나의 학습 진단’에서 시작할 수 있습니다.</p>');row.append(details);
+      details.innerHTML='<summary>학습 진단 결과 · '+(diagnostics.length?diagnostics.length+'과목':'기록 없음')+'</summary>'+(diagnostics.length?'<p>과목별 최근 완료 진단입니다. 재확인과 미학습을 구분하며 오늘의 점수·오답 집계에는 포함하지 않습니다.</p>'+diagnostics.map(result=>'<section class="student-diagnostic-course"><h3>고'+esc(result.grade)+' · '+esc(result.title)+'</h3><p>진단 완료 '+esc(when(result.completedAt))+' · 한국 시간</p><p><b>정답 '+result.correct+' · 재확인 '+result.recheck+' · 미학습 '+result.unlearned+'</b></p><table><caption>개념별 진단 결과</caption><thead><tr><th scope="col">개념</th><th scope="col">정답</th><th scope="col">재확인</th><th scope="col">미학습</th></tr></thead><tbody>'+result.concepts.map(concept=>'<tr><th scope="row"><a href="map.html?grade='+encodeURIComponent(result.grade)+'&n='+encodeURIComponent(concept.id)+'">'+esc(concept.name)+'</a></th><td>'+concept.correct+'</td><td>'+concept.recheck+'</td><td>'+concept.unlearned+'</td></tr>').join('')+'</tbody></table><p>재확인할 개념: '+(result.concepts.filter(c=>c.recheck>0).map(c=>'<a href="past-practice.html?grade='+encodeURIComponent(result.grade)+'&concept='+encodeURIComponent(c.id)+'">'+esc(c.name)+' 기출 보기</a>').join(' · ')||'없음')+'</p>'+progressView(result)+recommendationView(result)+'</section>').join('')+'<small>5문항으로 확인한 결과이므로 학습 지도 참고자료로 활용하세요. 미학습은 취약 개념으로 분류하지 않습니다.</small>':'<p>계정에 동기화된 완료 진단이 없습니다. 학생은 홈의 ‘나의 학습 진단’에서 시작할 수 있습니다.</p>');row.append(details);
     });
   }
   function openReset(student){

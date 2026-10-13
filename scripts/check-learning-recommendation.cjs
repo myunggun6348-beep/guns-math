@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict'),{summary}=require('../assets/diagnostic-analysis');
+const now=Date.parse('2026-10-13T05:00:00Z'),at=new Date(now-3600000).toISOString();
+const profile={grade:'1',track:'common1',diagnostics:{common1:{grade:'1',completedAt:at,answers:Array.from({length:5},()=>({concept:'poly',correct:false,skipped:false}))}}};
+const events=(count,correct=count,hints=0)=>Array.from({length:count},(_,i)=>({id:'attempt-'+i,problemId:'question-'+i,grade:'1',track:'common1',kind:hints?'similar':'today',at:new Date(now-10000+i).toISOString(),correct:i<correct,hints}));
+const stats=rows=>[{key:'poly',conceptId:'poly',attempts:100,correct:90,learningEvents:rows}];
+const next=(rows=[],notes=[],input=profile)=>summary(input,now,stats(rows),notes)[0].recommendation;
+assert.equal(next().level,'basic');assert.match(next().reason,/진단에서 재확인/);assert.match(next().practiceHref,/practice=poly&difficulty=basic/);
+assert.equal(next(events(1,0)).level,'basic');assert.match(next(events(1,0)).reason,/1문항 중 0문항/);
+assert.equal(next(events(2)).level,'standard');assert.equal(next(events(3)).level,'challenge');assert.equal(next(events(5,3)).level,'standard');assert.equal(next(events(5,2)).level,'basic');
+assert.equal(next(events(1,1,2)).level,'basic');assert.match(next(events(1,1,2)).reason,/힌트/);
+const due={grade:'1',sourceKey:'common1',conceptId:'poly',mastered:false,nextReviewAt:at};assert.equal(next(events(3),[due]).level,'basic');assert.match(next(events(3),[due]).reason,/복습할 시점/);assert.equal(next(events(3),[due]).review,true);
+for(const note of [{...due,grade:'2'},{...due,sourceKey:'common2'},{...due,mastered:true},{...due,nextReviewAt:new Date(now+3600000).toISOString()}])assert.equal(next(events(3),[note]).level,'challenge');
+const unlearned=JSON.parse(JSON.stringify(profile));unlearned.diagnostics.common1.answers.forEach(row=>row.skipped=true);assert.equal(next([],[],unlearned).unlearned,true);assert.match(next([],[],unlearned).reason,/아직 배우지/);assert.equal(next(events(1),[],unlearned).unlearned,false);
+assert.equal(summary({},now,[],[]).length,0);assert.equal(next(events(3).map(row=>({...row,grade:'2'}))).level,'basic');
+assert.equal(next(events(3).map(row=>({...row,track:'common2'}))).level,'basic');assert.equal(next(events(3).map(row=>({...row,at:new Date(now+86400000).toISOString()}))).level,'basic');
+const balanced=JSON.parse(JSON.stringify(profile));balanced.diagnostics.common1.answers=[{concept:'poly',correct:true,skipped:false},{concept:'poly',correct:true,skipped:false},{concept:'eq',correct:false,skipped:false},{concept:'eq',correct:true,skipped:false},{concept:'count',correct:false,skipped:true}];assert.equal(next(events(3),[],balanced).conceptId,'eq');
+const before=JSON.stringify({profile,rows:events(3),due});next(events(3),[due]);assert.equal(JSON.stringify({profile,rows:events(3),due}),before);
+console.log('다음 학습 추천 검사 통과: 진단 재확인·이후 정답/힌트·기초→표준→도전·복습 우선·미학습·학년/과목/시각 분리·취약 개념 우선·원본 보존');

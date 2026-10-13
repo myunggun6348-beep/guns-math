@@ -26,5 +26,9 @@
     const result=read(grade,track);if(!result)return[];
     return [...new Set(result.answers.filter(row=>!row.correct&&!row.skipped).map(row=>row.concept))].filter(id=>!stats.some(row=>(row.conceptId||row.key)===id&&row.attempts>0));
   }
-  window.LearningDiagnostic={read,select,save,weak};
+  function recommendation(grade,track){
+    if(window.StudentSync?.canUseLocal?.()===false)return null;
+    try{return window.DiagnosticAnalysis.summary(JSON.parse(localStorage.getItem(key)||'null'),Date.now(),window.WrongNotes.stats(),window.WrongNotes.all()).find(row=>row.grade===String(grade)&&row.track===track)?.recommendation||null}catch{return null}
+  }
+  window.LearningDiagnostic={read,select,save,weak,recommendation};
 })();
