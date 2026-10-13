@@ -95,6 +95,8 @@ const TODAY_TRACKS={
     QT("space","두 점 (0,1,2), (2,3,8)의 중점의 z좌표는?",["5"],"z좌표의 평균은 (2+8)/2=5입니다.")
   ]}
 };
+if(typeof module!=="undefined"&&module.exports)module.exports={TODAY_CONCEPTS,TODAY_TRACKS};
+else{
 window.TODAY_CONCEPTS=TODAY_CONCEPTS;
 window.TODAY_TRACKS=TODAY_TRACKS;
 (function(){
@@ -117,3 +119,4 @@ window.TODAY_TRACKS=TODAY_TRACKS;
     return rows[Math.max(0,Math.floor(Number(note.attempts)||0))%rows.length];
   };
 })();
+}

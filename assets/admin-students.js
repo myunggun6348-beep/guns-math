@@ -16,7 +16,7 @@
     const query=search.value.trim().toLowerCase();
     const matched=students.filter(student=>{
       const inClass=!filter.value||(filter.value==="unset"?(!student.grade||!student.className):filter.value===student.grade+"-"+student.className);
-      const found=!query||[student.id,student.name,student.grade,student.className,tracks[student.track]||student.track,student.weakest?.name].some(value=>String(value||"").toLowerCase().includes(query));
+      const found=!query||[student.id,student.name,student.grade,student.className,tracks[student.track]||student.track,student.weakest?.name,...(student.diagnostics||[]).flatMap(result=>[result.title,...result.concepts.map(concept=>concept.name)])].some(value=>String(value||"").toLowerCase().includes(query));
       return inClass&&found;
     });
     document.getElementById("미학습수").textContent=matched.filter(student=>student.inactive7).length;document.getElementById("시작전수").textContent=matched.filter(student=>student.notStarted).length;
@@ -32,6 +32,10 @@
     list.querySelectorAll('.student-admin-name').forEach((span,index)=>{
       const review=shown[index].review,details=document.createElement('details');details.className='review-weekly student-review-analysis';
       details.innerHTML='<summary>주간 복습 성과 보기</summary>'+(review?'<p>'+esc(review.startDate)+' ~ '+esc(review.endDate)+' · 한국 시간</p><p>정답 확인 '+review.confirmed+'문제 · 최종 완료 '+review.completed+'문제</p><p>오늘 복습 '+review.due+'문제 · 전체 미완료 '+review.active+'문제</p><table><caption>날짜별 마지막 복습 확인</caption><thead><tr><th scope="col">날짜</th><th scope="col">정답 확인</th><th scope="col">최종 완료</th></tr></thead><tbody>'+review.days.map(day=>'<tr><th scope="row">'+esc(day.date.slice(5))+'</th><td>'+day.confirmed+'</td><td>'+day.completed+'</td></tr>').join('')+'</tbody></table><ul>'+review.concepts.map(row=>'<li>'+esc(row.name)+' · 확인 '+row.confirmed+' · 완료 '+row.completed+'</li>').join('')+'</ul><small>계정에 동기화된 보관 중인 오답별 마지막 확인 기준입니다. 삭제·재오답 기록과 비회원 학습은 포함하지 않으며 전체 시도 횟수가 아닙니다.</small>':'<p>집계 정보를 새로고침해 주세요.</p>');span.append(details);
+    });
+    list.querySelectorAll('.student-admin-row:not(.head)').forEach((row,index)=>{
+      const diagnostics=shown[index].diagnostics||[],details=document.createElement('details');details.className='review-weekly student-diagnostic-analysis';
+      details.innerHTML='<summary>학습 진단 결과 · '+(diagnostics.length?diagnostics.length+'과목':'기록 없음')+'</summary>'+(diagnostics.length?'<p>과목별 최근 완료 진단입니다. 재확인과 미학습을 구분하며 오늘의 점수·오답 집계에는 포함하지 않습니다.</p>'+diagnostics.map(result=>'<section class="student-diagnostic-course"><h3>고'+esc(result.grade)+' · '+esc(result.title)+'</h3><p>진단 완료 '+esc(when(result.completedAt))+' · 한국 시간</p><p><b>정답 '+result.correct+' · 재확인 '+result.recheck+' · 미학습 '+result.unlearned+'</b></p><table><caption>개념별 진단 결과</caption><thead><tr><th scope="col">개념</th><th scope="col">정답</th><th scope="col">재확인</th><th scope="col">미학습</th></tr></thead><tbody>'+result.concepts.map(concept=>'<tr><th scope="row"><a href="map.html?grade='+encodeURIComponent(result.grade)+'&n='+encodeURIComponent(concept.id)+'">'+esc(concept.name)+'</a></th><td>'+concept.correct+'</td><td>'+concept.recheck+'</td><td>'+concept.unlearned+'</td></tr>').join('')+'</tbody></table><p>재확인할 개념: '+(result.concepts.filter(c=>c.recheck>0).map(c=>'<a href="past-practice.html?grade='+encodeURIComponent(result.grade)+'&concept='+encodeURIComponent(c.id)+'">'+esc(c.name)+' 기출 보기</a>').join(' · ')||'없음')+'</p></section>').join('')+'<small>5문항으로 확인한 결과이므로 학습 지도 참고자료로 활용하세요. 미학습은 취약 개념으로 분류하지 않습니다.</small>':'<p>계정에 동기화된 완료 진단이 없습니다. 학생은 홈의 ‘나의 학습 진단’에서 시작할 수 있습니다.</p>');row.append(details);
     });
   }
   function openReset(student){

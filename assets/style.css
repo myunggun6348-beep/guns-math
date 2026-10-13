@@ -2253,3 +2253,7 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
 .student-account-button:not(.signed-in)::after{content:"로그인"}
 @media(max-width:600px){.student-account-button.signed-in::after{content:"내 계정"}}
 @media(max-width:360px){.nav .brand{font-size:15px;gap:6px}.nav .brand svg{width:20px;height:20px}.nav-right{gap:6px}}
+.student-diagnostic-analysis{grid-column:1/-1;margin:0;border-top:1px solid var(--hairline);font-weight:400}.student-diagnostic-course{padding:14px 0;border-top:1px solid var(--hairline)}.student-diagnostic-course h3{margin:0;font-size:16px}.student-diagnostic-course th:first-child{text-align:left;max-width:140px;overflow-wrap:anywhere}.student-diagnostic-course a{color:inherit;text-underline-offset:3px}.student-diagnostic-course small{white-space:normal}
+.student-diagnostic-analysis>small{white-space:normal;overflow:visible;text-overflow:clip}
+.student-learning-analysis small{display:block;white-space:normal;overflow:visible;text-overflow:clip}.student-admin-search input{min-width:0;width:100%}
+.adm-row input[type=file]{min-width:0;max-width:100%}

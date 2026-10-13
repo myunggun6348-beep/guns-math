@@ -2,6 +2,7 @@ const { 준비됨, 명령 } = require("./_redis");
 const { passwordMatches } = require("./_admin-auth");
 const crypto=require("crypto");
 const {reviewSummary}=require('../assets/study-state');
+const {TODAY_CONCEPTS,TODAY_TRACKS}=require('../assets/today-data');
 const {새PIN문제,digest}=require("./_student-auth");
 
 function input(req) { return typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {}); }
@@ -17,6 +18,19 @@ function studyAnalysis(notes,stats){
   const reasons=Object.entries(reasonNames).map(([key,name])=>({key,name,count:notes.filter(note=>(Object.hasOwn(reasonNames,note.wrongReason)&&note.wrongReason!=="unrecorded"?note.wrongReason:"unrecorded")===key).length}));
   const hints=stats.reduce((sum,row)=>{["reviewAttempts","hintUsed","hintSteps","soloCorrect"].forEach(key=>sum[key]+=safeCount(row[key]));return sum},{reviewAttempts:0,hintUsed:0,hintSteps:0,soloCorrect:0});
   return{reasons,hints,savedHintNotes:notes.filter(note=>safeCount(note.hintsUsed)>0).length};
+}
+
+function diagnosticSummary(profile,now){
+  const result=[];
+  for(const [key,track] of Object.entries(TODAY_TRACKS)){
+    const row=profile?.diagnostics?.[key],at=typeof row?.completedAt==='string'?Date.parse(row.completedAt):NaN,allowed=new Set(track.questions.map(q=>q.concept));
+    if(!row||!track.grades.includes(row.grade)||!Number.isFinite(at)||at>now+1000||!Array.isArray(row.answers)||row.answers.length!==5)continue;
+    if(!row.answers.every(a=>a&&allowed.has(a.concept)&&typeof a.correct==='boolean'&&typeof a.skipped==='boolean'&&!(a.correct&&a.skipped)))continue;
+    const counts=rows=>({total:rows.length,correct:rows.filter(a=>a.correct).length,recheck:rows.filter(a=>!a.correct&&!a.skipped).length,unlearned:rows.filter(a=>a.skipped).length});
+    const concepts=[...new Set(row.answers.map(a=>a.concept))].map(id=>({id,name:TODAY_CONCEPTS[id].name,...counts(row.answers.filter(a=>a.concept===id))}));
+    result.push({track:key,title:track.title,grade:row.grade,completedAt:new Date(at).toISOString(),...counts(row.answers),concepts});
+  }
+  return result.sort((a,b)=>Date.parse(b.completedAt)-Date.parse(a.completedAt));
 }
 
 async function accountIds() {
@@ -65,7 +79,8 @@ module.exports = async (req, res) => {
       const totalQuestions = records.reduce((sum, row) => sum + (Number(row.total) || 5), 0);
       const totalCorrect = records.reduce((sum, row) => sum + (Number(row.correct) || 0), 0);
       const grade=String(data.profile?.grade||data.pref?.grade||""),className=String(data.profile?.className||""),groupKey=grade&&className?`${grade}-${className}`:"unset";
-      const lastAt=newest(recent?.finishedAt,...stats.map(row=>row.lastAt),...notes.map(note=>note.masteredAt||note.lastWrongAt||note.createdAt));
+      const diagnostics=diagnosticSummary(data.profile,reviewNow);
+      const lastAt=newest(recent?.finishedAt,...stats.map(row=>row.lastAt),...notes.map(note=>note.masteredAt||note.lastWrongAt||note.createdAt),...diagnostics.map(row=>row.completedAt));
       const notStarted=!lastAt&&records.length===0&&!stats.some(row=>Number(row.attempts)>0)&&notes.length===0;
       const inactive7=Date.parse(account.createdAt)<weekAgo&&(!lastAt||Date.parse(lastAt)<weekAgo);
       const concepts=classConcepts.get(groupKey)||new Map(),seen=new Set();
@@ -80,7 +95,7 @@ module.exports = async (req, res) => {
         studyCount: records.length, todayDone: todayRecords.length > 0, todayScore: todayRecords.length ? Math.max(...todayRecords.map(row => Number(row.correct) || 0)) : null,
         average: totalQuestions ? Math.round(totalCorrect / totalQuestions * 100) : null, activeWrong: notes.filter(note => !note.mastered).length, mastered: notes.filter(note => note.mastered).length,
         weakest: weak ? { name: weak.name || "기타", rate: rate(weak), attempts: Number(weak.attempts) || 0 } : null,
-        analysis:studyAnalysis(notes,stats),review:reviewSummary(notes,reviewNow),
+        analysis:studyAnalysis(notes,stats),review:reviewSummary(notes,reviewNow),diagnostics,
       });
     }
     students.sort((a, b) => String(b.lastAt).localeCompare(String(a.lastAt)) || a.id.localeCompare(b.id));
