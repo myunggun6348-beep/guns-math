@@ -66,4 +66,15 @@
   .home-page .home-study-summary b { font-size: 18px; }
   .home-page .home-more { margin-top: 18px; }
   .home-page .home-start-go { min-width: 0; }
+  .home-page .home-more .home-start { padding-top: 20px; }
+  .home-page .home-more .home-start-head { padding-top: 0; margin-bottom: 14px; }
+  .home-page .home-more .home-start-head .headline { font-size: 20px; }
+  .home-page .home-more .home-start-head p { display: none; }
+  .home-page .home-more .portal-grid { grid-template-columns: 1fr; gap: 18px; }
+  .home-page .home-more .portal-group { grid-column: 1; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-top: 0; }
+  .home-page .home-more .portal-group > h3 { grid-column: 1 / -1; padding: 0; margin: 0 0 2px; font-size: 12px; color: var(--home-muted); }
+  .home-page .home-more .portal-card { min-height: 58px; gap: 6px; padding: 12px; border: 1px solid var(--home-border); border-radius: 10px; background: var(--home-card); color: inherit; }
+  .home-page .home-more .portal-card h4 { font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+  .home-page .home-more .portal-card span { display: none; }
+  .home-page .home-more .portal-card > b { grid-row: 1; font-size: 15px; }
 }
