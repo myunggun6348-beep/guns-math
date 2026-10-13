@@ -64,7 +64,7 @@ const server=http.createServer((req,res)=>{
       assert.equal(new Set(적힌것).size,적힌것.length,"같은 페이지가 두 번 적혀 있습니다: "+적힌것.join(", "));
       assert.ok(!적힌것.includes("escape.html"),"수학 탈출은 홈이 아니라 게임 안에만 있어야 합니다");
       assert.equal(await page.locator(".home-main-action").count(),0);
-      assert.equal(await page.locator(".home-more").evaluate(el=>el.open),false);
+      assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true);
       assert.equal(await page.locator(".portal-hero").isVisible(),false);
       /* 첫 화면의 큰 문은 하나(오늘의 5문제)이고, 둘러보기는 글줄, 가입은 그 아래 한 줄입니다.
          입력 칸도, 오른쪽 위 계정 단추도 여기서는 안 보입니다
