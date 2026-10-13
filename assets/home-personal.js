@@ -128,7 +128,7 @@
     }
     const track=tracks[profile.track],all=records().filter(row=>String(row.grade)===profile.grade&&row.track===profile.track),recent=all.slice(0,7);
     const today=all.find(row=>row.date===dateKey(new Date())),average=recent.length?Math.round(recent.reduce((sum,row)=>sum+(Number(row.correct)||0)/(Number(row.total)||5)*100,0)/recent.length):0,run=streak(all);
-    const wrong=window.WrongNotes?.count?.()||{active:0,mastered:0};
+    const wrong=window.WrongNotes?.count?.()||{active:0,due:0,mastered:0};
     const greeting=profile.name?esc(profile.name)+"님, 오늘도 한 걸음씩":"오늘의 수학 공부";
     const review=wrong.due>0;
     const actionHref=pending?pending.href:review?'wrong-notes.html?view=due':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
@@ -139,7 +139,7 @@
 
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">오늘</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
       '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':'시작하기')+' →</b></a>'+
-      '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>복습 대기 <b>'+wrong.active+'문제</b></span></div>'+
+      '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>오늘 복습할 문제 <b>'+wrong.due+'문제</b></span><span>전체 미완료 오답 <b>'+wrong.active+'문제</b></span></div>'+
       '</div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
   }

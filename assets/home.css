@@ -42,7 +42,7 @@
 .home-plan-time { display: block; margin-top: 5px; }
 .home-page .home-main-action > b { grid-row: 1 / 5; }
 .home-start-body .home-learning-plan { margin-bottom: 20px; }
-.home-page .home-study-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+.home-page .home-study-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
 .home-page .home-study-summary span { padding: 17px 20px; border: 1px solid var(--home-border); border-radius: 12px; background: var(--home-card); color: var(--home-muted); font-size: 13px; }
 .home-page .home-study-summary b { display: block; margin: 8px 0 0; color: var(--home-accent); font-size: 21px; font-weight: 700; }
 .home-page .home-more { max-width: calc(960px + 2 * var(--gutter)); margin: 24px auto 0; }
@@ -68,7 +68,7 @@
   .home-page .home-personal-head h2 { font-size: 24px; }
   .home-page .home-main-action { grid-template-columns: 1fr; min-height: 0; gap: 12px; padding: 23px; border-radius: 16px; }
   .home-page .home-main-action > b { grid-column: 1; grid-row: auto; justify-self: start; margin-top: 5px; }
-  .home-page .home-study-summary { gap: 8px; }
+  .home-page .home-study-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
   .home-page .home-study-summary span { padding: 13px 10px; font-size: 11px; }
   .home-page .home-study-summary b { font-size: 18px; }
   .home-page .home-more { margin-top: 18px; }
