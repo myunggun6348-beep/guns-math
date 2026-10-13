@@ -15,18 +15,18 @@
   function dailyPlan(record){
     if(window.StudentSync&&!window.StudentSync.getState().ready)return '';
     const key=profile.grade+'|'+profile.track;if(!bankQuestions.has(key)){bankQuestions.set(key,null);window.ProblemBank.load({surface:'today',grade:profile.grade,track:profile.track}).then(added=>{bankQuestions.set(key,added);render()})}const added=bankQuestions.get(key);if(!added)return '';
-    const stats=window.WrongNotes?.stats()||[],selected=window.DailySelection.select({questions:tracks[profile.track].questions.concat(added),trackKey:profile.track,date:dateKey(new Date()),grade:profile.grade,stats,notes:window.WrongNotes?.all()||[],record});
+    const stats=window.WrongNotes?.stats()||[],diagnostic=window.LearningDiagnostic.weak(profile.grade,profile.track,stats),selected=window.DailySelection.select({questions:tracks[profile.track].questions.concat(added),trackKey:profile.track,date:dateKey(new Date()),grade:profile.grade,stats,diagnostic,notes:window.WrongNotes?.all()||[],record});
     const focus=selected.focus.map(id=>window.TODAY_CONCEPTS?.[id]?.name).filter(Boolean);
     const weak=stats.filter(row=>selected.focus.includes(row.conceptId||row.key)&&row.attempts>0&&row.correct/row.attempts<.6).map(row=>window.TODAY_CONCEPTS?.[row.conceptId||row.key]?.name).filter(Boolean);
-    const reason=selected.reused?'오늘 풀었던 같은 문제로 개념을 다시 확인해요.':weak.length?'최근 정답률이 60% 미만인 '+weak.join(' · ')+'을 더 확인해요.':focus.length?'복습할 시점인 '+focus.join(' · ')+'을 우선 확인해요.':'이 과목의 기본 개념을 골고루 확인해요.';
+    const reason=selected.reused?'오늘 풀었던 같은 문제로 개념을 다시 확인해요.':weak.length?'최근 정답률이 60% 미만인 '+weak.join(' · ')+'을 더 확인해요.':diagnostic.some(id=>selected.focus.includes(id))?'학습 진단에서 다시 확인할 개념을 포함했어요.':focus.length?'복습할 시점인 '+focus.join(' · ')+'을 우선 확인해요.':'이 과목의 기본 개념을 골고루 확인해요.';
     return plan(selected.questions.map(q=>q.concept),reason,selected.questions.length);
   }
   function resume(){
     const state=window.StudentSync?.getState();if(state&&!state.ready)return null;
     const owner=state?.signedIn?"student-"+state.student.id:"guest",notes=window.WrongNotes?.all()||[];
     const row=window.StudyDraft?.list(owner).find(({slot,draft})=>valid(draft.grade,draft.trackKey)&&draft.questions.every(q=>window.TODAY_CONCEPTS?.[q.concept])&&(!slot.startsWith("similar-")||notes.some(note=>note.id===slot.slice(8))));
-    if(!row)return null;const {slot,draft}=row,similar=slot.startsWith("similar-");
-    return{grade:draft.grade,track:draft.trackKey,href:'today.html?'+(similar?'review='+encodeURIComponent(slot.slice(8)):'grade='+draft.grade+'&subject='+encodeURIComponent(draft.trackKey))+'&resume=1',description:esc(tracks[draft.trackKey].title)+' · '+(similar?'확인 문제':(draft.index+1)+' / '+draft.questions.length+'문항')+' · 답과 필기를 이어서 볼 수 있어요.',plan:plan(draft.questions.slice(draft.index).map(q=>q.concept),'저장된 문제와 필기를 그대로 이어서 확인해요.',draft.questions.length-draft.answers.length)};
+    if(!row)return null;const {slot,draft}=row,similar=slot.startsWith("similar-"),diagnostic=slot.startsWith('diagnostic-');
+    return{grade:draft.grade,track:draft.trackKey,href:'today.html?'+(similar?'review='+encodeURIComponent(slot.slice(8)):(diagnostic?'diagnostic=1&':'')+'grade='+draft.grade+'&subject='+encodeURIComponent(draft.trackKey))+'&resume=1',description:esc(tracks[draft.trackKey].title)+' · '+(similar?'확인 문제':(diagnostic?'학습 진단 · ':'')+(draft.index+1)+' / '+draft.questions.length+'문항')+' · 답과 필기를 이어서 볼 수 있어요.',plan:plan(draft.questions.slice(draft.index).map(q=>q.concept),'저장된 문제와 필기를 그대로 이어서 확인해요.',draft.questions.length-draft.answers.length)};
   }
   function initial(){
     const own=read(KEY,null);if(own&&valid(own.grade,own.track))return own;
@@ -132,10 +132,11 @@
     const weekly=window.StudentSync&&!window.StudentSync.getState().ready?null:window.StudyState.reviewSummary(window.WrongNotes.all());
     const weekView=weekly?'<details class="review-weekly"><summary>주간 복습 성과 보기</summary><p>'+weekly.startDate+' ~ '+weekly.endDate+' · 한국 시간</p><p>정답 확인 '+weekly.confirmed+'문제 · 최종 완료 '+weekly.completed+'문제 · 오늘 복습 '+weekly.due+'문제</p><table><caption>날짜별 마지막 복습 확인</caption><thead><tr><th scope="col">날짜</th><th scope="col">정답 확인</th><th scope="col">최종 완료</th></tr></thead><tbody>'+weekly.days.map(day=>'<tr><th scope="row">'+day.date.slice(5)+'</th><td>'+day.confirmed+'문제</td><td>'+day.completed+'문제</td></tr>').join('')+'</tbody></table><ul>'+weekly.concepts.map(row=>'<li>'+esc(window.TODAY_CONCEPTS?.[row.conceptId]?.name||row.name)+' · 정답 확인 '+row.confirmed+' · 최종 완료 '+row.completed+'</li>').join('')+'</ul><small>'+(weekly.confirmed?'':'이번 기간에 보관된 복습 정답 확인이 없습니다. ')+'현재 보관 중인 오답별 마지막 확인을 한 번 집계합니다. 삭제하거나 다시 틀린 노트는 제외하며, 전체 시도 횟수가 아닙니다.</small></details>':'';
 
+    const diagnostic=window.LearningDiagnostic.read(profile.grade,profile.track),diagnosticSummary=diagnostic?'<p>최근 진단 · 정답 '+diagnostic.answers.filter(a=>a.correct).length+' · 다시 확인 '+diagnostic.answers.filter(a=>!a.correct&&!a.skipped).length+' · 미학습 '+diagnostic.answers.filter(a=>a.skipped).length+'</p><p>다시 확인할 개념: '+([...new Set(diagnostic.answers.filter(a=>!a.correct&&!a.skipped).map(a=>window.TODAY_CONCEPTS[a.concept].name))].map(esc).join(' · ')||'없음')+'</p>':'';
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">'+(account?.signedIn?'내 학습 홈':'체험 학습 · 이 브라우저에 저장')+'</span><h2>'+greeting+'</h2><p>고'+profile.grade+' 과정 · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학습 설정</button></div>'+
       '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':'시작하기')+' →</b></a>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>오늘 복습할 문제 <b>'+wrong.due+'문제</b></span><span>전체 미완료 오답 <b>'+wrong.active+'문제</b></span></div>'+
-      growth+weekView+'</div>';
+      growth+weekView+(account?.signedIn?'<details class="review-weekly"><summary>나의 학습 진단</summary>'+diagnosticSummary+'<p>5문항으로 기본 개념을 확인해요. 오늘의 학습 점수와 오답 기록에는 포함하지 않습니다.</p><a class="home-start-link" href="today.html?diagnostic=1&grade='+profile.grade+'&subject='+encodeURIComponent(profile.track)+'">'+(diagnostic?'진단 다시하기':'학습 진단 시작')+' →</a></details>':'')+'</div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
   }
   window.addEventListener("wrong-notes-change",render);

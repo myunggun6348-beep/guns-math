@@ -60,7 +60,7 @@
      변경'에서 언제든 바꿀 수 있습니다. 학년에 맞는 첫 과목으로 시작합니다. */
   function 기본과목(학년) {
     const 맞는것 = Object.entries(과목들).find(([, 과목]) => 과목.grades.includes(String(학년)));
-    return 맞는것 ? 맞는것[0] : "";
+    return 맞는것 ? 맞는것[0] : ({1:'common1',2:'algebra',3:'stats'}[학년]||'common1');
   }
 
   function 계정찾기() {
@@ -74,6 +74,11 @@
       result.textContent='마지막으로 사용한 아이디: '+id+' · 본인 아이디인지 확인하세요.';
       const use=document.createElement('button');use.type='button';use.className='student-text-action';use.textContent='이 아이디로 로그인';use.onclick=()=>{들어가기전('login');창.querySelector('[name="id"]').value=id;창.querySelector('[name="pin"]').focus()};result.append(use);
     };
+  }
+
+  function 진단안내(설정){
+    창.innerHTML='<div class="student-account-card" data-diagnostic-welcome><form method="dialog"><button class="student-dialog-close" aria-label="닫기">×</button></form><span class="eyebrow">가입 완료</span><h2>내게 맞는 공부부터 시작해요</h2><p>약 5분, 5문항으로 기본 개념을 확인해요. 아직 배우지 않은 문제는 따로 표시하고, 다시 확인할 개념은 오늘의 맞춤 학습에 반영합니다.</p><p>진단 결과는 오늘의 학습 점수와 오답노트에 포함하지 않습니다. 지금 건너뛰어도 홈의 ‘나의 학습 진단’에서 시작할 수 있어요.</p><a class="btn btn-primary" id="startDiagnostic" href="today.html?diagnostic=1&grade='+설정.grade+'&subject='+encodeURIComponent(설정.track)+'">짧은 학습 진단 시작 →</a><button type="button" class="student-text-action" id="diagnosticLater">나중에 할게요</button></div>';
+    창.querySelector('#diagnosticLater').onclick=()=>창.close();창.showModal();
   }
 
   function 들어가기전(모드) {
@@ -143,6 +148,7 @@
         });
         if(새설정){window.HomeProfile?.저장(새설정);await 맞춤.sync()}
         창.close();
+        if(새설정)진단안내(새설정);
       } catch (e) {
         오류.textContent = e.message;
       } finally {
@@ -156,7 +162,7 @@
     if (형편.signedIn) {
       단추.textContent = (형편.student.name || 형편.student.id) + " · 내 기록";
       단추.classList.add("signed-in");
-      if (창.open) 들어온뒤(형편);
+      if (창.open&&!창.querySelector('[data-diagnostic-welcome]')) 들어온뒤(형편);
     } else {
       단추.textContent=형편.error?"다시 로그인":"로그인";단추.classList.remove("signed-in");
       if(형편.error&&창.open&&창.querySelector(".student-sync-status")){들어가기전("login");창.querySelector(".student-account-error").textContent=형편.error;}

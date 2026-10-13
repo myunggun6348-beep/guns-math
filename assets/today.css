@@ -5,3 +5,4 @@
 .today-personal-guide{font-size:14px;line-height:1.5;padding:12px;border-radius:10px;background:var(--canvas)}
 
 .today-resume{margin:20px 0;padding:18px;border:1px solid var(--hairline);border-radius:12px;background:var(--canvas)}.today-resume h3{margin:0 0 8px}.today-resume small{display:block;margin-top:12px;line-height:1.5}.today-draft-status{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.diagnostic-skip{margin-top:12px}.today-start+.today-secondary{margin:12px 0 0 12px}@media(max-width:520px){.today-start+.today-secondary{margin-left:0;display:flex;width:100%}}

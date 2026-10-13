@@ -6,6 +6,7 @@
   const concepts=window.TODAY_CONCEPTS||{};
   const params=new URLSearchParams(location.search);
   const reviewId=params.get("review"),similarMode=Boolean(reviewId);
+  const diagnosticMode=!similarMode&&params.get("diagnostic")==="1";
   const difficulties={basic:"기초",standard:"표준",challenge:"도전"};
   let difficulty="standard",subtype="",hintCount=0,wrongSaved=true,dailyFocus=[];
   let saved={};try{saved=JSON.parse(localStorage.getItem("today-study-pref")||"{}")}catch{}
@@ -15,7 +16,7 @@
   let questions=[],index=0,correct=0,answers=[],selected=null,locked=false;
   let active=false,runOwner=null,runSlot=null,pageOwner=null,runId="",studyDate,timer;
   const owner=()=>window.StudentSync?.getState().signedIn?"student-"+window.StudentSync.getState().student.id:"guest";
-  const slot=()=>similarMode?"similar-"+reviewId:"daily-"+grade+"-"+trackKey;
+  const slot=()=>similarMode?"similar-"+reviewId:(diagnosticMode?"diagnostic-":"daily-")+grade+"-"+trackKey;
 
   const pad=n=>String(n).padStart(2,"0");
   const now=new Date();
@@ -67,6 +68,7 @@
     return count;
   }
   function hero(){
+    if(diagnosticMode)return '<header class="page-head g-study"><div class="page-head-text"><h1>나의 학습 진단</h1><p>5문항으로 지금 공부할 개념을 찾아봅니다. 성적이나 오늘의 학습 점수에는 포함하지 않습니다.</p></div></header>';
     if(similarMode)return '<header class="page-head g-study"><div class="page-head-text"><h1>비슷한 문제로 확인하기</h1><p>복습한 개념을 다른 문제에서도 적용할 수 있는지 확인해 보세요.</p></div></header>';
     return '<header class="page-head g-study"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></span><div class="page-head-text"><h1>오늘의 학습</h1><p>학년과 과목을 고르면 오늘 풀 5문제를 준비합니다. 결과에서 부족한 개념을 바로 복습하고 관련 기출로 이어갈 수 있습니다.</p></div><span class="page-head-meta">'+(studyDate===today?dateLabel:esc(studyDate)+' 이어서')+'</span></header>';
   }
@@ -78,8 +80,14 @@
   function setup(){
     active=false;studyDate=today;window.GameScratch.destroy();updateUrl();
     const available=Object.entries(tracks).filter(([,t])=>t.grades.includes(grade));
-    const last=latest();
+    const last=diagnosticMode?null:latest();
     app.innerHTML=hero()+'<section class="today-panel"><h2>오늘 공부할 과목</h2><p class="today-panel-intro">한 판은 약 5분입니다. 학습 기록이 있으면 취약 개념·복습할 개념을 최대 3문제까지 우선 구성하고, 다른 문제로 균형을 맞춥니다.</p><span class="picker-label">학년</span><div class="grade-picks">'+["1","2","3"].map(g=>'<button type="button" class="pick-button '+(g===grade?"on":"")+'" data-grade="'+g+'">고'+g+'</button>').join("")+'</div><span class="picker-label">과목</span><div class="subject-picks">'+available.map(([key,t])=>'<button type="button" class="pick-button '+(key===trackKey?"on":"")+'" data-track="'+key+'"><b>'+t.title+'</b></button>').join("")+'</div>'+(last?'<div class="today-last">오늘 이 과목에서 <b>'+last.correct+'/5</b>점을 받았습니다. 같은 세트를 다시 풀어 취약 개념을 확인할 수 있습니다.</div>':'')+'<button type="button" class="today-primary today-start" id="todayStart">'+(last?"다시 도전하기":"오늘의 5문제 시작")+'</button></section>';
+    if(diagnosticMode){
+      app.querySelector('h2').textContent='어느 과목부터 확인할까요?';
+      app.querySelector('.today-panel-intro').textContent='약 5분 · 오지선다와 답 입력을 섞어 기본 개념을 확인합니다. 아직 배우지 않은 문제는 따로 표시하세요. 결과는 오답노트와 별도로 저장하며, 이 진단만으로 실력을 단정하지 않습니다.';
+      document.getElementById('todayStart').textContent='5문항 진단 시작 →';
+      const later=document.createElement('a');later.className='today-secondary';later.href='index.html';later.textContent='나중에 하기';document.getElementById('todayStart').after(later);
+    }
     app.querySelectorAll("[data-grade]").forEach(btn=>btn.addEventListener("click",()=>{
       grade=btn.dataset.grade;
       const first=Object.keys(tracks).find(k=>tracks[k].grades.includes(grade));
@@ -95,10 +103,15 @@
     const button=document.getElementById("todayStart")||document.getElementById("retryToday");
     if(button){button.disabled=true;button.textContent="문항 준비 중…"}
     const base=tracks[trackKey];
+    if(diagnosticMode){
+      questions=window.LearningDiagnostic.select(trackKey);dailyFocus=[];index=0;correct=0;answers=[];selected=null;locked=false;
+      window.GameScratch.reset();studyDate=today;runOwner=startOwner;runSlot=slot();runId=crypto.randomUUID();active=true;renderQuestion();return;
+    }
     const added=await window.ProblemBank?.load({surface:"today",grade,track:trackKey})||[];
     if(owner()!==startOwner)return;
     const track={...base,questions:base.questions.concat(added)};
-    const picked=window.DailySelection.select({questions:track.questions,trackKey,date:today,grade,stats:window.WrongNotes.stats(),notes:window.WrongNotes.all(),record:latest()});questions=picked.questions;dailyFocus=picked.focus;index=0;correct=0;answers=[];selected=null;locked=false;
+    const stats=window.WrongNotes.stats(),diagnostic=window.LearningDiagnostic.weak(grade,trackKey,stats);
+    const picked=window.DailySelection.select({questions:track.questions,trackKey,date:today,grade,stats,diagnostic,notes:window.WrongNotes.all(),record:latest()});questions=picked.questions;dailyFocus=picked.focus;index=0;correct=0;answers=[];selected=null;locked=false;
     window.GameScratch.reset();
     studyDate=today;runOwner=startOwner;runSlot=slot();runId=crypto.randomUUID();active=true;
     renderQuestion();
@@ -112,6 +125,7 @@
     app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / '+questions.length+'</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)/questions.length*100)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question" data-math>'+esc(q.prompt)+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
     window.MathView?.typeset(app);
     window.GameScratch.mount(index);
+    if(diagnosticMode){const skip=document.createElement('button');skip.type='button';skip.className='today-secondary diagnostic-skip';skip.id='diagnosticSkip';skip.textContent='아직 배우지 않았어요';skip.onclick=()=>submit(true);app.querySelector('.daily-actions').append(skip)}
     if(!similarMode&&dailyFocus.length){const guide=document.createElement("p");guide.className="today-personal-guide";guide.textContent="맞춤 학습 · 집중 개념: "+dailyFocus.map(id=>concepts[id]?.name||id).join(" · ");app.querySelector(".daily-top").after(guide)}
     if(similarMode){
       app.querySelector(".daily-concept").append(" · "+difficulties[q.difficulty]+(q.subtype?" · "+q.subtype:""));
@@ -142,19 +156,21 @@
     }
     saveDraft();
   }
-  function submit(){
+  function submit(skip){
     if(locked)return;
     const q=questions[index];let isCorrect=false,userAnswer="";
-    if(q.type==="choice"){if(selected===null)return;isCorrect=selected===q.answer;userAnswer=q.choices[selected]}
+    const skipped=diagnosticMode&&skip===true;
+    if(skipped)userAnswer='아직 배우지 않음';
+    else if(q.type==="choice"){if(selected===null)return;isCorrect=selected===q.answer;userAnswer=q.choices[selected]}
     else{
       const input=document.getElementById("dailyInput");if(!input.value.trim()){input.focus();return}
       userAnswer=input.value;isCorrect=q.answers.some(a=>norm(a)===norm(userAnswer));
     }
-    locked=true;if(isCorrect)correct++;answers.push({concept:q.concept,correct:isCorrect,userAnswer,hintsUsed:hintCount,noteSaved:isCorrect,attemptAt:window.WrongNotes.attemptTime(window.WrongNotes.idFor({source:similarMode?"similar":"today",sourceKey:trackKey,prompt:q.prompt}))});wrongSaved=false;
+    locked=true;if(isCorrect)correct++;answers.push({concept:q.concept,correct:isCorrect,userAnswer,skipped,hintsUsed:hintCount,noteSaved:diagnosticMode||isCorrect,attemptAt:window.WrongNotes.attemptTime(window.WrongNotes.idFor({source:similarMode?"similar":"today",sourceKey:trackKey,prompt:q.prompt}))});wrongSaved=diagnosticMode;
     // shortcut: 채점 상태를 먼저 저장해 재접속 중복 집계를 막는다. 강제 종료의 원자성까지 필요하면 저장소를 통합한다.
     if(!saveDraft()){locked=false;if(isCorrect)correct--;answers.pop();return}
-    const recorded=window.WrongNotes?.record(answerData(index,isCorrect),isCorrect);
-    if(!isCorrect){wrongSaved=recorded===true;answers[index].noteSaved=wrongSaved}
+    if(!diagnosticMode){const recorded=window.WrongNotes?.record(answerData(index,isCorrect),isCorrect);
+    if(!isCorrect){wrongSaved=recorded===true;answers[index].noteSaved=wrongSaved}}
     renderFeedback(isCorrect);saveDraft();
   }
   function answerData(position,isCorrect){
@@ -163,9 +179,10 @@
   }
   function renderFeedback(isCorrect){
     const q=questions[index];
-    app.querySelectorAll(".daily-choice,.daily-input,#textSubmit,#choiceSubmit").forEach(el=>el.disabled=true);
+    app.querySelectorAll(".daily-choice,.daily-input,#textSubmit,#choiceSubmit,#diagnosticSkip").forEach(el=>el.disabled=true);
     const slot=document.getElementById("feedbackSlot");
     slot.innerHTML='<div class="daily-feedback '+(isCorrect?"":"wrong")+'" role="status" data-math><strong>'+(isCorrect?"정답입니다.":"이 개념을 결과에서 다시 연결해 드릴게요.")+'</strong>'+esc(q.explanation)+'</div>';
+    if(diagnosticMode&&answers[index].skipped)slot.querySelector('strong').textContent='미학습으로 표시했어요. 오답과 구분합니다.';
     window.MathView?.typeset(slot);
     if(!isCorrect&&!wrongSaved){const message=document.createElement("p");message.setAttribute("role","alert");message.textContent="오답 저장에 실패했습니다. 임시 풀이를 유지하고 완료할 때 다시 저장합니다.";slot.append(message)}
     if(similarMode){
@@ -182,6 +199,10 @@
     const next=document.getElementById("dailyNext");next.addEventListener("click",()=>{index++;if(index>=questions.length)finish();else renderQuestion()});next.focus();
   }
   function finish(){
+    if(diagnosticMode){
+      try{window.LearningDiagnostic.save(grade,trackKey,answers)}catch{index=questions.length-1;saveStatus('진단 결과를 저장하지 못했습니다. 임시 풀이를 유지했습니다. 저장 공간과 로그인을 확인한 뒤 결과 확인을 다시 눌러 주세요.');return}
+      active=false;clearTimeout(timer);window.StudyDraft.remove(runOwner,runSlot);window.GameScratch.destroy();diagnosticResult();return;
+    }
     for(let i=0;i<answers.length;i++){if(!answers[i].correct&&!answers[i].noteSaved){if(!window.WrongNotes.record(answerData(i,false),false,false)){index=questions.length-1;saveDraft();saveStatus("오답 풀이를 저장하지 못했습니다. 임시 기록을 유지했습니다. 저장 공간을 확인하고 결과 확인을 다시 눌러 주세요.");return}answers[i].noteSaved=true}}
     if(!similarMode){try{saveRecord()}catch{index=questions.length-1;saveStatus("학습 결과를 저장하지 못했습니다. 저장 공간을 확인하고 결과 확인을 다시 눌러 주세요.");return}}
       if(similarMode&&!answers[0].correct)wrongSaved=answers[0].noteSaved;
@@ -202,6 +223,12 @@
     app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">학습 완료</span><div class="result-score">'+correct+'/5</div><h2>'+message+'</h2><p class="result-lead">정답 개수보다 어떤 개념에서 막혔는지가 더 중요합니다. 아래 결과에서 바로 복습할 수 있습니다.</p>'+(run?'<span class="today-streak">연속 학습 '+run+'일</span>':'')+'<div class="concept-results">'+summary+'</div>'+(weak.length?'<h3 class="weak-title">먼저 복습할 개념</h3><div class="weak-list">'+weakCards+'</div>':'<div class="weak-card"><h3>오늘은 취약 개념이 없습니다.</h3><p>관련 기출로 난도를 높여 실력을 확인해 보세요.</p><div class="weak-actions"><a href="past-practice.html?grade='+grade+'&concept='+stats[0].id+'">관련 기출 난도 높이기 →</a></div></div>')+'<div class="result-actions"><button type="button" class="today-primary" id="retryToday">다시 풀기</button><button type="button" class="today-secondary" id="changeToday">과목 바꾸기</button><a class="today-secondary" href="wrong-notes.html">오답노트 보기</a></div></section>';
     document.getElementById("retryToday").addEventListener("click",start);
     document.getElementById("changeToday").addEventListener("click",setup);
+  }
+  function diagnosticResult(){
+    const ids=[...new Set(answers.map(a=>a.concept))],skipped=answers.filter(a=>a.skipped).length;
+    const summary=ids.map(id=>{const rows=answers.filter(a=>a.concept===id),wrong=rows.filter(a=>!a.correct&&!a.skipped).length,unlearned=rows.filter(a=>a.skipped).length;return '<article class="weak-card"><h3>'+esc(concepts[id].name)+'</h3><p>정답 '+rows.filter(a=>a.correct).length+' · 다시 확인 '+wrong+' · 미학습 '+unlearned+'</p><p>'+esc(concepts[id].about)+'</p><div class="weak-actions"><a href="map.html?grade='+grade+'&n='+encodeURIComponent(id)+'">개념 살펴보기 →</a><a href="past-practice.html?grade='+grade+'&concept='+encodeURIComponent(id)+'">관련 기출 연습 →</a></div></article>'}).join('');
+    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">진단 완료</span><h2>다음 공부를 준비했어요</h2><p class="result-lead">정답 '+correct+'문항 · 다시 확인 '+(answers.length-correct-skipped)+'문항 · 미학습 '+skipped+'문항.</p><p>다시 확인할 개념을 오늘의 맞춤 문제에 반영해요. 미학습은 취약 개념으로 분류하지 않습니다. 5문항의 결과는 다음 공부를 정하는 참고자료로 활용하세요.</p><div class="weak-list">'+summary+'</div><p role="status">진단 결과를 저장했어요. 계정 메뉴에서 동기화 상태를 확인할 수 있습니다.</p><div class="result-actions"><a class="today-primary" href="today.html?grade='+grade+'&subject='+encodeURIComponent(trackKey)+'">맞춤 5문제 풀기 →</a><a class="today-secondary" href="index.html">내 학습 홈으로</a></div></section>';
+    window.scrollTo(0,0);
   }
   function setupSimilar(note){
     const available=Object.keys(difficulties).filter(level=>window.similarQuestion(note,level));
@@ -224,6 +251,7 @@
     if(similarMode){
       setupSimilar(window.WrongNotes.all().find(row=>row.id===reviewId));return;
     }
+    if(diagnosticMode&&(!window.StudentSync?.getState().signedIn||window.StudentSync.canUseLocal()===false)){app.innerHTML=hero()+'<section class="today-panel"><h2>내 계정에 진단 결과를 저장해요</h2><p>로그인한 뒤 진단을 시작해 주세요.</p><button type="button" class="today-primary" id="diagnosticLogin">로그인</button><a class="today-secondary" href="index.html">홈으로</a></section>';document.getElementById('diagnosticLogin').onclick=()=>window.StudentAccountUI.열기('login');return}
     setup();
   }
   window.addEventListener("student-account-change",initialize);initialize();
