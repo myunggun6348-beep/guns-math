@@ -94,6 +94,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-study-draft.cjs` | 임시 풀이 검증·계정 분리·필기 복원·저장 실패 보존 |
 | `node scripts\check-study-resume-ui.cjs` | PC·모바일 이어하기·중복 채점 방지·오답/결과 저장 재시도 |
 | `node scripts\check-home-resume.cjs` | 홈 최신 풀이 연결·한 번 클릭으로 복원·계정 분리·PC/모바일 |
+| `node scripts\check-home-design.cjs` | 홈 320/390/820/1440px·밝은/어두운 화면·버튼/하단 대비·클릭·넘침 |
 
 | `node scripts\check-student-reset.cjs` | 선생님 비밀번호 초기화 권한·학습 기록 보존·기존 로그인 해제 |
 | `node scripts\check-student-attention.cjs` | 미학습 7일 경계·신규 가입 제외·반 공통 취약 개념 집계 |
