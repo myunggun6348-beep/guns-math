@@ -96,6 +96,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-home-resume.cjs` | 홈 최신 풀이 연결·한 번 클릭으로 복원·계정 분리·PC/모바일 |
 | `node scripts\check-home-design.cjs` | 홈 320/390/820/1440px·밝은/어두운 화면·버튼/하단 대비·클릭·넘침 |
 | `node scripts\check-home-learning.cjs` | 홈 개념·추천 이유·예상 시간·실제 5문제 일치·추가 공개 문항·복습/이어하기 |
+| `node scripts\check-review-growth.cjs` | 복습 성장 안내·최종 완료·예정일 전 연습·오답 후 재정답·저장 실패·홈 최근 성과 |
 
 | `node scripts\check-student-reset.cjs` | 선생님 비밀번호 초기화 권한·학습 기록 보존·기존 로그인 해제 |
 | `node scripts\check-student-attention.cjs` | 미학습 7일 경계·신규 가입 제외·반 공통 취약 개념 집계 |
@@ -106,6 +107,8 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\verify-exam-library.cjs` | 진짜 브라우저로 자료실을 열어 확인 (먼저 `폰으로 보기.bat` 으로 서버를 켜 둘 것) |
 
 ### 학습과 분석
+
+오답 재풀이를 맞히면 해당 개념의 오답을 다시 맞혔다는 안내와 복습 확인 단계/다음 일정을 표시합니다. 마지막 4번째 확인까지 마친 경우만 복습 완료로 안내하며 예정일 전 정답은 단계를 유지한다고 표시합니다. 학생이 ‘복습 목록으로’를 누를 때까지 결과를 유지합니다. 홈에는 최근 7일 동안 보관 중인 오답의 마지막 복습 정답 확인을 문제별 한 번 집계해 개념과 최종 완료 개수를 보여줍니다. 다시 틀려 단계가 초기화되거나 삭제한 노트는 제외합니다. 모든 과거 복습 횟수나 개념 전체의 숙달도를 뜻하지 않습니다.
 
 홈 학습 기록은 ‘오늘 복습할 문제’(복습 예정 시각이 됐거나 지난 문제와 아직 일정이 없는 새 오답)와 ‘전체 미완료 오답’(미래 복습 예정 포함)을 별도로 표시합니다. 완료한 오답은 두 개수에서 제외합니다. PC는 기록 카드 네 개를 한 줄로, 모바일은 두 열로 배치합니다.
 

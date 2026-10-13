@@ -76,9 +76,17 @@
       const answerValue=input?input.value:value,status=slot.querySelector(".retry-status");
       if(!String(answerValue).trim()){status.textContent="답을 먼저 입력해 주세요.";status.className="retry-status wrong";return}
       const accepted=Array.isArray(note.acceptedAnswers)&&note.acceptedAnswers.length?note.acceptedAnswers:[note.correctAnswer];const ok=accepted.some(answer=>norm(answerValue)===norm(answer));
+      const before=store.all().find(x=>x.id===id);
       if(!store.attempt(id,ok,answerValue)){status.textContent="풀이 기록을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.";return}
       slot.querySelector(".retry-submit").disabled=true;
-      if(ok){const saved=store.all().find(x=>x.id===id);status.textContent=saved.mastered?"정답입니다. 마지막 확인을 마쳐 복습 완료했습니다.":"정답입니다. "+dateText(saved.nextReviewAt)+"에 다시 확인하세요.";status.className="retry-status correct";toast(saved.mastered?"복습을 완료했습니다.":"다음 복습 일정을 저장했습니다.");const link=similarLink(saved);if(link){slot.querySelector(".retry-box").insertAdjacentHTML("beforeend",link);const back=document.createElement("button");back.type="button";back.className="wrong-button";back.textContent="복습 목록으로";back.onclick=draw;slot.querySelector(".retry-box").append(back)}else setTimeout(draw,1200)}
+      if(ok){
+        const saved=store.all().find(x=>x.id===id),box=slot.querySelector('.retry-box');status.textContent=saved.mastered?"정답입니다. 마지막 확인을 마쳐 복습 완료했습니다.":"정답입니다. "+dateText(saved.nextReviewAt)+"에 다시 확인하세요.";status.className="retry-status correct";
+        const growth=document.createElement('section');growth.className='review-growth';growth.setAttribute('aria-label','이번 복습 성과');
+        const title=document.createElement('strong');title.textContent=(window.TODAY_CONCEPTS?.[saved.conceptId]?.name||saved.conceptName||'수학')+' 오답을 다시 맞혔어요.';
+        const detail=document.createElement('p');detail.textContent=saved.mastered?'1일·3일·7일 간격의 마지막 확인까지 마쳤어요.':saved.reviewStage>(before?.reviewStage||0)?'복습 확인 '+saved.reviewStage+'/4를 마쳤어요. 다음 확인에서도 개념을 적용해 보세요.':'예정일 전 연습에서도 다시 맞혔어요. 복습 단계 '+saved.reviewStage+'/4와 예정일은 유지됩니다.';growth.append(title,detail);box.append(growth);
+        toast(saved.mastered?"복습을 완료했습니다.":"다음 복습 일정을 저장했습니다.");const link=similarLink(saved);if(link)box.insertAdjacentHTML('beforeend',link);
+        const back=document.createElement('button');back.type='button';back.className='wrong-button';back.textContent='복습 목록으로';back.onclick=draw;box.append(back);
+      }
       else{status.textContent="아직 다릅니다. 해설을 확인한 뒤 다시 풀어 보세요. 복습 단계는 처음부터 시작합니다.";status.className="retry-status wrong";slot.querySelector(".retry-submit").disabled=false}
     });
   }

@@ -136,11 +136,14 @@
     const actionDescription=pending?pending.description:review?'복습할 날짜가 된 문제를 먼저 확인해 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
     const dueNotes=review?window.WrongNotes.all().filter(window.WrongNotes.due):[];
     const learning=pending?pending.plan:review?plan(dueNotes.map(note=>note.conceptId),'복습할 날짜가 된 오답을 다시 풀어 개념을 확인해요.',dueNotes.length):dailyPlan(today);
+    const recovered=window.StudentSync&&!window.StudentSync.getState().ready?[]:window.WrongNotes.recentReviews(),completed=recovered.filter(note=>note.mastered&&note.reviewStage===4).length;
+    const names=[...new Set(recovered.map(note=>window.TODAY_CONCEPTS?.[note.conceptId]?.name||note.conceptName||'수학'))];
+    const growth=recovered.length?'<section class="review-growth" aria-label="최근 복습 성과"><strong>최근 7일 동안 오답 '+recovered.length+'문제를 다시 맞혔어요.</strong><p>'+names.slice(0,3).map(esc).join(' · ')+(names.length>3?' 외 '+(names.length-3)+'개':'')+(completed?' · 마지막 확인까지 완료 '+completed+'문제':'')+'</p><small>보관 중인 오답의 마지막 복습 확인 기준입니다.</small></section>':'';
 
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">오늘</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
       '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':'시작하기')+' →</b></a>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>오늘 복습할 문제 <b>'+wrong.due+'문제</b></span><span>전체 미완료 오답 <b>'+wrong.active+'문제</b></span></div>'+
-      '</div>';
+      growth+'</div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
   }
   window.addEventListener("wrong-notes-change",render);
