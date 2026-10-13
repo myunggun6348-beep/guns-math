@@ -13,6 +13,16 @@
   const fields=["correct","wrong","reviewAttempts","hintUsed","hintSteps","soloCorrect"];
   function counter(value){return Object.fromEntries(fields.map(key=>[key,count(value[key])]))}
   const maximum=(a,b)=>Object.fromEntries(fields.map(key=>[key,Math.max(a[key]||0,b[key]||0)]));
+  function learningEvents(value){
+    const rows=new Map();
+    for(const row of Array.isArray(value)?value:[]){
+      if(!row||!validId(row.id)||!validId(row.problemId)||!stamp(row.at)||!["1","2","3"].includes(row.grade)||typeof row.track!=='string'||!/^[a-z0-9-]{1,50}$/.test(row.track)||!["today","similar","retry"].includes(row.kind)||typeof row.correct!=='boolean'||!Number.isInteger(row.hints)||row.hints<0||row.hints>3)continue;
+      const clean={id:row.id,problemId:row.problemId,at:new Date(row.at).toISOString(),grade:row.grade,track:row.track,kind:row.kind,correct:row.correct,hints:row.hints};
+      rows.set(row.id,newer(rows.get(row.id),clean,row=>row.at));
+    }
+    // shortcut: 개념별 최근 50회만 보관한다. 전체 장기 이력이 필요해지면 별도 저장소로 옮긴다.
+    return [...rows.values()].sort((a,b)=>b.at.localeCompare(a.at)||a.id.localeCompare(b.id)).slice(0,50);
+  }
   function totals(row){
     // shortcut: 이전 누적 기록은 기준값으로 보존한다. 과거의 개별 풀이를 복원하려면 원본 이력이 필요하다.
     const base=row.base?counter(object(row.base)):{...counter(row),correct:Math.min(count(row.correct),count(row.attempts)),wrong:Math.max(0,count(row.attempts)-count(row.correct))};
@@ -20,7 +30,7 @@
     const result=Object.values(devices).reduce((sum,value)=>Object.fromEntries(fields.map(key=>[key,sum[key]+value[key]])),{...base});
     // 배포 전에 열어 둔 화면이 기기별 값 대신 누적값만 늘렸을 때도 새 풀이를 보존한다.
     if(row.base){const correct=Math.min(count(row.correct),count(row.attempts)),wrong=Math.max(0,count(row.attempts)-count(row.correct));base.correct+=Math.max(0,correct-result.correct);base.wrong+=Math.max(0,wrong-result.wrong);result.correct=Math.max(result.correct,correct);result.wrong=Math.max(result.wrong,wrong)}
-    return{...row,base,devices,...result,attempts:result.correct+result.wrong};
+    return{...row,...(row.learningEvents?{learningEvents:learningEvents(row.learningEvents)}:{}),base,devices,...result,attempts:result.correct+result.wrong};
   }
   function safeState(value){
     const source=object(value);
@@ -42,7 +52,7 @@
       const old=Object.hasOwn(stats,key)?stats[key]:null;if(!old){Object.defineProperty(stats,key,{value:row,enumerable:true,writable:true,configurable:true});return}
       const base=maximum(old.base,row.base),devices=Object.assign(Object.create(null),old.devices);
       Object.entries(row.devices).forEach(([id,value])=>{devices[id]=maximum(devices[id]||{},value)});
-      stats[key]=totals({...old,...(String(row.lastAt||"")>=String(old.lastAt||"")?row:{}),base,devices});
+      stats[key]=totals({...old,...(String(row.lastAt||"")>=String(old.lastAt||"")?row:{}),...(old.learningEvents||row.learningEvents?{learningEvents:learningEvents([...(old.learningEvents||[]),...(row.learningEvents||[])])}:{}),base,devices});
     });
     const latest=(left,right)=>newer(left,right,row=>stamp(row.updatedAt));
     return{profile:latest(b.profile,a.profile),pref:latest(b.pref,a.pref),records,notes,stats,deletedNotes};
@@ -63,6 +73,6 @@
     });
     return{startDate:days[0].date,endDate:days[6].date,confirmed:recent.length,completed:recent.filter(note=>note.mastered&&note.reviewStage===4).length,due:notes.filter(note=>!note.mastered&&(!note.nextReviewAt||Date.parse(note.nextReviewAt)<=now)).length,active:notes.filter(note=>!note.mastered).length,days,concepts:[...concepts.values()].sort((a,b)=>b.confirmed-a.confirmed||a.name.localeCompare(b.name,'ko'))};
   }
-  const api={safeState,merge,totals,noteStamp,recentReviews,reviewSummary};
+  const api={safeState,merge,totals,noteStamp,recentReviews,reviewSummary,learningEvents};
   if(typeof module!=="undefined"&&module.exports)module.exports=api;else root.StudyState=api;
 })(typeof window!=="undefined"?window:globalThis);

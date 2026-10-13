@@ -2257,3 +2257,4 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
 .student-diagnostic-analysis>small{white-space:normal;overflow:visible;text-overflow:clip}
 .student-learning-analysis small{display:block;white-space:normal;overflow:visible;text-overflow:clip}.student-admin-search input{min-width:0;width:100%}
 .adm-row input[type=file]{min-width:0;max-width:100%}
+.student-diagnostic-progress>summary{min-height:44px;padding:10px 0;font-weight:650;cursor:pointer}.diagnostic-progress-concept{padding:14px;margin:10px 0;border:1px solid var(--hairline);border-radius:12px}.diagnostic-progress-concept h4{margin:0;font-size:15px}.diagnostic-progress-status{font-weight:650}.diagnostic-rate{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;margin:12px 0}.diagnostic-rate b{text-align:right;font-weight:600}.diagnostic-rate meter{grid-column:1/-1;width:100%;height:14px;accent-color:#4972ae}

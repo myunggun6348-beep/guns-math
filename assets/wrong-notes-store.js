@@ -30,6 +30,12 @@
   function track(data,isCorrect){
     if(!data.conceptId&&!data.conceptName)return;
     const all=readStats(),key=statKey(data),row=window.StudyState.totals(all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""});
+    const at=typeof data.attemptAt==='string'&&Number.isFinite(Date.parse(data.attemptAt))?new Date(data.attemptAt).toISOString():new Date().toISOString();
+    const eventId=typeof data.attemptId==='string'&&/^[a-z0-9-]{1,80}$/.test(data.attemptId)?data.attemptId:crypto.randomUUID();
+    const event={id:eventId,problemId:hash([data.sourceKey||'',data.prompt||''].join('|')),at,grade:String(data.grade||''),track:data.sourceKey||'',kind:data.source,correct:Boolean(isCorrect),hints:data.source==='similar'?(data.hintsUsed||0):0};
+    const eligible=window.StudyState.learningEvents([event]).length>0;
+    if(eligible&&row.learningEvents?.some(row=>row.id===eventId))return;
+    if(eligible)row.learningEvents=window.StudyState.learningEvents([...(row.learningEvents||[]),event]);
     row.name=data.conceptName||row.name;row.subject=data.subject||row.subject;row.conceptId=data.conceptId||row.conceptId;
     const counter=row.devices[device]||{correct:0,wrong:0};counter[isCorrect?"correct":"wrong"]++;
     if(data.source==="similar"&&Number.isInteger(data.hintsUsed)&&data.hintsUsed>=0&&data.hintsUsed<=3){
@@ -88,7 +94,7 @@
     items[index]={...items[index],updatedAt:now,userAnswer:String(userAnswer??items[index].userAnswer),attempts:(items[index].attempts||0)+1,
       ...review(items[index],isCorrect,now)};
     if(!write(items))return false;
-    track({...items[index],source:"retry"},isCorrect);return true;
+    track({...items[index],source:"retry",attemptAt:now},isCorrect);return true;
   }
   const reasons={concept:"개념이 헷갈렸어요",reading:"조건을 잘못 읽었어요",calculation:"계산 실수였어요",time:"시간이 부족했어요",unsure:"아직 이유를 모르겠어요"};
   function setReason(id,reason){
