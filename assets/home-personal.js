@@ -20,12 +20,26 @@
   const valid=(grade,track)=>["1","2","3"].includes(String(grade))&&tracks[track]?.grades.includes(String(grade));
   const records=()=>{const value=read("today-study-records",[]);return Array.isArray(value)?value:[]};
   const 로그인했나=()=>Boolean(window.StudentSync?.getState?.().signedIn);
+  const bankQuestions=new Map();
+  function plan(ids,reason,count){
+    const names=[...new Set(ids)].map(id=>window.TODAY_CONCEPTS?.[id]?.name).filter(Boolean);if(!names.length)return '';
+    return '<div class="home-learning-plan"><p class="home-plan-concepts">'+names.map(esc).join(' · ')+'</p><p class="home-plan-reason">'+esc(reason)+'</p><span class="home-plan-time">'+(count>0?'예상 약 '+count+'분 · 풀이 속도에 따라 달라요':'결과 확인만 남았어요')+'</span></div>';
+  }
+  function dailyPlan(record){
+    if(window.StudentSync&&!window.StudentSync.getState().ready)return '';
+    const key=profile.grade+'|'+profile.track;if(!bankQuestions.has(key)){bankQuestions.set(key,null);window.ProblemBank.load({surface:'today',grade:profile.grade,track:profile.track}).then(added=>{bankQuestions.set(key,added);render()})}const added=bankQuestions.get(key);if(!added)return '';
+    const stats=window.WrongNotes?.stats()||[],selected=window.DailySelection.select({questions:tracks[profile.track].questions.concat(added),trackKey:profile.track,date:dateKey(new Date()),grade:profile.grade,stats,notes:window.WrongNotes?.all()||[],record});
+    const focus=selected.focus.map(id=>window.TODAY_CONCEPTS?.[id]?.name).filter(Boolean);
+    const weak=stats.filter(row=>selected.focus.includes(row.conceptId||row.key)&&row.attempts>0&&row.correct/row.attempts<.6).map(row=>window.TODAY_CONCEPTS?.[row.conceptId||row.key]?.name).filter(Boolean);
+    const reason=selected.reused?'오늘 풀었던 같은 문제로 개념을 다시 확인해요.':weak.length?'최근 정답률이 60% 미만인 '+weak.join(' · ')+'을 더 확인해요.':focus.length?'복습할 시점인 '+focus.join(' · ')+'을 우선 확인해요.':'이 과목의 기본 개념을 골고루 확인해요.';
+    return plan(selected.questions.map(q=>q.concept),reason,selected.questions.length);
+  }
   function resume(){
     const state=window.StudentSync?.getState();if(state&&!state.ready)return null;
     const owner=state?.signedIn?"student-"+state.student.id:"guest",notes=window.WrongNotes?.all()||[];
     const row=window.StudyDraft?.list(owner).find(({slot,draft})=>valid(draft.grade,draft.trackKey)&&draft.questions.every(q=>window.TODAY_CONCEPTS?.[q.concept])&&(!slot.startsWith("similar-")||notes.some(note=>note.id===slot.slice(8))));
     if(!row)return null;const {slot,draft}=row,similar=slot.startsWith("similar-");
-    return{grade:draft.grade,track:draft.trackKey,href:'today.html?'+(similar?'review='+encodeURIComponent(slot.slice(8)):'grade='+draft.grade+'&subject='+encodeURIComponent(draft.trackKey))+'&resume=1',description:esc(tracks[draft.trackKey].title)+' · '+(similar?'확인 문제':(draft.index+1)+' / '+draft.questions.length+'문항')+' · 답과 필기를 이어서 볼 수 있어요.'};
+    return{grade:draft.grade,track:draft.trackKey,href:'today.html?'+(similar?'review='+encodeURIComponent(slot.slice(8)):'grade='+draft.grade+'&subject='+encodeURIComponent(draft.trackKey))+'&resume=1',description:esc(tracks[draft.trackKey].title)+' · '+(similar?'확인 문제':(draft.index+1)+' / '+draft.questions.length+'문항')+' · 답과 필기를 이어서 볼 수 있어요.',plan:plan(draft.questions.slice(draft.index).map(q=>q.concept),'저장된 문제와 필기를 그대로 이어서 확인해요.',draft.questions.length-draft.answers.length)};
   }
   function initial(){
     const own=read(KEY,null);if(own&&valid(own.grade,own.track))return own;
@@ -64,6 +78,7 @@
         '<div class="home-start-body">'+
         '<h2>고등학교 수학, 한곳에서</h2>'+
         '<p class="home-setup-lead">'+(pending?pending.description:'하루 5분, 학년에 맞춘 5문제부터 풀어 보세요. 틀린 문제는 오답노트에 저절로 모입니다. 가입 없이 바로 쓸 수 있습니다.')+'</p>'+
+        (pending?pending.plan:'')+
         '<div class="home-start-actions">'+
           '<a class="btn btn-primary home-start-go" href="'+(pending?pending.href:'today.html')+'">'+(pending?'풀던 문제 이어하기':'오늘의 5문제 풀기')+' →</a>'+
           '<a class="home-start-browse" href="#more">다른 것 둘러보기</a>'+
@@ -119,9 +134,11 @@
     const actionHref=pending?pending.href:review?'wrong-notes.html?view=due':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
     const actionTitle=pending?'풀던 문제 이어하기':review?'오늘 복습할 '+wrong.due+'문제 풀기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
     const actionDescription=pending?pending.description:review?'복습할 날짜가 된 문제를 먼저 확인해 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
+    const dueNotes=review?window.WrongNotes.all().filter(window.WrongNotes.due):[];
+    const learning=pending?pending.plan:review?plan(dueNotes.map(note=>note.conceptId),'복습할 날짜가 된 오답을 다시 풀어 개념을 확인해요.',dueNotes.length):dailyPlan(today);
 
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">오늘</span><h2>'+greeting+'</h2><p>고'+profile.grade+(profile.className?' '+esc(profile.className)+'반':'')+' · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학년·반·과목 변경</button></div>'+
-      '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small><b>'+(pending?'이어서 풀기':'시작하기')+' →</b></a>'+
+      '<a class="home-main-action" href="'+actionHref+'"><span>지금 할 공부</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':'시작하기')+' →</b></a>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>복습 대기 <b>'+wrong.active+'문제</b></span></div>'+
       '</div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
