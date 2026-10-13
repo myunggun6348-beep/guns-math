@@ -38,7 +38,7 @@
 .home-page .home-study-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
 .home-page .home-study-summary span { padding: 17px 20px; border: 1px solid var(--home-border); border-radius: 12px; background: var(--home-card); color: var(--home-muted); font-size: 13px; }
 .home-page .home-study-summary b { display: block; margin: 8px 0 0; color: var(--home-accent); font-size: 21px; font-weight: 700; }
-.home-page .home-more { max-width: calc(960px + 2 * var(--gutter)); margin-bottom: 64px; }
+.home-page .home-more { max-width: calc(960px + 2 * var(--gutter)); margin: 24px auto 0; }
 .home-page .home-more > summary { min-height: 58px; padding: 0 20px; border-color: var(--home-border); border-radius: 12px; background: var(--home-card); font-size: 14px; }
 .home-page .home-start-card,
 .home-page .home-fork-card { border-color: var(--home-border); background: var(--home-card); border-radius: 20px; }
@@ -64,6 +64,6 @@
   .home-page .home-study-summary { gap: 8px; }
   .home-page .home-study-summary span { padding: 13px 10px; font-size: 11px; }
   .home-page .home-study-summary b { font-size: 18px; }
-  .home-page .home-more { margin-bottom: 40px; }
+  .home-page .home-more { margin-top: 18px; }
   .home-page .home-start-go { min-width: 0; }
 }

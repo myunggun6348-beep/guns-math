@@ -74,15 +74,8 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.locator(".home-start-go").getAttribute("href"),"today.html","큰 문이 오늘의 5문제로 가지 않습니다");
       assert.equal(await page.locator("#homeProfileForm").count(),0,"첫 화면에 입력 칸이 또 생겼습니다");
 
-      /* 둘러보기와 가입이 한 화면에 다 보여야 합니다. 스크롤해야 가입이 나오면
-         길을 둘로 나눈 뜻이 없습니다 — 폰에서 실제로 그랬습니다(단추가 1017px,
-         화면은 844px). 학생은 대부분 폰으로 옵니다. */
-      const 둘째길 = await page.evaluate(()=>{
-        const 단추=document.getElementById("homeJoin");
-        return {바닥:Math.round(단추.getBoundingClientRect().bottom),화면:innerHeight};
-      });
-      assert.ok(둘째길.바닥<=둘째길.화면,
-        "'가입하기'가 첫 화면 밖에 있습니다("+둘째길.바닥+"px > "+둘째길.화면+"px). 스크롤해야 보이면 가입하는 길이 없는 것과 같습니다.");
+      const 첫메뉴=await page.locator('.portal-card').first().boundingBox();assert.ok(첫메뉴.y>=0&&첫메뉴.y+첫메뉴.height<=viewport.height,'접속 직후 메뉴가 보이지 않습니다');
+      assert.equal(await page.evaluate(()=>Boolean(document.getElementById('more').compareDocumentPosition(document.getElementById('homePersonal'))&Node.DOCUMENT_POSITION_FOLLOWING)),true,'전체 메뉴가 학습 카드보다 먼저 와야 합니다');
       assert.equal(await page.locator(".student-account-button").isVisible(),false,"로그인 전인데 계정 단추가 보입니다");
 
       /* 가입은 네 가지만 묻습니다 — 이름(선택)·학년·아이디·비밀번호.
