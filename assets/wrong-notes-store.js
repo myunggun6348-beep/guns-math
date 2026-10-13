@@ -4,13 +4,15 @@
   const KEY="math-wrong-notes-v1",STATS_KEY="math-concept-stats-v1",DELETED_KEY="math-wrong-deletions-v1",device=crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
   function deletions(){try{const value=JSON.parse(localStorage.getItem(DELETED_KEY)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return{}}}
   function operationTime(id){const note=read().find(row=>row.id===id);return new Date(Math.max(Date.now(),Date.parse(window.StudyState.noteStamp(note||{}))||0,Date.parse(deletions()[id])||0)+1).toISOString()}
-  function read(){try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
-  function persist(items){localStorage.setItem(KEY,JSON.stringify(items));window.StudentSync?.changed();window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
+  const canUseLocal=()=>window.StudentSync?.canUseLocal?.()!==false;
+  function read(){if(!canUseLocal())return[];try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
+  function persist(items){if(!canUseLocal())throw new Error('계정 기록을 분리한 뒤 저장해 주세요.');localStorage.setItem(KEY,JSON.stringify(items));window.StudentSync?.changed();window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
   function write(items){
     try{return persist(items.slice(0,200))}catch{return false}
   }
   function statKey(data){return data.conceptId||("name:"+(data.conceptName||"기타"))}
   function readStats(){
+    if(!canUseLocal())return{};
     try{
       const value=JSON.parse(localStorage.getItem(STATS_KEY)||"{}");
       if(value&&typeof value==="object"&&!Array.isArray(value)&&Object.keys(value).length)return value;
@@ -24,7 +26,7 @@
     if(Object.keys(migrated).length)writeStats(migrated);
     return migrated;
   }
-  function writeStats(value){try{localStorage.setItem(STATS_KEY,JSON.stringify(value));window.StudentSync?.changed();return true}catch{return false}}
+  function writeStats(value){if(!canUseLocal())return false;try{localStorage.setItem(STATS_KEY,JSON.stringify(value));window.StudentSync?.changed();return true}catch{return false}}
   function track(data,isCorrect){
     if(!data.conceptId&&!data.conceptName)return;
     const all=readStats(),key=statKey(data),row=window.StudyState.totals(all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""});
@@ -54,6 +56,7 @@
     return{reviewStage:stage,lastReviewAt:now,nextReviewAt:days?new Date(Date.parse(now)+days*86400000).toISOString():"",mastered:stage===4,masteredAt:stage===4?now:""};
   }
   function record(data,isCorrect,countAttempt=true){
+    if(!canUseLocal())return false;
     const items=read(),id=idFor(data),index=items.findIndex(x=>x.id===id),now=typeof data.attemptAt==="string"&&Number.isFinite(Date.parse(data.attemptAt))?new Date(data.attemptAt).toISOString():operationTime(id);
     const attemptId=typeof data.attemptId==="string"&&/^[a-z0-9-]{1,80}$/.test(data.attemptId)?data.attemptId:"";
     if(attemptId&&index>=0&&items[index].lastAttemptId===attemptId)return true;
@@ -97,7 +100,7 @@
     const image=solutionImage(value),items=read(),index=items.findIndex(x=>x.id===id);if(!image||index<0)return false;
     items[index]={...items[index],feedbackImage:image,feedbackAt:new Date().toISOString()};return write(items);
   }
-  function removeIds(ids){const deleted=deletions();ids.forEach(id=>deleted[id]=operationTime(id));try{localStorage.setItem(DELETED_KEY,JSON.stringify(deleted))}catch{return false}return write(read().filter(note=>!ids.includes(note.id)))}
+  function removeIds(ids){if(!canUseLocal())return false;const deleted=deletions();ids.forEach(id=>deleted[id]=operationTime(id));try{localStorage.setItem(DELETED_KEY,JSON.stringify(deleted))}catch{return false}return write(read().filter(note=>!ids.includes(note.id)))}
   function remove(id){return removeIds([id])}
   function clearMastered(){return removeIds(read().filter(note=>note.mastered).map(note=>note.id))}
   function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,due:items.filter(due).length,mastered:items.filter(x=>x.mastered).length}}

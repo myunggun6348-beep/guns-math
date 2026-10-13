@@ -41,12 +41,14 @@
     if(params.get("resume")==="1"){params.delete("resume");const url=new URL(location.href);url.searchParams.delete("resume");history.replaceState(null,"",url);box.querySelector("button").click()}
   }
   function records(){
+    if(window.StudentSync?.canUseLocal?.()===false)return[];
     try{return JSON.parse(localStorage.getItem("today-study-records")||"[]")}catch{return[]}
   }
   function latest(){
     return records().find(r=>r.date===today&&r.grade===grade&&r.track===trackKey);
   }
   function saveRecord(){
+    if(window.StudentSync?.canUseLocal?.()===false)throw new Error('계정 기록을 분리한 뒤 저장해 주세요.');
     const list=records().filter(r=>!(r.date===studyDate&&r.grade===grade&&r.track===trackKey));
     list.unshift({date:studyDate,grade,track:trackKey,correct,total:5,questionPrompts:questions.map(q=>q.prompt),focusConcepts:dailyFocus,finishedAt:new Date().toISOString()});
     localStorage.setItem("today-study-records",JSON.stringify(list.slice(0,60)));

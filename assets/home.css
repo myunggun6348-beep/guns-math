@@ -6,6 +6,11 @@
   background: #f5f8f8;
   color: #203047;
 }
+@media(max-width:400px){
+  .home-page .brand{font-size:15px;gap:6px}.home-page .brand svg{width:20px;height:20px}
+  .home-page .nav .wrap{gap:8px}.home-page .nav-right{gap:6px}
+  .home-page .student-account-button{width:54px;padding:0 6px}.home-page .home-nav-more{font-size:12px}
+}
 .theme-dark .home-page {
   --home-accent: #bfd5ff;
   --home-card: #182332;
@@ -20,7 +25,8 @@
 .home-page .home-personal-shell.setup { max-width: 960px; }
 .home-page .home-personal-head { align-items: center; gap: 18px; margin-bottom: 24px; }
 .home-page .home-personal-head .eyebrow { color: var(--home-muted); font-size: 12px; letter-spacing: .04em; }
-.home-page .home-personal-head h2 { margin: 7px 0 9px; font-size: clamp(23px,2.5vw,30px); line-height: 1.4; letter-spacing: -.035em; }
+.home-page .home-personal-head h2 { margin: 7px 0 9px; font-size: clamp(23px,2.5vw,30px); line-height: 1.4; letter-spacing: -.035em; overflow-wrap:anywhere; }
+.home-page .home-personal-head>div{min-width:0;max-width:100%}
 .home-page .home-personal-head p { color: var(--home-muted); font-size: 14px; opacity: 1; }
 .home-page #homeProfileEdit { min-height: 44px; border-color: var(--home-border); background: var(--home-card); font-family: inherit; color: var(--home-muted); }
 .home-page .home-main-action {
@@ -51,6 +57,9 @@
 .home-page .home-fork-card { border-color: var(--home-border); background: var(--home-card); border-radius: 20px; }
 .home-page .home-start-card h2 { font-size: clamp(25px,3vw,34px); letter-spacing: -.03em; }
 .home-page .home-start-go { border-radius: 10px; background: var(--home-accent); color: var(--home-card); }
+.home-page .home-entry-benefits{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;font-size:12px;color:var(--home-muted)}
+.home-page .home-entry-benefits span{padding:5px 9px;border:1px solid var(--home-border);border-radius:6px}
+.home-page .home-start-actions .home-join-btn{min-height:52px;padding:12px 22px;border-radius:10px;border-color:var(--home-border);color:inherit;font-size:15px}
 .home-page .home-setup-lead { color: var(--home-muted); opacity: 1; }
 .home-page .home-join { border-color: var(--home-border); }
 .home-page .footer { background: transparent; color: var(--home-muted); border-top: 1px solid var(--home-border); }
@@ -63,6 +72,7 @@
 .home-page #homeProfileEdit:focus-visible { outline: 3px solid var(--home-accent); outline-offset: 4px; }
 .theme-dark .home-page .home-main-action > span { background: #243e35; color: #b5ddc8; }
 @media (max-width:650px) {
+  .home-page .student-account-button{font-size:0}.home-page .student-account-button.signed-in::after{content:"내 계정";font-size:12px}
   .home-page .home-personal { padding: 25px 0 18px; }
   .home-page .home-personal-head { align-items: flex-start; flex-direction: column; gap: 12px; margin-bottom: 18px; }
   .home-page .home-personal-head h2 { font-size: 24px; }
@@ -73,6 +83,9 @@
   .home-page .home-study-summary b { font-size: 18px; }
   .home-page .home-more { margin-top: 18px; }
   .home-page .home-start-go { min-width: 0; }
+  .home-page .home-start-card.has-art .home-start-art{display:none}
+  .home-page .home-start-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .home-page .home-start-actions .home-start-go,.home-page .home-start-actions .home-join-btn{width:100%;min-width:0;font-size:15px}
   .home-page .home-more .home-start { padding-top: 20px; }
   .home-page .home-more .home-start-head { padding-top: 0; margin-bottom: 14px; }
   .home-page .home-more .home-start-head .headline { font-size: 20px; }

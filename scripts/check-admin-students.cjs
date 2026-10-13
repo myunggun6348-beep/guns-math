@@ -31,6 +31,7 @@ const server=http.createServer((req,res)=>{
       await page.goto("http://127.0.0.1:5199/admin.html",{waitUntil:"networkidle"});
       await page.locator("#로그인 input[type=password]").fill("test-password");await page.locator("#로그인 button[type=submit]").click();
       await page.waitForSelector("#학생현황 .student-admin-row:not(.head)");
+      assert.equal(await page.locator('.legacy-class-view').evaluate(el=>el.open),false);await page.locator('.legacy-class-view summary').click();
       assert.equal(await page.locator("#학생현황요약 b").first().textContent(),"3");assert.equal(await page.locator("#반별요약 button").count(),2);
       assert.equal(await page.locator("#학생현황 .student-admin-row:not(.head)").count(),3);
       assert.match(await page.locator('[data-class="2-3"] .student-common-concepts').textContent(),/미분.*2\/2명.*38%/);

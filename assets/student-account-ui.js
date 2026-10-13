@@ -1,14 +1,4 @@
-/* =========================================================
-   학생 계정 창 — 손대지 않아도 됩니다.
-
-   문은 홈 첫 화면에 둘뿐입니다: '가입하고 시작' / '그냥 둘러보기'.
-   이 파일은 그중 '가입하고 시작'을 눌렀을 때 뜨는 창과, 로그인한 뒤
-   오른쪽 위에 생기는 계정 단추를 맡습니다.
-
-   가입 안 한 학생도 그대로 공부할 수 있습니다 — 기록이 이 기기에만
-   남을 뿐입니다. 그래서 '가입 없이 쓰기' 같은 문을 따로 두지 않습니다.
-   둘러보기가 곧 그 길입니다.
-   ========================================================= */
+/* 모든 페이지에서 개인 계정 로그인·가입·복구 안내를 제공한다. */
 (function () {
   "use strict";
   const 맞춤 = window.StudentSync;
@@ -19,8 +9,7 @@
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[글]));
 
-  /* 오른쪽 위 계정 단추. 로그인하기 전에는 아예 안 보입니다 —
-     첫 화면에서 고를 것을 둘로 줄이려고 그렇게 했습니다. */
+  // 공개 페이지에서도 로그인과 내 계정을 열 수 있다.
   const 단추 = document.createElement("button");
   단추.type = "button";
   단추.className = "student-account-button";
@@ -67,7 +56,7 @@
   }
 
   /* 과목은 가입할 때 묻지 않습니다. 처음 온 학생에게 '공통수학2 와 대수 중
-     무엇을 주로 하느냐'는 답하기 어려운 질문이고, 나중에 홈의 '학년·반·과목
+     무엇을 주로 하느냐'는 답하기 어려운 질문이고, 나중에 홈의 '학습 설정
      변경'에서 언제든 바꿀 수 있습니다. 학년에 맞는 첫 과목으로 시작합니다. */
   function 기본과목(학년) {
     const 맞는것 = Object.entries(과목들).find(([, 과목]) => 과목.grades.includes(String(학년)));
@@ -75,13 +64,13 @@
   }
 
   function 계정찾기() {
-    창.innerHTML='<div class="student-account-card"><form method="dialog"><button class="student-dialog-close" aria-label="닫기">×</button></form><span class="eyebrow">로그인 도움</span><h2>아이디·비밀번호 찾기</h2><section class="student-recovery-section"><h3>아이디를 잊었나요?</h3><p>이 브라우저에서 마지막으로 사용한 아이디를 확인할 수 있습니다. 공용 기기에서는 다른 학생의 아이디일 수 있습니다.</p><button type="button" class="student-secondary-action" id="findStudentId">이 기기의 마지막 아이디 확인</button><p id="studentIdResult" role="status"></p></section><section class="student-recovery-section"><h3>비밀번호를 잊었나요?</h3><p>선생님에게 이름·학년·반과 아이디를 알려 주고 비밀번호 초기화를 요청하세요. 아이디도 모르면 선생님이 학생 목록에서 확인할 수 있습니다.</p><p>선생님이 학생을 확인한 뒤 새 비밀번호를 전달합니다. 학습 기록은 유지되며 이전 로그인은 해제됩니다. 기존 비밀번호를 알려 줄 필요는 없습니다.</p><small>학생이 직접 비밀번호를 재설정하는 기능은 아직 제공하지 않습니다.</small></section><button type="button" class="btn btn-primary" id="recoveryBack">로그인으로 돌아가기</button></div>';
+    창.innerHTML='<div class="student-account-card"><form method="dialog"><button class="student-dialog-close" aria-label="닫기">×</button></form><span class="eyebrow">로그인 도움</span><h2>아이디·비밀번호 찾기</h2><section class="student-recovery-section"><h3>아이디를 잊었나요?</h3><p>이 브라우저에서 마지막으로 사용한 아이디를 확인할 수 있습니다. 공용 기기에서는 다른 학생의 아이디일 수 있습니다.</p><button type="button" class="student-secondary-action" id="findStudentId">이 기기의 마지막 아이디 확인</button><p id="studentIdResult" role="status"></p></section><section class="student-recovery-section"><h3>비밀번호를 잊었나요?</h3><p>학습 지원 관리자(선생님)에게 이름 또는 별명과 아이디를 알려 주고 비밀번호 초기화를 요청하세요. 아이디도 모르면 선생님이 학생 목록에서 확인할 수 있습니다.</p><p>선생님이 학생을 확인한 뒤 새 비밀번호를 전달합니다. 학습 기록은 유지되며 이전 로그인은 해제됩니다. 기존 비밀번호를 알려 줄 필요는 없습니다.</p><small>학생이 직접 비밀번호를 재설정하는 기능은 아직 제공하지 않습니다.</small></section><button type="button" class="btn btn-primary" id="recoveryBack">로그인으로 돌아가기</button></div>';
     창.querySelector('#recoveryBack').onclick=()=>들어가기전('login');
     창.querySelector('#findStudentId').onclick=()=>{
-      let id='';try{id=localStorage.getItem('math-student-data-owner')||''}catch{}
+      let id='';try{id=localStorage.getItem('math-student-last-id-v1')||localStorage.getItem('math-student-data-owner')||''}catch{}
       const result=창.querySelector('#studentIdResult');
       result.replaceChildren();
-      if(!/^[a-z0-9]{4,16}$/.test(id)){result.textContent='이 브라우저에 사용했던 아이디가 없습니다. 전에 로그인한 기기에서 확인하거나 선생님에게 이름·학년·반을 알려 주세요.';return}
+      if(!/^[a-z0-9]{4,16}$/.test(id)){result.textContent='이 브라우저에 사용했던 아이디가 없습니다. 전에 로그인한 기기에서 확인하거나 학습 지원 관리자(선생님)에게 이름 또는 별명을 알려 주세요.';return}
       result.textContent='마지막으로 사용한 아이디: '+id+' · 본인 아이디인지 확인하세요.';
       const use=document.createElement('button');use.type='button';use.className='student-text-action';use.textContent='이 아이디로 로그인';use.onclick=()=>{들어가기전('login');창.querySelector('[name="id"]').value=id;창.querySelector('[name="pin"]').focus()};result.append(use);
     };
@@ -112,7 +101,7 @@
           /* 숨길 일이 아닙니다. 나중에 알게 되는 편이 훨씬 나쁩니다. */
           (만드나
             ? '<p class="student-account-help">비밀번호는 숫자 6자리 이상. 1111 이나 1234 처럼 뻔한 것은 쓸 수 없습니다.<br>' +
-              '아이디와 비밀번호를 기억하세요. 비밀번호를 잊으면 선생님에게 초기화를 요청하세요.<br>' +
+              '가입하면 이 기기의 체험 학습 기록도 계정에 이어집니다. 아이디와 비밀번호를 기억하세요. 비밀번호를 잊으면 선생님에게 초기화를 요청하세요.<br>' +
               '선생님은 학습 기록(오늘의 학습·오답노트)을 봅니다. 질문은 그대로 익명입니다.</p>'
             : '<p class="student-account-help">비밀번호를 잊으면 선생님에게 초기화를 요청하세요. 계정이 없어도 창을 닫고 공부할 수 있습니다.</p>') +
           '<p class="student-account-error" role="status"></p>' +
@@ -145,21 +134,14 @@
       보내기단추.disabled = true;
       오류.textContent = "";
       try {
-        /* 학년·과목을 먼저 이 기기에 적어 둡니다. 가입 직후 맞추기가 돌면서
-           그대로 계정에 올라가, 다른 기기에서 로그인해도 따라옵니다. */
-        if (만드나) {
-          window.HomeProfile?.저장({
-            name: 폼.elements.name.value,
-            grade: 폼.elements.grade.value,
-            className: "",
-            track: 기본과목(폼.elements.grade.value),
-          });
-        }
+        // 계정 준비 후 설정을 저장해 체험 프로필과 분리한다.
+        const 새설정=만드나?{name:폼.elements.name.value,grade:폼.elements.grade.value,className:'',track:기본과목(폼.elements.grade.value)}:null;
         await 맞춤[만드나 ? "register" : "login"]({
           id: 폼.elements.id.value,
           pin: 폼.elements.pin.value,
           name: 폼.elements.name.value,
         });
+        if(새설정){window.HomeProfile?.저장(새설정);await 맞춤.sync()}
         창.close();
       } catch (e) {
         오류.textContent = e.message;
@@ -170,13 +152,12 @@
   }
 
   function 그리기(형편 = 맞춤.getState()) {
-    let 이전계정=false;try{이전계정=Boolean(localStorage.getItem("math-student-data-owner"))}catch{}
-    단추.hidden = !형편.signedIn && !형편.error && !이전계정;
+    단추.hidden = !형편.ready;
     if (형편.signedIn) {
       단추.textContent = (형편.student.name || 형편.student.id) + " · 내 기록";
       단추.classList.add("signed-in");
       if (창.open) 들어온뒤(형편);
-    } else if (형편.error || 이전계정) {
+    } else {
       단추.textContent=형편.error?"다시 로그인":"로그인";단추.classList.remove("signed-in");
       if(형편.error&&창.open&&창.querySelector(".student-sync-status")){들어가기전("login");창.querySelector(".student-account-error").textContent=형편.error;}
     }
@@ -188,7 +169,7 @@
   window.StudentAccountUI = {
     열기(모드) {
       const 형편 = 맞춤.getState();
-      if (형편.signedIn) 들어온뒤(형편); else 들어가기전(모드 || "register");
+      if (형편.signedIn) 들어온뒤(형편); else if(모드==='recover')계정찾기();else 들어가기전(모드 || "register");
       창.showModal();
     },
   };

@@ -71,11 +71,11 @@ const server=http.createServer((req,res)=>{
          (예전에는 문이 셋이라 같은 것을 두 군데서 고르게 돼 있었습니다). */
       assert.equal(await page.locator(".home-start-card").count(),1);
       assert.equal(await page.locator(".home-start-go").count(),1,"큰 문이 하나가 아닙니다");
-      assert.equal(await page.locator(".home-start-go").getAttribute("href"),"today.html","큰 문이 오늘의 5문제로 가지 않습니다");
+      assert.equal(await page.locator(".home-start-go").getAttribute("id"),"homeLogin","첫 입구가 로그인이어야 합니다");
       assert.equal(await page.locator("#homeProfileForm").count(),0,"첫 화면에 입력 칸이 또 생겼습니다");
 
       assert.equal(await page.evaluate(()=>Boolean(document.getElementById('homePersonal').compareDocumentPosition(document.getElementById('more'))&Node.DOCUMENT_POSITION_FOLLOWING)),true,'전체 메뉴가 학습 카드 아래에 와야 합니다');
-      assert.equal(await page.locator(".student-account-button").isVisible(),false,"로그인 전인데 계정 단추가 보입니다");
+      assert.equal(await page.locator(".student-account-button").isVisible(),true,"로그인 입구가 없습니다");
 
       /* 가입은 네 가지만 묻습니다 — 이름(선택)·학년·아이디·비밀번호.
          과목까지 고르게 하면 처음 온 학생에게 답하기 어려운 질문이 됩니다
@@ -104,7 +104,7 @@ const server=http.createServer((req,res)=>{
 
       /* '둘러보기'를 누르면 접힌 칸이 실제로 펼쳐져야 합니다
          (전에는 그 자리로 내려가기만 하고 닫힌 채였습니다). */
-      await page.locator(".home-start-browse").click();
+      await page.locator(".home-start-browse").first().click();
       await page.waitForTimeout(300);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
       await page.locator(".home-more>summary").click();   // 다시 닫고 아래 검사를 이어 갑니다
@@ -115,10 +115,11 @@ const server=http.createServer((req,res)=>{
       await page.evaluate(()=>{
         localStorage.setItem("math-home-profile-v1",JSON.stringify({name:"민수",grade:"2",className:"",track:"algebra"}));
         localStorage.setItem("today-study-pref",JSON.stringify({grade:"2",track:"algebra"}));
+        sessionStorage.setItem('math-home-explore','true');
       });
       await page.reload({waitUntil:"networkidle"});
       assert.equal(await page.locator(".home-main-action").count(),1);
-      assert.equal(await page.locator(".home-study-summary span").count(),3);
+      assert.equal(await page.locator(".home-study-summary span").count(),4);
       assert.match(await page.locator(".home-main-action").getAttribute("href"),/today\.html\?grade=2/);
       await page.screenshot({path:"artifacts/home-personal-simple-"+viewport.name+".png",fullPage:false});
 
@@ -205,6 +206,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 문 두 개(가입·둘러보기), 가입 네 칸, 뻔한 비밀번호 막힘, 학년·기본과목이 계정으로, 가입하라고 안 조름, 활동 빠짐없이, 학년·연도 바로가기, 데스크톱·태블릿·모바일");
+    console.log("메인 검사 통과: 로그인 입구·가입·계정 찾기·명시적 체험·학년/과목 동기화·공개 자료·PC/태블릿/모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});

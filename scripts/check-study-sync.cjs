@@ -2,16 +2,17 @@ const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("n
 const root=path.join(__dirname,".."),{merge}=require("../assets/study-state");
 const clone=value=>JSON.parse(JSON.stringify(value)),read=(client,key)=>JSON.parse(client.localStorage.getItem(key)||"null");
 let remote={},otherAccounts={},pause=null,release=null,fail=false;
-function client(){
-  const values=new Map(),listeners=new Map();let account="minsu",failNext="";
-  const context=vm.createContext({console,crypto:crypto.webcrypto,Date,CustomEvent:class{constructor(type){this.type=type}},setTimeout:()=>1,clearTimeout:()=>{},localStorage:{getItem:key=>values.get(key)||null,setItem:(key,value)=>{if(key===failNext){failNext="";throw new Error("quota")}values.set(key,String(value))}}});
+function client(seed={}){
+  const values=new Map(Object.entries(seed)),listeners=new Map();let account="minsu",failNext="",logoutFail=false,logoutHold=false,releaseLogout;
+  const context=vm.createContext({console,crypto:crypto.webcrypto,Date,CustomEvent:class{constructor(type){this.type=type}},setTimeout:()=>1,clearTimeout:()=>{},localStorage:{getItem:key=>values.get(key)||null,removeItem:key=>values.delete(key),setItem:(key,value)=>{if(key===failNext){failNext="";throw new Error("quota")}values.set(key,String(value))}}});
   context.failStorage=key=>failNext=key;
+  context.failLogout=()=>logoutFail=true;context.holdLogout=()=>logoutHold=true;context.releaseLogout=()=>releaseLogout();
   context.window=context;context.addEventListener=(type,fn)=>{if(!listeners.has(type))listeners.set(type,[]);listeners.get(type).push(fn)};context.dispatchEvent=event=>(listeners.get(event.type)||[]).forEach(fn=>fn(event));
   context.fetch=async(url,options={})=>{
     const payload=options.body?JSON.parse(options.body):{};
     if(!options.method)return{ok:true,json:async()=>({signedIn:false})};
     if(payload.action==="login"){account=payload.id;return{ok:true,json:async()=>({student:{id:payload.id},signedIn:true})}}
-    if(payload.action==="logout")return{ok:true,json:async()=>({ok:true})};
+    if(payload.action==="logout"){if(logoutHold){logoutHold=false;await new Promise(resolve=>releaseLogout=resolve)}if(logoutFail){logoutFail=false;return{ok:false,json:async()=>({error:'logout offline'})}}return{ok:true,json:async()=>({ok:true})}}
     if(fail)return{ok:false,json:async()=>({error:"offline"})};
     assert.ok(payload.data.notes.every(note=>!note.solutionImage&&!note.feedbackImage),"필기 이미지가 서버로 전송됨");
     const response=clone(merge(payload.data,account==="minsu"?remote:otherAccounts[account]||{}));
@@ -46,7 +47,12 @@ async function browserChecks(){
   b.WrongNotes.record({...question,prompt:"x+4=5"},true);await b.StudentSync.sync();
   const beforeQuota=clone(a.WrongNotes.all());a.failStorage("math-concept-stats-v1");await a.StudentSync.sync();
   assert.deepEqual(clone(a.WrongNotes.all()),beforeQuota,"저장 공간 오류 때 부분 적용된 기록이 남음");assert.match(a.StudentSync.getState().error,/저장/);await a.StudentSync.sync();assert.equal(a.StudentSync.getState().error,"");
-  fail=true;const before=clone(a.WrongNotes.all());await a.StudentSync.sync();assert.equal(a.StudentSync.getState().error,"offline");await a.StudentSync.logout();assert.deepEqual(clone(a.WrongNotes.all()),before);assert.equal(a.StudentSync.getState().signedIn,false);fail=false;
+  const beforeIsolation=read(a,'math-wrong-notes-v1');a.failStorage('math-student-backup:minsu');await assert.rejects(a.StudentSync.logout(),/분리/);assert.equal(a.StudentSync.getState().signedIn,false);assert.equal(a.StudentSync.canUseLocal(),false);assert.deepEqual(read(a,'math-wrong-notes-v1'),beforeIsolation);await a.StudentSync.login({id:'minsu'});
+  await a.StudentSync.sync();const beforeLogoutFailure=clone(a.WrongNotes.all());a.failLogout();await assert.rejects(a.StudentSync.logout(),/logout offline/);assert.equal(a.StudentSync.getState().signedIn,true);assert.deepEqual(clone(a.WrongNotes.all()),beforeLogoutFailure);
+  a.holdLogout();a.failLogout();const oldLogout=a.StudentSync.logout();for(let i=0;i<24;i++)await Promise.resolve();assert.equal(a.StudentSync.getState().signedIn,false);await a.StudentSync.login({id:'another'});a.releaseLogout();await assert.rejects(oldLogout,/logout offline/);assert.equal(a.StudentSync.getState().student.id,'another');assert.equal(a.localStorage.getItem('math-student-data-owner'),'another');await a.StudentSync.login({id:'minsu'});
+  fail=true;const before=clone(a.WrongNotes.all());await a.StudentSync.sync();assert.equal(a.StudentSync.getState().error,"offline");await a.StudentSync.logout();assert.deepEqual(clone(a.WrongNotes.all()),[]);assert.deepEqual(read(a,'math-student-backup:minsu').notes,before);assert.equal(a.StudentSync.getState().signedIn,false);fail=false;await a.StudentSync.login({id:'minsu'});assert.deepEqual(clone(a.WrongNotes.all()),before);
+  const expired=client({'math-student-data-owner':'expired01','math-wrong-notes-v1':JSON.stringify(before)});for(let i=0;i<8;i++)await Promise.resolve();assert.equal(expired.StudentSync.getState().signedIn,false);assert.equal(expired.WrongNotes.all().length,0);assert.deepEqual(read(expired,'math-student-backup:expired01').notes,before);
+  const blocked=client({'math-student-data-owner':'blocked01','math-wrong-notes-v1':JSON.stringify(before)});blocked.failStorage('math-student-backup:blocked01');for(let i=0;i<8;i++)await Promise.resolve();assert.equal(blocked.StudentSync.canUseLocal(),false);assert.deepEqual(clone(blocked.WrongNotes.all()),[]);assert.equal(blocked.WrongNotes.record(question,false),false);assert.deepEqual(read(blocked,'math-wrong-notes-v1'),before);
 }
 async function serverChecks(){
   const values=new Map(),token="a".repeat(64),redisPath=require.resolve("../api/_redis");let competing=null;
