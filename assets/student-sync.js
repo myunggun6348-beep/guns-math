@@ -1,10 +1,10 @@
 (function(){
   "use strict";
-  const KEYS={profile:"math-home-profile-v1",pref:"today-study-pref",records:"today-study-records",notes:"math-wrong-notes-v1",stats:"math-concept-stats-v1",deletedNotes:"math-wrong-deletions-v1"};
+  const KEYS={profile:"math-home-profile-v1",pref:"today-study-pref",records:"today-study-records",notes:"math-wrong-notes-v1",stats:"math-concept-stats-v1",deletedNotes:"math-wrong-deletions-v1",journeys:"math-study-journeys-v1"};
   const OWNER="math-student-data-owner",GUEST="math-student-guest-data-v1",LAST_ID="math-student-last-id-v1";
   const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}};
   const write=(key,value)=>{if(value!==undefined){const text=JSON.stringify(value);if(localStorage.getItem(key)!==text)localStorage.setItem(key,text)}};
-  const snapshot=()=>({profile:read(KEYS.profile,null),pref:read(KEYS.pref,null),records:read(KEYS.records,[]),notes:read(KEYS.notes,[]),stats:read(KEYS.stats,{}),deletedNotes:read(KEYS.deletedNotes,{})});
+  const snapshot=()=>({profile:read(KEYS.profile,null),pref:read(KEYS.pref,null),records:read(KEYS.records,[]),notes:read(KEYS.notes,[]),stats:read(KEYS.stats,{}),deletedNotes:read(KEYS.deletedNotes,{}),journeys:read(KEYS.journeys,[])});
   let state={signedIn:false,student:null,ready:false,syncing:false},timer,inFlight=null,pending=false,generation=0;
   async function request(options={}){
     const response=await fetch("/api/student-account",{credentials:"same-origin",signal:globalThis.AbortSignal?.timeout?.(15000),headers:{"Content-Type":"application/json"},...options});
@@ -31,7 +31,7 @@
   function localFor(id){const owner=localStorage.getItem(OWNER);return owner===id?snapshot():read("math-student-backup:"+id,null)||(owner?{}:snapshot())}
   function restoreGuest(){
     const owner=localStorage.getItem(OWNER);if(!owner)return;const previous=snapshot();
-    const blank={profile:null,pref:{},records:[],notes:[],stats:{},deletedNotes:{}},guest=read(GUEST,blank)||blank;
+    const blank={profile:null,pref:{},records:[],notes:[],stats:{},deletedNotes:{},journeys:[]},guest=read(GUEST,blank)||blank;
     try{write("math-student-backup:"+owner,previous);Object.entries(KEYS).forEach(([field,key])=>write(key,guest[field]??blank[field]));localStorage.removeItem(OWNER);localStorage.setItem(LAST_ID,owner)}
     catch{Object.entries(KEYS).forEach(([field,key])=>{try{write(key,previous[field])}catch{}});try{localStorage.setItem(OWNER,owner)}catch{}throw new Error("기록을 안전하게 분리하지 못했습니다. 저장 공간을 확인해 주세요.")}
     try{globalThis.sessionStorage?.removeItem('math-home-explore')}catch{}

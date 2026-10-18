@@ -23,6 +23,34 @@
     // shortcut: 개념별 최근 50회만 보관한다. 전체 장기 이력이 필요해지면 별도 저장소로 옮긴다.
     return [...rows.values()].sort((a,b)=>b.at.localeCompare(a.at)||a.id.localeCompare(b.id)).slice(0,50);
   }
+  function journeys(value){
+    const rows=[];
+    for(const row of Array.isArray(value)?value:[]){
+      if(!row||!/^\d{4}-\d{2}-\d{2}$/.test(row.date)||!stamp(row.createdAt)||!["1","2","3"].includes(row.grade)||!validId(row.track)||!validId(row.conceptId)||!["basic","standard","challenge"].includes(row.level))continue;
+      const start=Date.parse(row.date+'T00:00:00+09:00');
+      if(!Number.isFinite(start)||koreaDay(start)!==row.date||Date.parse(row.createdAt)<start||Date.parse(row.createdAt)>=start+86400000)continue;
+      const noteIds=[...new Set((Array.isArray(row.noteIds)?row.noteIds:[]).filter(validId))].slice(0,2),ids=['daily','practice-'+row.conceptId,...noteIds.map(id=>'review-'+id)],results=new Map();
+      for(const result of Array.isArray(row.results)?row.results:[]){
+        const total=result?.id==='daily'?5:1;
+        if(!result||!ids.includes(result.id)||!stamp(result.at)||Date.parse(result.at)<start||Date.parse(result.at)>=start+86400000||result.total!==total||!Number.isInteger(result.correct)||result.correct<0||result.correct>total||!Number.isInteger(result.hints)||result.hints<0||result.hints>3)continue;
+        const clean={id:result.id,at:new Date(result.at).toISOString(),correct:result.correct,total,hints:result.hints,weakConcepts:[...new Set((Array.isArray(result.weakConcepts)?result.weakConcepts:[]).filter(validId))].slice(0,5)},old=results.get(result.id);
+        if(!old||clean.at<old.at||(clean.at===old.at&&JSON.stringify(clean)<JSON.stringify(old)))results.set(result.id,clean);
+      }
+      rows.push({date:row.date,grade:row.grade,track:row.track,createdAt:new Date(row.createdAt).toISOString(),conceptId:row.conceptId,level:row.level,noteIds,results:[...results.values()].sort((a,b)=>a.id.localeCompare(b.id))});
+    }
+    // shortcut: 하루 활동 묶음은 최근 30개만 보관한다. 장기 완료 달력이 필요해지면 보관 범위를 확장한다.
+    return rows.sort((a,b)=>b.date.localeCompare(a.date)||a.createdAt.localeCompare(b.createdAt)).slice(0,30);
+  }
+  function mergeJourneys(left,right){
+    const rows=new Map();
+    for(const row of journeys(left).concat(journeys(right))){
+      const key=row.date+'|'+row.grade+'|'+row.track,old=rows.get(key);
+      if(!old){rows.set(key,row);continue}
+      const first=row.createdAt<old.createdAt||(row.createdAt===old.createdAt&&JSON.stringify({...row,results:[]})<JSON.stringify({...old,results:[]}))?row:old;
+      rows.set(key,journeys([{...first,results:old.results.concat(row.results)}])[0]);
+    }
+    return journeys([...rows.values()]);
+  }
   function totals(row){
     // shortcut: 이전 누적 기록은 기준값으로 보존한다. 과거의 개별 풀이를 복원하려면 원본 이력이 필요하다.
     const base=row.base?counter(object(row.base)):{...counter(row),correct:Math.min(count(row.correct),count(row.attempts)),wrong:Math.max(0,count(row.attempts)-count(row.correct))};
@@ -38,7 +66,7 @@
     const notes=(Array.isArray(source.notes)?source.notes:[]).filter(row=>row&&typeof row==="object"&&validId(row.id)).map(({solutionImage,feedbackImage,...row})=>row);
     const stats=Object.fromEntries(Object.entries(object(source.stats)).filter(([,row])=>row&&typeof row==="object"&&!Array.isArray(row)).map(([key,row])=>[key,totals(row)]));
     const deletedNotes=Object.fromEntries(Object.entries(object(source.deletedNotes)).filter(([id,value])=>validId(id)&&stamp(value)));
-    return{profile:source.profile&&typeof source.profile==="object"&&!Array.isArray(source.profile)?source.profile:null,pref:source.pref&&typeof source.pref==="object"&&!Array.isArray(source.pref)?source.pref:null,records,notes,stats,deletedNotes};
+    return{profile:source.profile&&typeof source.profile==="object"&&!Array.isArray(source.profile)?source.profile:null,pref:source.pref&&typeof source.pref==="object"&&!Array.isArray(source.pref)?source.pref:null,records,notes,stats,deletedNotes,journeys:mergeJourneys(source.journeys,[])};
   }
   function merge(local,remote){
     const a=safeState(remote),b=safeState(local);
@@ -55,7 +83,7 @@
       stats[key]=totals({...old,...(String(row.lastAt||"")>=String(old.lastAt||"")?row:{}),...(old.learningEvents||row.learningEvents?{learningEvents:learningEvents([...(old.learningEvents||[]),...(row.learningEvents||[])])}:{}),base,devices});
     });
     const latest=(left,right)=>newer(left,right,row=>stamp(row.updatedAt));
-    return{profile:latest(b.profile,a.profile),pref:latest(b.pref,a.pref),records,notes,stats,deletedNotes};
+    return{profile:latest(b.profile,a.profile),pref:latest(b.pref,a.pref),records,notes,stats,deletedNotes,journeys:mergeJourneys(a.journeys,b.journeys)};
   }
   const koreaDay=at=>new Date(at+9*3600000).toISOString().slice(0,10);
   function recentReviews(value,now=Date.now()){
@@ -73,6 +101,6 @@
     });
     return{startDate:days[0].date,endDate:days[6].date,confirmed:recent.length,completed:recent.filter(note=>note.mastered&&note.reviewStage===4).length,due:notes.filter(note=>!note.mastered&&(!note.nextReviewAt||Date.parse(note.nextReviewAt)<=now)).length,active:notes.filter(note=>!note.mastered).length,days,concepts:[...concepts.values()].sort((a,b)=>b.confirmed-a.confirmed||a.name.localeCompare(b.name,'ko'))};
   }
-  const api={safeState,merge,totals,noteStamp,recentReviews,reviewSummary,learningEvents};
+  const api={safeState,merge,totals,noteStamp,recentReviews,reviewSummary,learningEvents,journeys,mergeJourneys};
   if(typeof module!=="undefined"&&module.exports)module.exports=api;else root.StudyState=api;
 })(typeof window!=="undefined"?window:globalThis);

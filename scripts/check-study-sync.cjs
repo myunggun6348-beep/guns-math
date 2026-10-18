@@ -35,6 +35,8 @@ async function browserChecks(){
   a.WrongNotes.updateSolution(a.WrongNotes.idFor(question),"data:image/png;base64,BB==");await a.StudentSync.sync();
   assert.equal(a.WrongNotes.all()[0].feedbackImage,"data:image/png;base64,BB==");
   const id=a.WrongNotes.idFor(question);a.WrongNotes.remove(id);await a.StudentSync.sync();await b.StudentSync.sync();
+  const createdAt=new Date().toISOString(),journey={date:new Date(Date.now()+9*3600000).toISOString().slice(0,10),grade:'1',track:'common1',createdAt,conceptId:'poly',level:'basic',noteIds:[],results:[]};
+  a.localStorage.setItem('math-study-journeys-v1',JSON.stringify([journey]));await a.StudentSync.sync();await b.StudentSync.sync();assert.equal(read(b,'math-study-journeys-v1').length,1,'하루 활동의 다른 기기 동기화 실패');
   assert.equal(remote.notes.length,0,"다른 기기의 이전 기록이 삭제를 취소함");
   b.WrongNotes.record(question,false);await b.StudentSync.sync();assert.equal(remote.notes.length,1,"삭제한 문제의 재학습이 저장되지 않음");
   pause=true;const syncing=b.StudentSync.sync();await Promise.resolve();
@@ -42,6 +44,7 @@ async function browserChecks(){
   assert.equal(remote.notes.length,2,"전송 중 새 풀이 기록이 사라짐");assert.equal(remote.stats.poly.attempts,8);
   a.WrongNotes.record({...question,prompt:"x+3=4"},false);await a.StudentSync.sync();
   await a.StudentSync.login({id:"another"});assert.equal(a.WrongNotes.all().length,0,"다른 학생에게 이전 계정 기록이 보임");
+  assert.equal(read(a,'math-study-journeys-v1').length,0,'다른 학생에게 이전 하루 활동이 보임');
   assert.ok(read(a,"math-student-backup:minsu"),"계정 전환 전 기기 기록이 보관되지 않음");
   await a.StudentSync.login({id:"minsu"});assert.ok(a.WrongNotes.all().some(note=>note.solutionImage===question.solutionImage));
   b.WrongNotes.record({...question,prompt:"x+4=5"},true);await b.StudentSync.sync();

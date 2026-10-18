@@ -32,7 +32,7 @@
     const all=readStats(),key=statKey(data),row=window.StudyState.totals(all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""});
     const at=typeof data.attemptAt==='string'&&Number.isFinite(Date.parse(data.attemptAt))?new Date(data.attemptAt).toISOString():new Date().toISOString();
     const eventId=typeof data.attemptId==='string'&&/^[a-z0-9-]{1,80}$/.test(data.attemptId)?data.attemptId:crypto.randomUUID();
-    const event={id:eventId,problemId:hash([data.sourceKey||'',data.prompt||''].join('|')),at,grade:String(data.grade||''),track:data.sourceKey||'',kind:data.source,correct:Boolean(isCorrect),hints:data.source==='similar'?(data.hintsUsed||0):0};
+    const event={id:eventId,problemId:problemId(data),at,grade:String(data.grade||''),track:data.sourceKey||'',kind:data.source,correct:Boolean(isCorrect),hints:data.source==='similar'?(data.hintsUsed||0):0};
     const eligible=window.StudyState.learningEvents([event]).length>0;
     if(eligible&&row.learningEvents?.some(row=>row.id===eventId))return;
     if(eligible)row.learningEvents=window.StudyState.learningEvents([...(row.learningEvents||[]),event]);
@@ -53,6 +53,7 @@
   }
   function hash(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)}
   function idFor(data){return hash([data.source||"",data.sourceKey||"",data.prompt||""].join("|"))}
+  function problemId(data){return hash([data.sourceKey||'',data.prompt||''].join('|'))}
   function solutionImage(value){const image=String(value||"");return /^data:image\/(?:png|webp|jpeg);base64,/.test(image)&&image.length<350000?image:""}
   function due(note){return !note.mastered&&(!note.nextReviewAt||Date.parse(note.nextReviewAt)<=Date.now())}
   function review(note,isCorrect,now){
@@ -111,5 +112,5 @@
   function clearMastered(){return removeIds(read().filter(note=>note.mastered).map(note=>note.id))}
   function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,due:items.filter(due).length,mastered:items.filter(x=>x.mastered).length}}
   function recentReviews(now=Date.now()){return window.StudyState.recentReviews(read(),now)}
-  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,due,idFor,stats,performance,reasons,setReason,attemptTime:operationTime,recentReviews};
+  window.WrongNotes={all:read,record,attempt,updateSolution,remove,clearMastered,count,due,idFor,problemId,stats,performance,reasons,setReason,attemptTime:operationTime,recentReviews};
 })();

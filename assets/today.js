@@ -18,11 +18,10 @@
   const owner=()=>window.StudentSync?.getState().signedIn?"student-"+window.StudentSync.getState().student.id:"guest";
   const slot=()=>practiceMode?'practice-'+grade+'-'+trackKey+'-'+practiceId:similarMode?"similar-"+reviewId:(diagnosticMode?"diagnostic-":"daily-")+grade+"-"+trackKey;
 
-  const pad=n=>String(n).padStart(2,"0");
-  const now=new Date();
-  const today=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
+  const now=new Date(Date.now()+9*3600000);
+  const today=now.toISOString().slice(0,10);
   studyDate=today;
-  const dateLabel=(now.getMonth()+1)+"월 "+now.getDate()+"일 오늘";
+  const dateLabel=(now.getUTCMonth()+1)+"월 "+now.getUTCDate()+"일 오늘 · 한국 시간";
   const esc=v=>String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   const norm=v=>String(v).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"");
   function saveStatus(text){let el=document.getElementById("draftStatus");if(!el){el=document.createElement("p");el.id="draftStatus";el.className="today-draft-status";el.setAttribute("role","status");app.querySelector(".today-panel")?.append(el)}el.textContent=text}
@@ -51,19 +50,19 @@
   function saveRecord(){
     if(window.StudentSync?.canUseLocal?.()===false)throw new Error('계정 기록을 분리한 뒤 저장해 주세요.');
     const list=records().filter(r=>!(r.date===studyDate&&r.grade===grade&&r.track===trackKey));
-    list.unshift({date:studyDate,grade,track:trackKey,correct,total:5,questionPrompts:questions.map(q=>q.prompt),focusConcepts:dailyFocus,finishedAt:new Date().toISOString()});
+    list.unshift({date:studyDate,grade,track:trackKey,correct,total:5,questionPrompts:questions.map(q=>q.prompt),focusConcepts:dailyFocus,weakConcepts:[...new Set(answers.filter(a=>!a.correct).map(a=>a.concept))],finishedAt:new Date().toISOString()});
     localStorage.setItem("today-study-records",JSON.stringify(list.slice(0,60)));
     window.StudentSync?.changed();
   }
   function streak(){
     const dates=[...new Set(records().map(r=>r.date))].sort().reverse();
     if(!dates.length)return 0;
-    let cursor=new Date(now.getFullYear(),now.getMonth(),now.getDate()),count=0;
-    if(dates[0]!==today)cursor.setDate(cursor.getDate()-1);
+    let cursor=new Date(today+'T00:00:00+09:00'),count=0;
+    if(dates[0]!==today)cursor.setUTCDate(cursor.getUTCDate()-1);
     for(const d of dates){
-      const expected=cursor.getFullYear()+"-"+pad(cursor.getMonth()+1)+"-"+pad(cursor.getDate());
+      const expected=new Date(cursor.getTime()+9*3600000).toISOString().slice(0,10);
       if(d!==expected)break;
-      count++;cursor.setDate(cursor.getDate()-1);
+      count++;cursor.setUTCDate(cursor.getUTCDate()-1);
     }
     return count;
   }
@@ -224,7 +223,7 @@
     app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">학습 완료</span><div class="result-score">'+correct+'/5</div><h2>'+message+'</h2><p class="result-lead">정답 개수보다 어떤 개념에서 막혔는지가 더 중요합니다. 아래 결과에서 바로 복습할 수 있습니다.</p>'+(run?'<span class="today-streak">연속 학습 '+run+'일</span>':'')+'<div class="concept-results">'+summary+'</div>'+(weak.length?'<h3 class="weak-title">먼저 복습할 개념</h3><div class="weak-list">'+weakCards+'</div>':'<div class="weak-card"><h3>오늘은 취약 개념이 없습니다.</h3><p>관련 기출로 난도를 높여 실력을 확인해 보세요.</p><div class="weak-actions"><a href="past-practice.html?grade='+grade+'&concept='+stats[0].id+'">관련 기출 난도 높이기 →</a></div></div>')+'<div class="result-actions"><button type="button" class="today-primary" id="retryToday">다시 풀기</button><button type="button" class="today-secondary" id="changeToday">과목 바꾸기</button><a class="today-secondary" href="wrong-notes.html">오답노트 보기</a></div></section>';
     document.getElementById("retryToday").addEventListener("click",start);
     document.getElementById("changeToday").addEventListener("click",setup);
-    document.getElementById('retryToday').parentElement.before(nextStudyElement());
+    app.querySelector('.concept-results').before(nextStudyElement());
   }
   function diagnosticResult(){
     const ids=[...new Set(answers.map(a=>a.concept))],skipped=answers.filter(a=>a.skipped).length;
@@ -233,6 +232,10 @@
     app.querySelector('.result-actions').before(nextStudyElement());window.scrollTo(0,0);
   }
   function nextStudyView(){
+    const journey=window.StudyJourney.get(grade,trackKey),progress=window.StudyJourney.view(journey);
+    return progress+(journey?'<details class="journey-extra"><summary>더 공부하고 싶다면</summary>'+recommendationView()+'</details>':recommendationView());
+  }
+  function recommendationView(){
     const next=window.LearningDiagnostic.recommendation(grade,trackKey);if(!next)return '';
     return '<section class="learning-next"><h3>다음 추천 학습 · '+esc(next.name)+'</h3><p>'+esc(next.reason)+'</p><div class="result-actions"><a class="today-primary" href="'+esc(next.review?'wrong-notes.html?view=due':next.unlearned?next.mapHref:next.practiceHref)+'">'+(next.review?'오답 먼저 복습하기':next.unlearned?'개념부터 살펴보기':difficulties[next.level]+' 1문항 풀기')+' →</a><a class="today-secondary" href="'+esc(next.review||next.unlearned?next.practiceHref:next.mapHref)+'">'+(next.review?'복습 후 기초 1문항':next.unlearned?'배웠다면 기초 1문항':'개념 지도 보기')+' →</a></div></section>';
   }
@@ -248,7 +251,7 @@
     if(!difficulty){app.innerHTML=hero()+'<section class="today-panel"><h2>이 기록에 연결할 다른 문제를 준비하고 있습니다.</h2><a class="today-primary" href="wrong-notes.html">오답노트로 돌아가기 →</a></section>';return}
     const types=window.similarTypes(note,difficulty);if(!types.includes(subtype))subtype="";
     app.innerHTML=hero()+'<section class="today-panel"><h2>확인 문제 난도를 골라 주세요</h2><p>같은 학년의 '+esc(concepts[note.conceptId].name)+' 문제를 1개 풉니다.</p><div class="subject-picks" role="group" aria-label="확인 문제 난도">'+Object.entries(difficulties).map(([level,label])=>'<button type="button" class="pick-button '+(difficulty===level?"on":"")+'" data-difficulty="'+level+'" aria-pressed="'+(difficulty===level)+'" '+(!available.includes(level)?'disabled':'')+'>'+label+(!available.includes(level)?' · 준비 중':'')+'</button>').join("")+'</div><p class="today-panel-intro">기초: 기본 개념·공식 확인<br>표준: 식을 세우고 계산하기<br>도전: 조건 해석과 여러 단계 연결</p><p>원래 문제는 제외합니다. 선택한 난도에 다른 문제가 없으면 준비 중으로 표시합니다.</p><button type="button" class="today-primary" id="similarStart">이 난도로 풀기 →</button></section>';
-    if(practiceMode){const panel=app.querySelector('.today-panel');panel.querySelector('h2').textContent='추천 개념을 확인해요';panel.querySelector('.today-panel-intro').nextElementSibling.textContent='학습 기록을 참고해 추천한 난도입니다. 다른 난도와 세부 유형도 선택할 수 있어요.'}
+    if(practiceMode){const panel=app.querySelector('.today-panel');panel.querySelector('h2').textContent='추천 개념을 확인해요';panel.querySelector('.today-panel-intro').nextElementSibling.textContent='학습 기록을 참고해 추천한 난도입니다. 다른 난도와 세부 유형도 선택할 수 있어요.';const link=document.createElement('a');link.className='today-secondary';link.href='map.html?grade='+grade+'&n='+encodeURIComponent(practiceId);link.textContent='이 개념 먼저 살펴보기 →';panel.querySelector('.today-panel-intro').after(link)}
     app.querySelectorAll("[data-difficulty]").forEach(button=>button.onclick=()=>{difficulty=button.dataset.difficulty;setupSimilar(note)});
     const label=document.createElement("label");label.className="wrong-reason";label.textContent="세부 유형";const select=document.createElement("select");select.id="similarSubtype";select.innerHTML='<option value="">추천 · 원래 유형 우선</option>'+types.map(type=>'<option value="'+esc(type)+'">'+esc(type)+'</option>').join("");select.value=subtype;select.onchange=()=>{subtype=select.value};label.append(select);document.getElementById("similarStart").before(label);
     document.getElementById("similarStart").onclick=()=>{const match=window.similarQuestion(note,difficulty,subtype);grade=String(note.grade);trackKey=match.key;questions=[match.question];index=0;correct=0;answers=[];window.GameScratch.reset();studyDate=today;runOwner=owner();runSlot=slot();runId=crypto.randomUUID();active=true;renderQuestion()};
@@ -261,6 +264,7 @@
     grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):(pref.grade||"1");
     trackKey=params.get("subject")||pref.track||"common1";
     if(!tracks[trackKey]||!tracks[trackKey].grades.includes(grade))trackKey=Object.keys(tracks).find(key=>tracks[key].grades.includes(grade));
+    window.StudyJourney.get(grade,trackKey);
     if(practiceMode){setupPractice();return}
     if(similarMode){
       setupSimilar(window.WrongNotes.all().find(row=>row.id===reviewId));return;

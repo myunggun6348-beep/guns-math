@@ -2,6 +2,8 @@
 (function(){
   "use strict";
   const app=document.getElementById("wrongApp"),store=window.WrongNotes;
+  const params=new URLSearchParams(location.search),journeyMode=params.get('journey')==='1';
+  function journey(){let pref={};try{pref=JSON.parse(localStorage.getItem('math-home-profile-v1')||'{}')||{}}catch{}return window.StudyJourney.get(params.get('grade')||pref.grade,params.get('subject')||pref.track)}
   let filter=new URLSearchParams(location.search).get("view")||"active",conceptFilter="";
   if(!["due","active","mastered","all"].includes(filter))filter="active";
   const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -24,12 +26,15 @@
   }
   function draw(){
     const counts=store.count(),all=store.all();
+    const progress=journey();
     let items=filter==="due"?all.filter(store.due):filter==="active"?all.filter(x=>!x.mastered):filter==="mastered"?all.filter(x=>x.mastered):all;
     if(conceptFilter)items=items.filter(x=>noteKey(x)===conceptFilter);
+    if(journeyMode&&progress)items=all.filter(note=>progress.noteIds.includes(note.id));
     const selected=store.stats().find(x=>x.key===conceptFilter);
     const summary='<div class="wrong-summary"><div class="wrong-stat"><b>'+counts.active+'</b><span>복습 필요</span></div><div class="wrong-stat"><b>'+counts.mastered+'</b><span>복습 완료</span></div><div class="wrong-stat"><b>'+counts.all+'</b><span>전체 기록</span></div></div>';
     const tools='<div class="wrong-tools"><div><div class="wrong-tabs"><button class="wrong-tab '+(filter==="active"?"on":"")+'" data-filter="active">복습 필요</button><button class="wrong-tab '+(filter==="mastered"?"on":"")+'" data-filter="mastered">복습 완료</button><button class="wrong-tab '+(filter==="all"?"on":"")+'" data-filter="all">전체</button></div>'+(selected?'<button class="concept-filter-clear" id="clearConcept">'+esc(selected.name)+'만 보는 중 ×</button>':'')+'</div>'+(counts.mastered?'<button class="wrong-clear" id="clearMastered">완료 기록 정리</button>':'')+'</div>';
-    app.innerHTML=dashboard()+summary+tools+(items.length?'<div class="wrong-list">'+items.map(card).join("")+'</div>':empty(selected));
+    app.innerHTML='<div id="wrongJourney">'+window.StudyJourney.view(progress)+'</div><div'+(journeyMode&&progress?' hidden':'')+'>'+dashboard()+summary+tools+'</div>'+(journeyMode&&progress?'<p>오늘 정한 복습 '+progress.noteIds.length+'문제입니다. 정답 여부와 별도로 제출한 활동을 완료 표시해요. <a href="wrong-notes.html">전체 오답 보기 →</a></p>':'')+(items.length?'<div class="wrong-list" id="journeyReviewList">'+items.map(card).join("")+'</div>':empty(selected));
+    if(journeyMode&&progress?.next?.id==='review'){const link=app.querySelector('#wrongJourney .journey-actions a');link.href='#journeyReviewList';link.textContent='아래 복습 문제부터 풀기 →'}
     const dueTab=document.createElement("button");dueTab.type="button";dueTab.className="wrong-tab"+(filter==="due"?" on":"");dueTab.dataset.filter="due";dueTab.textContent="오늘 복습 "+counts.due+"문제";app.querySelector(".wrong-tabs").prepend(dueTab);
     app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered)return;const label=document.createElement("p");label.className="retry-status";label.textContent=note.reviewStage?"복습 확인 "+note.reviewStage+"/4 · "+(store.due(note)?"오늘 다시 풀 차례":dateText(note.nextReviewAt)+" 다시 확인"):"다시 맞힌 뒤 1일·3일·7일 간격으로 확인합니다.";element.querySelector(".wrong-card-top").after(label)});
     app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered||note.reviewStage>0)element.querySelector(".wrong-card-actions").insertAdjacentHTML("afterbegin",similarLink(note))});
@@ -78,6 +83,13 @@
       const accepted=Array.isArray(note.acceptedAnswers)&&note.acceptedAnswers.length?note.acceptedAnswers:[note.correctAnswer];const ok=accepted.some(answer=>norm(answerValue)===norm(answer));
       const before=store.all().find(x=>x.id===id);
       if(!store.attempt(id,ok,answerValue)){status.textContent="풀이 기록을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.";return}
+      const progress=journey();document.getElementById('wrongJourney').innerHTML=window.StudyJourney.view(progress);
+      slot.querySelector('.journey-step')?.remove();
+      if(progress)slot.insertAdjacentHTML('beforeend','<div class="journey-step">'+window.StudyJourney.view(progress)+'</div>');
+      if(journeyMode&&progress?.next?.id==='review'){
+        const nextId=progress.noteIds.find(noteId=>!progress.results.some(r=>r.id==='review-'+noteId));
+        if(nextId){const link=slot.querySelector('.journey-step .journey-actions a');link.href='#retry-'+nextId;link.textContent='다음 복습 문제 풀기 →';link.onclick=event=>{event.preventDefault();app.querySelector('[data-retry="'+nextId+'"]').click();document.getElementById('retry-'+nextId).scrollIntoView({block:'center'})}}
+      }
       slot.querySelector(".retry-submit").disabled=true;
       if(ok){
         const saved=store.all().find(x=>x.id===id),box=slot.querySelector('.retry-box');status.textContent=saved.mastered?"정답입니다. 마지막 확인을 마쳐 복습 완료했습니다.":"정답입니다. "+dateText(saved.nextReviewAt)+"에 다시 확인하세요.";status.className="retry-status correct";
@@ -92,5 +104,6 @@
   }
   window.addEventListener("wrong-work-message",event=>toast(event.detail));
   window.addEventListener("student-sync-applied",draw);
+  let pageAccount='';window.addEventListener('student-account-change',()=>{const state=window.StudentSync.getState(),key=state.ready?(state.student?.id||'guest'):'pending';if(key!==pageAccount){pageAccount=key;draw()}});
   draw();
 })();
