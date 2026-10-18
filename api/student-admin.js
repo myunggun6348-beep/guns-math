@@ -3,10 +3,10 @@ const { passwordMatches } = require("./_admin-auth");
 const crypto=require("crypto");
 const {reviewSummary}=require('../assets/study-state');
 const {summary:diagnosticSummary,weeklyPlan}=require('../assets/diagnostic-analysis');
+const {teacherSummary}=require('../assets/study-journey');
 const {새PIN문제,digest}=require("./_student-auth");
 
 function input(req) { return typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {}); }
-function koreaDate() { return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date()); }
 function rate(row) {
   const attempts = Number(row?.attempts) || 0, correct = Number(row?.correct) || 0;
   return attempts ? Math.round(correct / attempts * 100) : 0;
@@ -51,7 +51,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ok:true,id});
     }
     if(received.action&&received.action!=="list")return res.status(400).json({error:"지원하지 않는 작업입니다."});
-    const keys = await accountIds(), today = koreaDate(), students = [],reviewNow=Date.now(),weekAgo=reviewNow-7*86400000,classConcepts=new Map();
+    const keys = await accountIds(),reviewNow=Date.now(),today=new Date(reviewNow+9*3600000).toISOString().slice(0,10),students = [],weekAgo=reviewNow-7*86400000,classConcepts=new Map();
     for (const key of keys) {
       const id = key.slice("student:account:".length);
       const [accountRaw, dataRaw] = await Promise.all([명령("GET", key), 명령("GET", `student:data:${id}`)]);
@@ -67,7 +67,8 @@ module.exports = async (req, res) => {
       const totalCorrect = records.reduce((sum, row) => sum + (Number(row.correct) || 0), 0);
       const grade=String(data.profile?.grade||data.pref?.grade||""),className=String(data.profile?.className||""),groupKey=grade&&className?`${grade}-${className}`:"unset";
       const diagnostics=diagnosticSummary(data.profile,reviewNow,stats,notes),trackKey=String(data.profile?.track||data.pref?.track||'');
-      const lastAt=newest(recent?.finishedAt,...stats.map(row=>row.lastAt),...notes.map(note=>note.masteredAt||note.lastWrongAt||note.createdAt),...diagnostics.map(row=>row.completedAt));
+      const dailyJourneys=teacherSummary(data.journeys,notes,reviewNow),journeyComplete=dailyJourneys.length>0&&dailyJourneys.every(row=>row.done),journeyRemaining=dailyJourneys.some(row=>!row.done),journeyNoRecord=dailyJourneys.length===0;
+      const lastAt=newest(recent?.finishedAt,...stats.map(row=>row.lastAt),...notes.map(note=>note.masteredAt||note.lastWrongAt||note.createdAt),...diagnostics.map(row=>row.completedAt),...dailyJourneys.map(row=>row.lastAt));
       const notStarted=!lastAt&&records.length===0&&!stats.some(row=>Number(row.attempts)>0)&&notes.length===0;
       const inactive7=Date.parse(account.createdAt)<weekAgo&&(!lastAt||Date.parse(lastAt)<weekAgo);
       const concepts=classConcepts.get(groupKey)||new Map(),seen=new Set();
@@ -82,7 +83,7 @@ module.exports = async (req, res) => {
         studyCount: records.length, todayDone: todayRecords.length > 0, todayScore: todayRecords.length ? Math.max(...todayRecords.map(row => Number(row.correct) || 0)) : null,
         average: totalQuestions ? Math.round(totalCorrect / totalQuestions * 100) : null, activeWrong: notes.filter(note => !note.mastered).length, mastered: notes.filter(note => note.mastered).length,
         weakest: weak ? { name: weak.name || "기타", rate: rate(weak), attempts: Number(weak.attempts) || 0 } : null,
-        analysis:studyAnalysis(notes,stats),review:reviewSummary(notes,reviewNow),diagnostics,weeklyPlan:weeklyPlan({grade,track:trackKey,diagnostics,notes,now:reviewNow}),
+        analysis:studyAnalysis(notes,stats),review:reviewSummary(notes,reviewNow),diagnostics,weeklyPlan:weeklyPlan({grade,track:trackKey,diagnostics,notes,now:reviewNow}),dailyJourneys,journeyComplete,journeyRemaining,journeyNoRecord,
       });
     }
     students.sort((a, b) => String(b.lastAt).localeCompare(String(a.lastAt)) || a.id.localeCompare(b.id));
@@ -103,7 +104,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       generatedAt: new Date().toISOString(),
       summary: { total: students.length, active7: students.filter(s => Date.parse(s.lastAt) >= weekAgo).length, today: students.filter(s => s.todayDone).length, activeWrong: students.reduce((sum, s) => sum + s.activeWrong, 0),inactive7:students.filter(s=>s.inactive7).length,notStarted:students.filter(s=>s.notStarted).length },
-      classes, students,
+      journeySummary:{date:today,complete:students.filter(s=>s.journeyComplete).length,remaining:students.filter(s=>s.journeyRemaining).length,noRecord:students.filter(s=>s.journeyNoRecord).length},classes, students,
     });
   } catch (error) {
     console.error("student admin error", error);
