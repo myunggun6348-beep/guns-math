@@ -72,11 +72,19 @@
   }
   function openReset(student){
     if(resetting)return;
-    resetDialog.innerHTML='<div class="student-account-card"><h2>학생 비밀번호 초기화</h2><p><b>'+esc(student.name||student.id)+'</b> · '+esc(student.id)+'<br>새 숫자 비밀번호를 학생에게 직접 알려 주세요. 기존 로그인은 해제되며 학습 기록은 유지됩니다.</p><form id="studentResetForm" class="student-account-form"><label>새 비밀번호<input name="pin" type="password" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="12" pattern="[0-9]+" required placeholder="숫자 6~12자리"></label><label>새 비밀번호 다시 입력<input name="confirm" type="password" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="12" pattern="[0-9]+" required></label><p class="student-account-error" role="status"></p><button class="btn btn-primary" type="submit">비밀번호 초기화</button><button type="button" class="student-secondary-action" id="cancelReset">취소</button></form></div>';
+    resetDialog.innerHTML='<div class="student-account-card"><h2>학생 비밀번호 초기화</h2><p><b>'+esc(student.name||student.id)+'</b> · '+esc(student.id)+'<br>새 숫자 비밀번호를 학생에게 직접 알려 주세요. 기존 로그인은 해제되며 학습 기록은 유지됩니다.</p><div class="student-reset-rules" id="studentResetRules"><b>새 비밀번호 입력 조건</b><ul><li><strong>숫자(0~9)만 6~12자리</strong> 입력하세요.</li><li>영문·한글·특수문자·공백은 사용할 수 없습니다.</li><li>같은 숫자만 반복하거나 123456·654321처럼 연속된 숫자는 사용할 수 없습니다.</li></ul></div><form id="studentResetForm" class="student-account-form" novalidate><label>새 비밀번호<input name="pin" type="password" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="12" pattern="[0-9]+" required placeholder="숫자만 6~12자리" title="숫자(0~9)만 6~12자리 입력하세요." aria-describedby="studentResetRules studentResetError"></label><label>새 비밀번호 다시 입력<input name="confirm" type="password" inputmode="numeric" autocomplete="new-password" minlength="6" maxlength="12" pattern="[0-9]+" required placeholder="위 비밀번호를 똑같이 다시 입력" title="위에서 입력한 숫자 비밀번호를 똑같이 다시 입력하세요." aria-describedby="studentResetRules studentResetError"></label><p class="student-account-error" id="studentResetError" role="status" aria-live="polite"></p><button class="btn btn-primary" type="submit">비밀번호 초기화</button><button type="button" class="student-secondary-action" id="cancelReset">취소</button></form></div>';
     const form=resetDialog.querySelector("form"),status=form.querySelector('[role="status"]');
+    const invalid=(input,message)=>{status.textContent=message;input.setAttribute('aria-invalid','true');input.focus()};
+    form.addEventListener('input',()=>{status.textContent='';form.elements.pin.removeAttribute('aria-invalid');form.elements.confirm.removeAttribute('aria-invalid')});
     resetDialog.querySelector("#cancelReset").onclick=()=>resetDialog.close();
     form.onsubmit=async event=>{
-      event.preventDefault();if(form.elements.pin.value!==form.elements.confirm.value){status.textContent="두 비밀번호가 서로 다릅니다.";return}
+      event.preventDefault();if(resetting)return;
+      const pin=form.elements.pin,confirm=form.elements.confirm;
+      if(!pin.value){invalid(pin,'새 비밀번호를 입력해 주세요. 숫자만 6~12자리입니다.');return}
+      if(!/^[0-9]+$/.test(pin.value)){invalid(pin,'숫자(0~9)만 입력해 주세요. 영문·한글·특수문자·공백은 사용할 수 없습니다.');return}
+      if(pin.value.length<6||pin.value.length>12){invalid(pin,'비밀번호는 숫자 6~12자리로 입력해 주세요.');return}
+      if(!confirm.value){invalid(confirm,'확인을 위해 위 비밀번호를 똑같이 다시 입력해 주세요.');return}
+      if(pin.value!==confirm.value){invalid(confirm,'두 비밀번호가 서로 다릅니다. 위 비밀번호를 똑같이 다시 입력해 주세요.');return}
       const submit=form.querySelector('[type="submit"]'),cancel=resetDialog.querySelector("#cancelReset");resetting=true;submit.disabled=true;cancel.disabled=true;status.textContent="";
       try{
         const response=await fetch("/api/student-admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reset-password",password:window.선생님암호?.()||"",id:student.id,newPin:form.elements.pin.value})}),data=await response.json().catch(()=>({}));

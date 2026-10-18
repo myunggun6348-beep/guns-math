@@ -64,6 +64,11 @@ const server=http.createServer((req,res)=>{
       await page.locator('.student-daily-journey > summary').click();assert.match(await page.locator('.student-daily-journey').innerText(),/미접속, 동기화 지연/);assert.equal(await page.locator('.student-daily-journey progress').count(),0);
       await page.locator('#학생검색').fill('student01');
       await page.locator(".student-reset-button").click();await page.waitForSelector("#studentResetForm");
+      assert.match(await page.locator('#studentResetRules').innerText(),/숫자\(0~9\)만 6~12자리/);assert.match(await page.locator('#studentResetRules').innerText(),/영문·한글·특수문자·공백/);assert.match(await page.locator('#studentResetRules').innerText(),/반복.*연속/);
+      const invalidBefore=resetRequests.length;
+      for(const [value,message] of [['',/새 비밀번호를 입력/],['abc1234',/숫자\(0~9\)만 입력/],['123 789',/공백은 사용할 수 없습니다/],['48392',/6~12자리/]]){await page.locator('#studentResetForm [name="pin"]').fill(value);await page.locator('#studentResetForm [type="submit"]').click();assert.match(await page.locator('#studentResetError').innerText(),message);assert.equal(await page.locator('#studentResetForm [name="pin"]').getAttribute('aria-invalid'),'true');assert.equal(resetRequests.length,invalidBefore,'잘못된 형식이 서버로 전송됨')}
+      await page.locator('#studentResetForm [name="pin"]').fill('483927');await page.locator('#studentResetForm [type="submit"]').click();assert.match(await page.locator('#studentResetError').innerText(),/똑같이 다시 입력/);assert.equal(await page.locator('#studentResetForm [name="confirm"]').getAttribute('aria-invalid'),'true');assert.equal(resetRequests.length,invalidBefore);
+      await page.locator('.student-account-dialog').screenshot({path:path.join(root,'artifacts',`teacher-reset-rules-${viewport.width}.png`)});
       await page.locator('#studentResetForm [name="pin"]').fill("483927");await page.locator('#studentResetForm [name="confirm"]').fill("483928");
       const before=resetRequests.length;await page.locator('#studentResetForm [type="submit"]').click();assert.match(await page.locator("#studentResetForm [role=status]").innerText(),/서로 다릅니다/);assert.equal(resetRequests.length,before);
       await page.locator('#studentResetForm [name="confirm"]').fill("483927");await page.locator('#studentResetForm [type="submit"]').click();
