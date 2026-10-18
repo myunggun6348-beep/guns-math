@@ -14,11 +14,14 @@ context.window=context;context.dispatchEvent=()=>{};context.StudentSync={canUseL
 for(const name of ['study-state.js','today-data.js','wrong-notes-store.js','study-journey.js'])vm.runInContext(fs.readFileSync(path.join(root,'assets',name),'utf8'),context);
 const get=()=>context.StudyJourney.get('1','common1'),note={source:'today',sourceKey:'common1',grade:'1',conceptId:'poly',conceptName:'다항식',prompt:'x+1=2',type:'text',correctAnswer:'1'};
 context.WrongNotes.record(note,false);let journey=get();assert.equal(journey.tasks.length,3);assert.equal(journey.completed,0,'오답 생성은 재풀이 제출이 아님');const original=JSON.parse(values.get('math-study-journeys-v1'));
+assert.doesNotMatch(context.StudyJourney.view(journey),/class="journey-achievement"/,'학습 전 성과 카드 표시');
 context.WrongNotes.record({...note,prompt:'new wrong'},false);journey=get();assert.equal(journey.noteIds.length,1,'새 오답으로 하루 분량이 늘어남');
 context.WrongNotes.attempt(journey.noteIds[0],false,'2');journey=get();assert.equal(journey.completed,1);assert.equal(journey.tasks[0].results[0].correct,0,'틀린 재풀이도 제출한 활동이며 정답과 구분');
 values.set('today-study-records',JSON.stringify([{date,grade:'1',track:'common1',correct:3,total:5,finishedAt:new Clock().toISOString(),weakConcepts:['eq']} ]));journey=get();assert.equal(journey.completed,2);
 context.WrongNotes.record({...note,source:'similar',hintsUsed:2,prompt:'practice wrong'},false);journey=get();assert.equal(journey.done,true);assert.equal(journey.tasks[2].results[0].hints,2);assert.deepEqual(Array.from(journey.weakConcepts).sort(),['eq','poly']);
+const beforeCard=new Map(values),card=context.StudyJourney.view(journey);assert.match(card,/오늘의 성과/);assert.match(card,/data-achievement="activities">3\/3/);assert.match(card,/data-achievement="submitted">7</);assert.match(card,/data-achievement="correct">3</);assert.match(card,/힌트 사용 · 2단계/);assert.match(card,/활동별 첫 제출 기준/);assert.deepEqual(values,beforeCard,'카드 표시로 기록 변경');
 context.WrongNotes.record({...note,source:'similar',hintsUsed:0,prompt:'practice correct'},true);assert.equal(get().tasks[2].results[0].correct,0,'같은 날 추가 풀이가 첫 제출 결과를 바꿈');
+assert.match(context.StudyJourney.view(get()),/data-achievement="correct">3</,'추가 연습으로 성과 카드 첫 제출 결과를 바꿈');
 const old=values.get('math-study-journeys-v1');signedIn=false;assert.equal(get(),null);assert.equal(values.get('math-study-journeys-v1'),old);signedIn=true;blocked=true;assert.equal(get(),null);blocked=false;
 assert.equal(context.StudyJourney.get('1','toString'),null);assert.equal(context.StudyJourney.get('2','common1'),null);
 now=Date.parse('2026-10-18T15:00:00Z');journey=get();assert.equal(journey.date,'2026-10-19');assert.equal(journey.completed,0,'한국 자정에 전날 활동이 새 하루 완료로 집계됨');assert.equal(JSON.parse(values.get('math-study-journeys-v1')).length,2);
@@ -26,6 +29,8 @@ fail=true;now+=86400000;journey=get();assert.equal(journey.saved,false);assert.m
 // Reopening a completed day keeps completion even after note/event cleanup or a retake.
 now=Date.parse('2026-10-18T04:00:00Z');values.set('math-concept-stats-v1','{}');values.set('math-wrong-notes-v1','[]');values.set('today-study-records','[]');assert.equal(get().done,true);
 const future={...original[0],noteIds:[],results:[{...result('daily',5),at:'2026-10-18T14:00:00Z'}]};values.set('math-study-journeys-v1',JSON.stringify([future]));assert.equal(get().completed,0,'미래 완료 기록을 표시함');
+assert.doesNotMatch(context.StudyJourney.view(get()),/class="journey-achievement"/);
+const shared=require('../assets/study-journey'),excluded=shared.summarize({...plan,noteIds:['removed'],results:[result('daily',5),result('practice-poly')]},[],Date.parse('2026-10-18T04:00:00Z')),excludedCard=shared.view(excluded);assert.equal(excluded.done,true);assert.match(excludedCard,/data-achievement="submitted">6</);assert.match(excludedCard,/data-achievement="correct">6</);assert.match(excludedCard,/1문제는 제외/,'삭제된 문제를 성과로 가산');
 assert.equal(get().tasks.length,2,'복습이 없으면 두 활동만 안내');
 for(const [track,meta] of Object.entries(context.TODAY_TRACKS))for(const grade of meta.grades){const row=context.StudyJourney.get(grade,track);assert.ok(row);assert.ok(meta.questions.some(q=>q.concept===row.conceptId));assert.equal(row.tasks.length,2);assert.equal(row.completed,0)}
 console.log('하루 학습 검사 통과: 고정 분량·실제 제출/정답 구분·힌트·재접속·두 기기 병합·새 오답 분리·한국 자정·과목/계정 보호·오류 재시도·기존 복습 일정 유지');
