@@ -10,7 +10,7 @@
   const bankQuestions=new Map();
   function plan(ids,reason,count){
     const names=[...new Set(ids)].map(id=>window.TODAY_CONCEPTS?.[id]?.name).filter(Boolean);if(!names.length)return '';
-    return '<div class="home-learning-plan"><p class="home-plan-concepts">'+names.map(esc).join(' · ')+'</p><p class="home-plan-reason">'+esc(reason)+'</p><span class="home-plan-time">'+(count>0?'예상 약 '+count+'분 · 풀이 속도에 따라 달라요':'결과 확인만 남았어요')+'</span></div>';
+    return '<div class="home-learning-plan"><p class="home-plan-concepts">'+names.map(esc).join(' · ')+'</p><p class="home-plan-reason">'+esc(reason)+'</p><span class="home-plan-time">'+(count>0?'이 활동 약 '+count+'분 · 풀이 속도에 따라 달라요':'결과 확인만 남았어요')+'</span></div>';
   }
   function weeklyPlanView(value,journey){
     if(!value)return '';
@@ -110,6 +110,7 @@
   }
 
   function render(){
+    const expanded=new Set([...root.querySelectorAll('details[open] > summary')].map(el=>el.textContent));
     const account=window.StudentSync?.getState();root.hidden=false;
     if(account&&!account.ready){root.innerHTML='<div class="home-personal-shell"><p role="status">내 계정을 확인하고 있어요…</p></div>';return}
     if(window.StudentSync?.canUseLocal?.()===false){root.innerHTML='<div class="home-personal-shell"><p role="alert">'+esc(account?.error||'계정 기록을 준비하지 못했습니다. 다시 불러와 주세요.')+'</p><button type="button" class="btn btn-primary" id="retryAccount">기록 다시 불러오기</button></div>';root.querySelector('button').onclick=()=>account?.signedIn?window.StudentSync.sync():window.StudentSync.start();return}
@@ -127,9 +128,10 @@
     const wrong=window.WrongNotes?.count?.()||{active:0,due:0,mastered:0};
     const greeting=profile.name?esc(profile.name)+"님, 오늘도 한 걸음씩":"오늘의 수학 공부";
     const journey=window.StudyJourney.get(profile.grade,profile.track),review=wrong.due>0;
+    const stage=pending?'in-progress':journey?.done?'complete':journey?.results.length||journey?.completed?'in-progress':'before';
     const actionHref=pending?pending.href:journey?(journey.next?.href||'#homeJourney'):review?'wrong-notes.html?view=due':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
     const actionTitle=pending?'풀던 문제 이어하기':journey?(journey.done?'오늘 할 공부를 마쳤어요':journey.next.title):review?'오늘 복습할 '+wrong.due+'문제 풀기':today?'오늘의 5문제 다시 풀기':'오늘의 5문제 풀기';
-    const actionDescription=pending?pending.description:journey?(journey.done?'오늘의 결과를 확인하고 편하게 마무리하세요.':journey.completed+' / '+journey.tasks.length+'활동 완료 · 오늘 남은 학습 약 '+journey.remainingMinutes+'분'):review?'복습할 날짜가 된 문제를 먼저 확인해 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
+    const actionDescription=pending?pending.description:journey?(stage==='before'?'오늘 '+journey.tasks.length+'활동 · 전체 약 '+journey.remainingMinutes+'분':journey.next?.id==='review'?esc(journey.next.detail):'남은 활동을 하나씩 이어가세요.'):review?'복습할 날짜가 된 문제를 먼저 확인해 보세요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
     const dueNotes=review?window.WrongNotes.all().filter(window.WrongNotes.due):[];
     const learning=pending?pending.plan:journey?.done?'':journey?.next?.id==='practice'?plan([journey.conceptId],'오늘 정한 개념을 한 문제로 더 확인해요.',2):journey?.next?.id==='daily'?dailyPlan(today):review?plan(dueNotes.filter(note=>!journey||journey.noteIds.includes(note.id)).map(note=>note.conceptId),'오늘 정한 오답을 다시 풀어 개념을 확인해요.',journey?journey.noteIds.length*2:dueNotes.length):dailyPlan(today);
     const recovered=window.StudentSync&&!window.StudentSync.getState().ready?[]:window.WrongNotes.recentReviews(),completed=recovered.filter(note=>note.mastered&&note.reviewStage===4).length;
@@ -141,13 +143,17 @@
     const diagnostic=window.LearningDiagnostic.read(profile.grade,profile.track),diagnosticSummary=diagnostic?'<p>최근 진단 · 정답 '+diagnostic.answers.filter(a=>a.correct).length+' · 다시 확인 '+diagnostic.answers.filter(a=>!a.correct&&!a.skipped).length+' · 미학습 '+diagnostic.answers.filter(a=>a.skipped).length+'</p><p>다시 확인할 개념: '+([...new Set(diagnostic.answers.filter(a=>!a.correct&&!a.skipped).map(a=>window.TODAY_CONCEPTS[a.concept].name))].map(esc).join(' · ')||'없음')+'</p>':'';
     const next=window.LearningDiagnostic.recommendation(profile.grade,profile.track),level={basic:'기초',standard:'표준',challenge:'도전'};
     const nextView=next?'<section class="learning-next"><h3>다음 추천 학습 · '+esc(next.name)+'</h3><p>'+esc(next.reason)+'</p><a class="home-start-link" href="'+esc(next.review?'wrong-notes.html?view=due':next.unlearned?next.mapHref:next.practiceHref)+'">'+(next.review?'오답 먼저 복습하기':next.unlearned?'개념부터 살펴보기':level[next.level]+' 1문항 풀기')+' →</a>'+(next.unlearned?'<a class="home-start-link" href="'+esc(next.practiceHref)+'">배웠다면 기초 1문항 →</a>':'')+'</section>':'';
+    const action='<a class="home-main-action" href="'+esc(actionHref)+'"><span>'+(stage==='before'?'학습 전':'학습 중')+'</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':stage==='before'?'시작하기':'다음 활동')+' →</b></a>';
+    const homeJourney=pending&&(pending.grade!==profile.grade||pending.track!==profile.track)?null:journey;
+    const primary=homeJourney?window.StudyJourney.view(homeJourney,true,{stage,action}):'<section class="home-learning-stage" data-home-stage="'+stage+'">'+action+'</section>';
     root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">'+(account?.signedIn?'내 학습 홈':'체험 학습 · 이 브라우저에 저장')+'</span><h2>'+greeting+'</h2><p>고'+profile.grade+' 과정 · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학습 설정</button></div>'+
-      '<a class="home-main-action" href="'+actionHref+'"><span>'+(journey?.done&&!pending?'오늘의 마무리':'지금 할 공부')+'</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':journey?.done?'결과 보기':'시작하기')+' →</b></a>'+
-      '<div id="homeJourney">'+window.StudyJourney.view(journey,true)+'</div>'+
+      '<div id="homeJourney">'+primary+'</div>'+
+      '<details class="home-learning-records" id="homeLearningRecords"><summary>학습 기록 보기</summary>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>'+(journey?.done?'추가로 복습할 문제':'오늘 복습할 문제')+' <b>'+wrong.due+'문제</b></span><span>전체 미완료 오답 <b>'+wrong.active+'문제</b></span></div>'+
-      growth+weekView+(account?.signedIn?weeklyPlanView(window.LearningDiagnostic.weeklyPlan(profile.grade,profile.track),journey)+'<details class="review-weekly"><summary>나의 학습 진단'+(next?' · 추천 학습':'')+'</summary>'+diagnosticSummary+nextView+'<p>5문항으로 기본 개념을 확인해요. 오늘의 학습 점수와 오답 기록에는 포함하지 않습니다.</p><a class="home-start-link" href="today.html?diagnostic=1&grade='+profile.grade+'&subject='+encodeURIComponent(profile.track)+'">'+(diagnostic?'진단 다시하기':'학습 진단 시작')+' →</a></details>':'')+'</div>';
+      growth+weekView+'</details>'+(account?.signedIn?weeklyPlanView(window.LearningDiagnostic.weeklyPlan(profile.grade,profile.track),journey)+'<details class="review-weekly"><summary>나의 학습 진단'+(next?' · 추천 학습':'')+'</summary>'+diagnosticSummary+nextView+'<p>5문항으로 기본 개념을 확인해요. 오늘의 학습 점수와 오답 기록에는 포함하지 않습니다.</p><a class="home-start-link" href="today.html?diagnostic=1&grade='+profile.grade+'&subject='+encodeURIComponent(profile.track)+'">'+(diagnostic?'진단 다시하기':'학습 진단 시작')+' →</a></details>':'')+'</div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
-    if(new URLSearchParams(location.search).get('weekly')==='review')root.querySelector('#homeReviewWeekly').open=true;
+    root.querySelectorAll('details').forEach(el=>{if(expanded.has(el.querySelector(':scope > summary')?.textContent))el.open=true});
+    if(new URLSearchParams(location.search).get('weekly')==='review'){root.querySelector('#homeLearningRecords').open=true;root.querySelector('#homeReviewWeekly').open=true}
   }
   window.addEventListener("wrong-notes-change",render);
   window.addEventListener("student-account-change",()=>{profile=initial();render()});

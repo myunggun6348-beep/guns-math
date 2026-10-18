@@ -41,6 +41,14 @@
 .home-page .home-main-action > b { grid-column: 2; grid-row: 1 / 4; align-self: center; margin: 0; padding: 14px 20px; border-radius: 10px; background: var(--home-accent); color: var(--home-card); font-size: 14px; white-space: nowrap; }
 .home-page .home-main-action:hover { border-color: var(--home-accent); }
 .home-page .home-main-action:hover b { transform: none; }
+.home-page .home-learning-stage{margin:0 0 16px;padding:28px;border:1px solid var(--home-border);border-radius:20px;background:var(--home-card);box-shadow:0 5px 22px #20304705}
+.home-page .home-learning-stage .home-main-action{min-height:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+.home-stage-progress{margin-top:20px;padding-top:15px;border-top:1px solid var(--home-border);font-size:12px;color:var(--home-muted)}.home-stage-progress progress{margin:12px 0}
+.home-stage-details>summary,.home-learning-records>summary{min-height:44px;padding:12px 0;font-size:13px;font-weight:650;cursor:pointer}.home-stage-details{margin-top:10px}
+.home-page .home-learning-stage.is-complete>.journey-achievement{margin:14px 0 0;padding:0;border:0;border-radius:0;background:transparent}.home-stage-label{display:inline-block;padding:5px 9px;border-radius:6px;background:#eaf3ef;color:#2a5c48;font-size:12px;font-weight:650}
+.home-page .home-learning-stage.is-complete .journey-achievement-stats>div{background:var(--surface-soft)}
+.home-learning-records{padding:0 4px;border-bottom:1px solid var(--home-border)}.home-page .home-learning-records .home-study-summary{margin-top:8px}.home-learning-records>summary{padding:16px 0}.home-page .home-learning-stage .home-main-action:focus-visible{outline-offset:8px}
+.theme-dark .home-stage-label{background:#243e35;color:#b5ddc8}@media(max-width:650px){.home-page .home-learning-stage{padding:22px;border-radius:16px}}
 .home-learning-plan { grid-column: 1; min-width: 0; padding-top: 12px; border-top: 1px solid var(--home-border); }
 .home-learning-plan p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
 .home-plan-concepts { font-size: 14px; font-weight: 650; }
