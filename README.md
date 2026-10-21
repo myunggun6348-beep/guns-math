@@ -116,6 +116,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-admin-password.cjs` | 선생님 방 암호 — 바꾸기·여벌 열쇠·되돌리기 (인터넷 필요 없음) |
 | `node scripts\check-phone.cjs` | 휴대폰 3종 — 가로 넘침·누르기 작은 단추·아이폰 확대·콘솔 오류 |
 | `node scripts\check-hidden.cjs` | 숨긴 칸이 정말 숨겨졌는지 (전체 15쪽) |
+| `node scripts\check-buttons.cjs` | 주 단추가 모든 쪽에서 같은 검정 알약인지 (밝은·어두운 화면) |
 | `node scripts\check-escape-entry.cjs` | 수학 탈출 들어가는 길 — 혼자 오면 단추 하나, 링크로 오면 이름만 |
 | `node scripts\verify-exam-library.cjs` | 진짜 브라우저로 자료실을 열어 확인 (먼저 `폰으로 보기.bat` 으로 서버를 켜 둘 것) |
 
@@ -290,6 +291,24 @@ chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
 안에서 들어간다 — 게임이 홈과 게임 목록 두 군데로 나뉘어 보이면 안 되기 때문이다.
 대신 `check-home-portal` 이 게임 목록에 수학 탈출이 실제로 있는지 따로 확인한다
 (양쪽에서 빠지면 아무도 못 가는 쪽이 된다).
+
+### 단추 — 규칙은 둘뿐이다
+
+값은 `assets/style.css` 맨 위 `--btn-*` 에 **한 번만** 적는다. 페이지마다 단추를
+따로 그리다 보니 한때 모양이 32가지였다(남색·검정·파랑, 알약·둥근 네모·각진 네모,
+높이 34~81px).
+
+| 역할 | 모양 | 쓰는 곳 |
+|---|---|---|
+| 주 단추 | **검정 알약** (어두운 화면에서는 흰 알약) | "누르면 뭔가 일어남". 한 화면에 하나 |
+| 보조 단추 | 흰 알약 + 가는 테두리 | 그 밖의 행동 |
+
+크기는 보통(48px)·작게(40px) 두 가지뿐. 새 단추는 `btn btn-primary` /
+`btn btn-secondary` 를 쓰거나, 따로 그려야 하면 `--btn-*` 값을 가져다 쓴다.
+`scripts/check-buttons.cjs` 가 어긋난 주 단추를 잡는다.
+
+홈은 한때 남색 테마(배경·글자·테두리)를 따로 갖고 있어서 다른 사이트처럼 보였다.
+`assets/home.css` 의 `--home-*` 는 이제 사이트 공통 색을 가리킨다.
 
 ### 홈 가운데 — 찾기는 뺐다 (`index.html`)
 

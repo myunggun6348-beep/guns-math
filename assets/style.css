@@ -56,6 +56,22 @@
   --r-lg: 24px;
   --r-xl: 32px;
   --r-pill: 50px;
+
+  /* --- 단추 — 사이트 전체가 이 값만 씁니다 ---
+     예전에는 페이지마다 자기 단추를 따로 그려서 모양이 32가지였습니다
+     (남색·검정·파랑, 알약·둥근 네모·각진 네모, 높이 34~81px).
+     규칙은 둘뿐입니다.
+       주 단추   = 검정 알약. "누르면 뭔가 일어남". 한 화면에 하나.
+       보조 단추 = 흰 알약 + 가는 테두리. 그 밖의 행동.
+     크기는 보통(48)과 작게(40) 두 가지만. 다크 모드에서는 --ink·--canvas 가
+     뒤집히므로 따로 적지 않아도 흰 알약 + 검은 글씨가 됩니다. */
+  --btn-h: 48px;
+  --btn-h-sm: 40px;
+  --btn-pad: 0 22px;
+  --btn-pad-sm: 0 16px;
+  --btn-font: 16px;
+  --btn-font-sm: 14px;
+  --btn-weight: 650;
   --r-full: 9999px;
 
   /* --- 서체 --- */
@@ -224,10 +240,12 @@ img, svg { max-width: 100%; }
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--xs);
+  min-height: var(--btn-h);
   font-family: inherit;
-  font-size: 20px;
-  font-weight: 480;
+  font-size: var(--btn-font);
+  font-weight: var(--btn-weight);
   line-height: 1.4;
   letter-spacing: -0.005em;
   text-decoration: none;
@@ -239,15 +257,17 @@ img, svg { max-width: 100%; }
 .btn:hover { transform: scale(1.03); }
 .btn:active { transform: scale(0.99); }
 
+/* 주 단추는 --primary(다크에서 파랑)가 아니라 --ink 를 씁니다. 페이지 단추들이
+   전부 --ink 라서, 다크 모드에서 이것만 파랗게 떠 있었습니다. */
 .btn-primary {
-  background: var(--primary);
-  color: var(--on-primary);
-  padding: 10px 20px;
+  background: var(--ink);
+  color: var(--canvas);
+  padding: var(--btn-pad);
 }
 .btn-secondary {
   background: var(--canvas);
   color: var(--ink);
-  padding: 8px 18px 10px;
+  padding: var(--btn-pad);
   /* 흰 캔버스 위에서도 알약 모양이 보이도록 헤어라인 한 줄 */
   box-shadow: inset 0 0 0 1px var(--hairline);
 }
@@ -2030,7 +2050,7 @@ html.theme-dark .canvas-host {
 .home-start-card h2 { margin: 0 0 10px; font-size: clamp(26px, 3.4vw, 36px); }
 .home-start-card .home-setup-lead { margin-bottom: 24px; }
 .home-start-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
-.home-start-go { min-width: 240px; min-height: 52px; justify-content: center; font-size: 17px; text-decoration: none; }
+.home-start-go { min-width: 240px; min-height: var(--btn-h); justify-content: center; font-size: var(--btn-font); text-decoration: none; }
 .home-start-browse {
   display: inline-flex; align-items: center; min-height: 44px;
   color: var(--ink); font-size: 15px; font-weight: 650; text-decoration: underline; text-underline-offset: 4px;

@@ -1,23 +1,17 @@
+/* 홈만 남색 테마(배경·글자·테두리)를 따로 갖고 있어서 다른 사이트처럼 보였습니다.
+   이름은 그대로 두고 값만 사이트 공통 색에 잇습니다. */
 .home-page {
-  --home-accent: #253858;
-  --home-card: #fff;
-  --home-muted: #596879;
-  --home-border: #dce5e7;
-  background: #f5f8f8;
-  color: #203047;
+  --home-accent: var(--ink);
+  --home-card: var(--canvas);
+  --home-muted: var(--muted);
+  --home-border: var(--hairline);
+  background: var(--canvas);
+  color: var(--ink);
 }
 @media(max-width:400px){
   .home-page .brand{font-size:15px;gap:6px}.home-page .brand svg{width:20px;height:20px}
   .home-page .nav .wrap{gap:8px}.home-page .nav-right{gap:6px}
   .home-page .student-account-button{width:54px;padding:0 6px}.home-page .home-nav-more{font-size:12px}
-}
-.theme-dark .home-page {
-  --home-accent: #bfd5ff;
-  --home-card: #182332;
-  --home-muted: #a8b8ca;
-  --home-border: #344457;
-  background: #101923;
-  color: #e7eef7;
 }
 .home-page .nav { background: var(--home-card); border-bottom: 1px solid var(--home-border); }
 .home-page .home-personal { padding: 38px 0 22px; background: transparent; }
@@ -38,7 +32,7 @@
 .home-page .home-main-action > span { grid-column: 1; width: fit-content; padding: 5px 9px; border-radius: 6px; background: #eaf3ef; color: #2a5c48; font-size: 12px; opacity: 1; }
 .home-page .home-main-action > strong { grid-column: 1; font-size: clamp(23px,2.8vw,30px); line-height: 1.4; letter-spacing: -.025em; }
 .home-page .home-main-action > small { grid-column: 1; color: var(--home-muted); font-size: 14px; line-height: 1.6; opacity: 1; }
-.home-page .home-main-action > b { grid-column: 2; grid-row: 1 / 4; align-self: center; margin: 0; padding: 14px 20px; border-radius: 10px; background: var(--home-accent); color: var(--home-card); font-size: 14px; white-space: nowrap; }
+.home-page .home-main-action > b { grid-column: 2; grid-row: 1 / 4; align-self: center; margin: 0; padding: 0 22px; min-height: var(--btn-h); display: inline-flex; align-items: center; border-radius: var(--r-pill); background: var(--ink); color: var(--canvas); font-size: var(--btn-font); font-weight: var(--btn-weight); font-size: 14px; white-space: nowrap; }
 .home-page .home-main-action:hover { border-color: var(--home-accent); }
 .home-page .home-main-action:hover b { transform: none; }
 .home-page .home-learning-stage{margin:0 0 16px;padding:28px;border:1px solid var(--home-border);border-radius:20px;background:var(--home-card);box-shadow:0 5px 22px #20304705}
@@ -64,10 +58,10 @@
 .home-page .home-start-card,
 .home-page .home-fork-card { border-color: var(--home-border); background: var(--home-card); border-radius: 20px; }
 .home-page .home-start-card h2 { font-size: clamp(25px,3vw,34px); letter-spacing: -.03em; }
-.home-page .home-start-go { border-radius: 10px; background: var(--home-accent); color: var(--home-card); }
+.home-page .home-start-go { border-radius: var(--r-pill); background: var(--ink); color: var(--canvas); }
 .home-page .home-entry-benefits{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;font-size:12px;color:var(--home-muted)}
 .home-page .home-entry-benefits span{padding:5px 9px;border:1px solid var(--home-border);border-radius:6px}
-.home-page .home-start-actions .home-join-btn{min-height:52px;padding:12px 22px;border-radius:10px;border-color:var(--home-border);color:inherit;font-size:15px}
+.home-page .home-start-actions .home-join-btn{min-height:var(--btn-h);padding:var(--btn-pad);border-radius:var(--r-pill);border-color:var(--hairline);color:inherit;font-size:var(--btn-font)}
 .home-page .home-setup-lead { color: var(--home-muted); opacity: 1; }
 .home-page .home-join { border-color: var(--home-border); }
 .home-page .footer { background: transparent; color: var(--home-muted); border-top: 1px solid var(--home-border); }
@@ -93,7 +87,7 @@
   .home-page .home-start-go { min-width: 0; }
   .home-page .home-start-card.has-art .home-start-art{display:none}
   .home-page .home-start-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .home-page .home-start-actions .home-start-go,.home-page .home-start-actions .home-join-btn{width:100%;min-width:0;font-size:15px}
+  .home-page .home-start-actions .home-start-go,.home-page .home-start-actions .home-join-btn{width:100%;min-width:0}
   .home-page .home-more .home-start { padding-top: 20px; }
   .home-page .home-more .home-start-head { padding-top: 0; margin-bottom: 14px; }
   .home-page .home-more .home-start-head .headline { font-size: 20px; }
