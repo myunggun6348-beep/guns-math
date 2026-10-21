@@ -520,33 +520,32 @@ img, svg { max-width: 100%; }
   display: block;
   margin-bottom: var(--xs);
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.62);
+  font-weight: 650;
+  color: var(--ink);
 }
 .qform input,
 .qform textarea {
   width: 100%;
   font-family: inherit;
   font-size: 16px;
-  color: var(--inverse-ink);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--r-md);
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
   padding: 12px 14px;
   resize: vertical;
 }
-.qform input::placeholder,
-.qform textarea::placeholder { color: rgba(255, 255, 255, 0.36); }
 .qform input:focus,
-.qform textarea:focus { outline: none; border-color: var(--block-lime); }
+.qform textarea:focus { outline: none; border-color: var(--ink); }
 .qform button:disabled { opacity: 0.5; cursor: default; }
 /* "보내는 중…" / "고맙습니다" 등. 자리를 미리 잡아 둬서 문구가 나타날 때
    버튼이나 그 아래 내용이 밀리지 않게 한다 */
-.qform-status { margin: var(--sm) 0 0; min-height: 1.2em; color: rgba(255, 255, 255, 0.72); }
+.qform-status { margin: var(--sm) 0 0; min-height: 1.2em; color: var(--muted); }
 
 /* --- 아직 답이 없는 질문 ---
    A 배지 자리를 비워 두면 학생이 '무시당했나' 싶어진다. 답이 없다는 걸
    말로 적어 두되, 답글보다는 흐리게 해서 둘이 헷갈리지 않게 한다. */
-.qa-wait { font-size: 14px; color: rgba(255, 255, 255, 0.45); }
+.qa-wait { font-size: 14px; color: var(--muted); }
 
 /* 최근에 답이 달린 질문 표 — block-navy(늘 어두운 면) 위에 놓이므로
    연두 바탕에 검은 글씨로 고정한다 */
@@ -568,8 +567,8 @@ img, svg { max-width: 100%; }
   margin-left: var(--xs);
   padding: 2px 8px 3px;
   border-radius: var(--r-full);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
-  color: rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  color: var(--ink);
   font-size: 11.5px;
   font-weight: 600;
 }
@@ -589,30 +588,32 @@ img, svg { max-width: 100%; }
   margin-top: var(--md);
 }
 .qa-tab {
+  display: inline-flex; align-items: center;
+  min-height: var(--chip-h);
+  padding: var(--chip-pad);
   font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.72);
-  background: rgba(255, 255, 255, 0.08);
-  border: 0;
-  border-radius: var(--r-full);
-  padding: 6px 14px;
+  font-size: var(--chip-font);
+  font-weight: var(--chip-weight);
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
   cursor: pointer;
 }
-.qa-tab:hover { background: rgba(255, 255, 255, 0.16); }
-.qa-tab.on { background: var(--block-lime); color: #14150f; font-weight: 650; }
+.qa-tab:hover { border-color: var(--ink); }
+.qa-tab.on { border-color: var(--chip-on); background: var(--chip-on); color: var(--chip-on-ink); }
 .qa-forget {
   margin-left: auto;
   font-family: inherit;
   font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--muted);
   background: none;
   border: 0;
   padding: 0;
   text-decoration: underline;
   cursor: pointer;
 }
-.qa-forget:hover { color: rgba(255, 255, 255, 0.75); }
+.qa-forget:hover { color: var(--ink); }
 
 /* =========================================================
    특징 3칸
@@ -1950,17 +1951,17 @@ html.theme-dark .canvas-host {
 @media(max-width:470px){.submission-row{grid-template-columns:1fr}.submission-main,.submission-actions{grid-column:1}.submission-actions{grid-row:auto}}
 
 .qtype{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 var(--lg);padding:0;border:0}
-.qtype legend{width:100%;margin-bottom:var(--xs);font-size:14px;color:rgba(255,255,255,.62)}
+.qtype legend{width:100%;margin-bottom:var(--xs);font-size:14px;font-weight:650;color:var(--ink)}
 .qtype label{cursor:pointer}.qtype input{position:absolute;opacity:0;pointer-events:none}
-.qtype span{display:block;padding:8px 13px;border:1px solid rgba(255,255,255,.22);border-radius:var(--r-full);font-size:14px;color:rgba(255,255,255,.75)}
-.qtype input:checked+span{background:var(--block-lime);border-color:var(--block-lime);color:#111;font-weight:650}
-.qtype input:focus-visible+span{outline:2px solid #fff;outline-offset:2px}
+.qtype span{display:flex;align-items:center;min-height:var(--chip-h);padding:var(--chip-pad);border:1px solid var(--hairline);border-radius:var(--r-pill);background:var(--canvas);font-size:var(--chip-font);font-weight:var(--chip-weight);color:var(--ink)}
+.qtype input:checked+span{background:var(--chip-on);border-color:var(--chip-on);color:var(--chip-on-ink)}
+.qtype input:focus-visible+span{outline:2px solid var(--ink);outline-offset:2px}
 .qform input[type="file"]{padding:8px;font-size:14px}
 .qphoto-preview{position:relative;margin-top:10px;width:min(100%,320px)}
 .qphoto-preview[hidden]{display:none}.qphoto-preview img{display:block;width:100%;max-height:260px;object-fit:contain;border-radius:var(--r-md);background:#fff}
 .qphoto-preview button{position:absolute;right:8px;top:8px;padding:5px 9px;border:0;border-radius:var(--r-full);background:#111;color:#fff;font:600 12px inherit;cursor:pointer}
-.qphoto-help{margin:7px 0 0;color:rgba(255,255,255,.5)}
-.qa-kind{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:var(--r-full);background:rgba(255,255,255,.12);font-size:11px;color:rgba(255,255,255,.8)}
+.qphoto-help{margin:7px 0 0;color:var(--muted)}
+.qa-kind{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:var(--r-full);background:var(--surface-soft);font-size:11px;color:var(--ink)}
 .qa-photo-link{display:block;width:min(100%,360px);margin-top:12px}.qa-photo-link img{display:block;width:100%;max-height:300px;object-fit:contain;border-radius:var(--r-md);background:#fff}
 .adm-q-image{display:block;width:min(100%,420px);margin:0 0 var(--md)}.adm-q-image img{display:block;width:100%;max-height:360px;object-fit:contain;border:1px solid var(--hairline);border-radius:var(--r-md);background:#fff}
 .library-grade-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 var(--lg)}
@@ -2306,3 +2307,20 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
   html .page-head h1 { font-size: 19px; }
   html .page-head p { display: none; }
 }
+
+
+/* =========================================================
+   질문 쪽 — 쓰는 칸은 밝은 카드, 목록은 그 아래 바탕
+   예전에는 쓰는 칸과 목록이 짙은 남색 판 하나에 같이 들어 있었습니다.
+   ========================================================= */
+.ask-card { padding: 28px; border: 1px solid var(--hairline); border-radius: 20px; background: var(--surface-soft); }
+.ask-lead { margin: 0; max-width: 34em; color: var(--muted); }
+.ask-card .qform { margin-top: var(--lg); }
+.ask-list { margin-top: 48px; }
+.ask-list-title { margin: 0; font-size: 22px; font-weight: 700; }
+@media (max-width: 650px) {
+  .ask-card { padding: 18px; border-radius: 16px; }
+  .ask-list { margin-top: 32px; }
+}
+/* 질문 목록 구분선 — 기본 .rows 는 검정 반투명이라 어두운 화면에서 사라집니다 */
+.ask-list .rows, .ask-list .rows > article { border-color: var(--hairline); }

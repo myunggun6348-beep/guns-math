@@ -70,8 +70,10 @@
 <section class="section" id="ask" style="padding-top: var(--xxl);">
   <div class="wrap">
     <header class="page-head g-play"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 10.5h6"/></svg></span><div class="page-head-text"><h1>수학 질문, 편하게 남기세요</h1><p><b>문제 풀이</b>, <b>수학 공부법</b>, <b>사이트·수업 제안</b> 중 하나를 골라 남겨 주세요. 풀이가 막힌 문제는 사진을 함께 올릴 수 있습니다.</p></div></header>
-    <div class="block block-navy">
-      <p class="body-sm" style="margin: 0 0 4px; max-width: 30em; opacity: .8;">
+    <!-- 예전에는 여기가 짙은 남색 판(block-navy)이었습니다. 폰에서 첫 화면이 거의
+         남색으로 덮였고, 입력칸 글씨도 흐렸습니다. 다른 쪽과 같은 밝은 카드로 둡니다. -->
+    <div class="ask-card">
+      <p class="body-sm ask-lead">
         이름도, 로그인도 필요 없습니다. 완전히 익명입니다.
         남긴 질문은 아래에 바로 올라가고, 답도 이 자리에서 함께 볼 수 있습니다.
       </p>
@@ -102,16 +104,18 @@
           </div>
           <p class="caption qphoto-help">큰 사진은 글자가 읽히는 크기로 자동 압축합니다.</p>
         </div>
-        <button type="submit" class="btn btn-secondary">질문 남기기 →</button>
+        <button type="submit" class="btn btn-primary">질문 남기기 →</button>
         <p class="qform-status caption" role="status" aria-live="polite"></p>
       </form>
+    </div>
 
-      <h2 class="caption" style="margin: 40px 0 0;">받은 질문과 답</h2>
+    <section class="ask-list">
+      <h2 class="ask-list-title">받은 질문과 답</h2>
       <!-- 무엇만 볼지 고르는 줄. '내 질문'은 이 브라우저에서 남긴 것이
            있을 때만 나타납니다 (assets 아닌 아래 script 가 만듭니다) -->
       <div class="qa-tabs" id="qFilter"></div>
       <div class="rows" id="qna"></div>
-    </div>
+    </section>
   </div>
 </section>
 

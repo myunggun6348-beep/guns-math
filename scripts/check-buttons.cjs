@@ -66,7 +66,7 @@ const 쪽들 = ["index.html", "games.html", "files.html", "library.html", "map.h
           }
           /* 칩: 켜지면 라임, 모두 알약, 높이 40. 검정 칩은 주 단추와 헷갈립니다. */
           const 라임 = (() => { const t = document.createElement("i"); t.style.color = "var(--chip-on)"; document.body.append(t); const v = getComputedStyle(t).color; t.remove(); return v; })();
-          const 칩들 = ".library-grade-tabs button,.cmap-grade button,.cmap-relation button,.grade-tab,.pick-button,.wrong-tab";
+          const 칩들 = ".library-grade-tabs button,.cmap-grade button,.cmap-relation button,.grade-tab,.pick-button,.wrong-tab,.qa-tab";
           for (const el of document.querySelectorAll(칩들)) {
             if (!el.checkVisibility()) continue;
             const c = getComputedStyle(el), 높이 = Math.round(el.getBoundingClientRect().height);
