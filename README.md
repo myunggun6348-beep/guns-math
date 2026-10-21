@@ -117,6 +117,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-phone.cjs` | 휴대폰 3종 — 가로 넘침·누르기 작은 단추·아이폰 확대·콘솔 오류 |
 | `node scripts\check-hidden.cjs` | 숨긴 칸이 정말 숨겨졌는지 (전체 15쪽) |
 | `node scripts\check-buttons.cjs` | 주 단추는 같은 검정 알약, 칩은 같은 알약·켜지면 라임인지 (밝은·어두운 화면) |
+| `node scripts\check-games.cjs` | 미니게임·수학 탈출이 같은 게임 틀인지 (수학 탈출을 한 판 돌려 봄) |
 | `node scripts\check-wrong-notes.cjs` | 오답노트 — 빈 때는 한 덩이, 기록이 생기면 숫자·탭·카드 그대로 |
 | `node scripts\check-escape-entry.cjs` | 수학 탈출 들어가는 길 — 혼자 오면 단추 하나, 링크로 오면 이름만 |
 | `node scripts\verify-exam-library.cjs` | 진짜 브라우저로 자료실을 열어 확인 (먼저 `폰으로 보기.bat` 으로 서버를 켜 둘 것) |
@@ -315,6 +316,14 @@ chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
 **페이지 머리 띠**(`.page-head`)는 모든 쪽이 같은 것을 쓴다(수학 탈출도). 공부 쪽은
 라임, 찾기 쪽은 라일락, 놀이·질문 쪽은 코랄. 폰에서는 제목 한 줄만 남기고 설명을
 감춘다 — 설명까지 넣으면 띠 하나가 첫 화면의 1/4 을 차지했다(62~134px → 모두 54px).
+
+**게임은 하나의 틀을 쓴다.** 미니게임(`quick-game.html`)과 수학 탈출(`escape.html`)은
+둘 다 `← 게임 목록` → 머리 띠(`.page-head`, 코랄) → 카드 셋으로 되어 있다:
+시작(`.start-panel`) · 진행(`.quiz-panel`) · 결과(`.result-panel`). 이 규칙들은
+`style.css` 끝의 '게임 틀' 한 곳에만 있다. 진행 카드 맨 위 한 줄에 '어디까지 ·
+남은 시간', 그 아래 진행 막대와 점수. 한때 미니게임은 큰 라임 카드에 가는 58px
+제목, 수학 탈출은 가운데 54px 시계·50px 방 이름·90px '탈출 성공!' 이라 둘이 서로
+다른 화면이었다. `scripts/check-games.cjs` 가 수학 탈출을 한 판 돌려 확인한다.
 
 **짙은 색 판을 쓰지 않는다.** 질문 쪽은 한때 쓰는 칸과 목록을 짙은 남색 판에 넣어서
 폰 첫 화면이 거의 남색이었고 입력칸 글씨가 흐렸다. 이제 쓰는 칸은 밝은 카드

@@ -150,12 +150,12 @@
   function renderGame() {
     if (run.done) return renderFinish();
     show("#game"); $("#gameCourse").textContent = `${run.course} · ${difficultyLabel(run.difficulty)}`; $("#studentLabel").textContent = run.student; $("#score").textContent = run.score;
-    $("#progressBar").style.width = `${run.solved.length / 6 * 100}%`; $("#roomNumber").textContent = ["첫", "두", "세"][run.stage] + " 번째 방"; $("#roomTitle").textContent = roomNames[run.stage]; $("#roomStory").textContent = roomStories[run.stage];
+    $("#progressBar").style.width = `${run.solved.length / 6 * 100}%`; $("#roomNumber").textContent = `방 ${run.stage + 1} / 3`; $("#roomTitle").textContent = roomNames[run.stage]; $("#roomStory").textContent = roomStories[run.stage];
     const root = $("#clueGrid"); root.replaceChildren();
     run.questions.slice(run.stage * 2, run.stage * 2 + 2).forEach((question, index) => {
       const locked = index === 1 && !run.solved.includes(question.id - 1), solved = run.solved.includes(question.id);
       const button = document.createElement("button"); button.type = "button"; button.className = `clue-card${locked ? " locked" : ""}${solved ? " solved" : ""}`; button.disabled = locked;
-      const num = document.createElement("span"); num.className = "num"; num.textContent = `CLUE ${question.id + 1} · ${index ? "보너스" : "필수"}`;
+      const num = document.createElement("span"); num.className = "num"; num.textContent = `단서 ${question.id + 1} · ${index ? "보너스" : "필수"}`;
       const state = document.createElement("span"); state.className = "state"; state.textContent = solved ? "해결 ✓" : locked ? "잠김" : "열기 →";
       const title = document.createElement("h3"); title.textContent = question.subject; const desc = document.createElement("p"); desc.textContent = `${question.topic} · ${question.format === "choice" ? "오지선다형" : "주관식"} · ${question.points}점`;
       button.append(num, state, title, desc); button.addEventListener("click", () => openQuestion(question)); root.append(button);
@@ -168,14 +168,19 @@
   }
   function startTimer() {
     clearInterval(timerId); const tick = async () => {
-      if (!run) return; const left = run.deadline - Date.now(); $("#timer").textContent = formatTime(left); $("#timer").classList.toggle("urgent", left <= 60000);
+      if (!run) return; const left = run.deadline - Date.now(); $("#timer").textContent = formatTime(left); $("#timer").classList.toggle("warning", left <= 60000);
       if (left <= 0) { clearInterval(timerId); try { const data = await call("finish", { id: run.id, playerKey }); run = data.run; renderFinish(); } catch (error) { errorMessage(error); } }
     }; tick(); timerId = setInterval(tick, 1000);
   }
   async function advance() { try { const data = await call("next", { id: run.id, playerKey }); run = data.run; renderGame(); } catch (error) { errorMessage(error); } }
   function renderFinish() {
     clearInterval(timerId); show("#finish"); localStorage.removeItem("mathEscapeRun");
-    $("#finishTitle").textContent = run.escaped ? "탈출 성공!" : "도전 종료"; $("#finishText").textContent = run.escaped ? "세 개의 교실을 모두 통과했습니다." : `푼 단서 ${run.solved.length}개. 다음 도전에서 기록을 넘어 보세요.`; $("#finalScore").textContent = run.score;
+    $("#finishTag").textContent = run.escaped ? "탈출 완료" : "시간 종료";
+    $("#finishTitle").textContent = run.escaped ? "탈출 성공!" : "도전 종료";
+    // 결과 숫자 셋 — 미니게임 결과 카드(정답·풀이 시간·최고 기록)와 같은 자리
+    $("#finishSolved").textContent = `${run.solved.length}/6`;
+    $("#finishTime").textContent = formatTime(Math.min(Date.now(), run.deadline) - run.started);
+    $("#finishHints").textContent = run.hints.length; $("#finishText").textContent = run.escaped ? "세 개의 교실을 모두 통과했습니다." : `푼 단서 ${run.solved.length}개. 다음 도전에서 기록을 넘어 보세요.`; $("#finalScore").textContent = run.score;
   }
   $("#restart").addEventListener("click", () => { run = null; show("#lobby"); });
   $("#leaveGame").addEventListener("click", () => { clearInterval(timerId); show("#lobby"); toast("이 기기에서 이어할 수 있도록 저장했습니다."); });

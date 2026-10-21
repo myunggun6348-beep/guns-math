@@ -41,6 +41,7 @@
      넘어간 것처럼 보였습니다. 게임 쪽이라 코랄(g-play) 입니다. -->
 <main id="top" class="section escape-page">
   <div class="wrap">
+    <a class="back-link" href="games.html">← 게임 목록</a>
     <header class="page-head g-play"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></span><div class="page-head-text"><h1>수학 탈출</h1><p>마지막 종이 울리기 전에 — 문제를 풀어 교실 세 개를 빠져나가는 15분 방탈출. 태블릿 펜으로 풀이를 남길 수 있습니다.</p></div></header>
   </div>
 
@@ -50,7 +51,7 @@
          학생에게는 그게 벽이었습니다. 정하고 싶은 사람만 펼치면 됩니다.
          이름은 '선생님이 준 코드' 쪽에만 둡니다 — 코드 없이 혼자 하면 기록이
          선생님에게 가지 않아서 이름을 받을 이유가 없습니다. -->
-    <div id="studentPanel" class="setup-panel">
+    <div id="studentPanel" class="setup-panel start-panel">
       <div><h2 id="studentPanelTitle">혼자 해 보기</h2><p class="muted" id="studentPanelLead">아무것도 정하지 않아도 바로 시작합니다.</p></div>
       <form id="studentForm" class="form-grid">
         <button class="escape-btn primary wide" type="submit" id="startButton">바로 시작 →</button>
@@ -67,7 +68,7 @@
       </form>
       <p class="escape-teacher-line"><button type="button" class="text-btn" data-role="teacher">선생님이신가요? 수업 운영 →</button></p>
     </div>
-    <div id="teacherPanel" class="setup-panel" hidden>
+    <div id="teacherPanel" class="setup-panel start-panel" hidden>
       <div><button type="button" class="text-btn" data-role="student">← 학생 화면으로</button><h2>수업 운영</h2><p class="muted">선생님 방과 같은 암호를 씁니다.</p></div>
       <form id="teacherForm" class="form-grid">
         <label>관리자 비밀번호<input name="password" required type="password" autocomplete="current-password" /></label>
@@ -81,14 +82,35 @@
   </section>
 
   <section class="wrap game" id="game" hidden>
-    <div class="game-top"><div><span class="status-chip" id="gameCourse"></span><strong id="studentLabel"></strong></div><div class="timer" id="timer" aria-live="polite">15:00</div><div class="score"><span>점수</span><strong id="score">0</strong></div></div>
-    <div class="progress-track"><span id="progressBar"></span></div>
-    <div class="room-heading"><span id="roomNumber">첫 번째 방</span><h2 id="roomTitle">복도의 자물쇠</h2><p id="roomStory">두 개의 단서를 풀어 다음 문을 여세요.</p></div>
-    <div class="clue-grid" id="clueGrid"></div>
-    <div class="game-actions"><button class="escape-btn" id="leaveGame" type="button">나중에 이어하기</button></div>
+    <!-- 미니게임과 같은 진행 카드(.quiz-panel). 예전에는 가운데 54px 시계, 50px 방
+         이름, 72px 점수를 따로 그려 혼자 다른 화면처럼 보였습니다. -->
+    <section class="quiz-panel">
+      <div class="quiz-top"><span class="progress-label" id="roomNumber">방 1 / 3</span><span class="timer" id="timer" aria-live="polite">15:00</span></div>
+      <div class="progress-track" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="score-line"><span>점수 <b id="score">0</b></span><span id="gameCourse"></span><span id="studentLabel" hidden></span></div>
+      <h2 class="room-title" id="roomTitle">복도의 자물쇠</h2>
+      <p class="room-story" id="roomStory">두 개의 단서를 풀어 다음 문을 여세요.</p>
+      <div class="clue-grid" id="clueGrid"></div>
+      <div class="quiz-actions"><button class="escape-btn" id="leaveGame" type="button">나중에 이어하기</button></div>
+    </section>
   </section>
 
-  <section class="wrap finish" id="finish" hidden><span class="eyebrow">세 교실 모두 통과</span><h2 id="finishTitle">탈출 성공!</h2><p id="finishText"></p><div class="finish-score"><span>최종 점수</span><strong id="finalScore">0</strong></div><button class="escape-btn primary" id="restart" type="button">새로 도전하기</button></section>
+  <!-- 미니게임과 같은 결과 카드(.result-panel). 예전에는 90px '탈출 성공!' 이 화면 가운데를
+       차지했고, 시간이 다 돼 끝나도 '세 교실 모두 통과' 라는 글이 그대로 붙어 있었습니다. -->
+  <section class="wrap finish" id="finish" hidden>
+    <section class="result-panel">
+      <span class="question-tag" id="finishTag">탈출 완료</span>
+      <h2 id="finishTitle">탈출 성공!</h2>
+      <p id="finishText"></p>
+      <div class="result-score"><span id="finalScore">0</span>점</div>
+      <div class="result-grid">
+        <div class="result-stat"><b id="finishSolved">0/6</b><span>푼 단서</span></div>
+        <div class="result-stat"><b id="finishTime">0:00</b><span>걸린 시간</span></div>
+        <div class="result-stat"><b id="finishHints">0</b><span>힌트</span></div>
+      </div>
+      <div class="result-actions"><button class="escape-btn primary" id="restart" type="button">새로 도전하기</button><a class="escape-btn" href="games.html">다른 게임</a></div>
+    </section>
+  </section>
 </main>
 
 <dialog id="questionDialog" class="question-dialog">

@@ -129,10 +129,12 @@
   function norm(value){return String(value).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"")}
   function best(){return Number(localStorage.getItem("quick-game-best-"+key)||0)}
   function hero(){
-    return '<div class="quick-hero"><span class="quick-kicker">'+game.kicker+'</span><h1 class="quick-title">'+game.title+'</h1><p class="quick-desc">'+game.desc+'</p><div class="quick-meta"><span>4분</span><span>매회 5문제</span><span>문제은행 '+game.questions.length+'</span><span>펜 풀이</span><span>즉시 해설</span><span>최고 '+best()+'점</span></div></div>'
+    /* 다른 쪽과 같은 머리 띠. 예전에는 큰 라임 카드에 가늘고 큰 제목(58px)이라
+       수학 탈출·나머지 사이트와 다른 화면처럼 보였습니다. 게임 쪽이라 코랄입니다. */
+    return '<header class="page-head g-play"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h.01M15 9h.01M9 15h.01M15 15h.01"/></svg></span><div class="page-head-text"><h1>'+game.title+'</h1><p>'+game.kicker+' — '+game.desc+'</p></div></header>'
   }
   function intro(){
-    app.innerHTML=hero()+'<div class="start-panel"><h2>준비되면 시작하세요</h2><p>문제마다 답을 한 번 제출할 수 있습니다. 빠르고 정확하게 풀수록 점수가 올라갑니다.</p><ul class="start-list"><li>각 문제에서 태블릿 펜으로 바로 계산</li><li>정답 160점 + 연속 정답 보너스</li><li>오답도 풀이 흔적과 함께 해설 확인</li><li>기록은 이 기기에 자동 저장</li></ul><button class="quick-btn" id="startBtn">게임 시작</button></div>';
+    app.innerHTML=hero()+'<div class="start-panel"><h2>준비되면 시작하세요</h2><div class="quick-meta"><span>4분</span><span>매회 5문제</span><span>문제은행 '+game.questions.length+'</span><span>펜 풀이</span><span>즉시 해설</span><span>최고 '+best()+'점</span></div><p>문제마다 답을 한 번 제출할 수 있습니다. 빠르고 정확하게 풀수록 점수가 올라갑니다.</p><ul class="start-list"><li>각 문제에서 태블릿 펜으로 바로 계산</li><li>정답 160점 + 연속 정답 보너스</li><li>오답도 풀이 흔적과 함께 해설 확인</li><li>기록은 이 기기에 자동 저장</li></ul><button class="quick-btn" id="startBtn">게임 시작</button></div>';
     document.getElementById("startBtn").addEventListener("click",start);
   }
   function start(){

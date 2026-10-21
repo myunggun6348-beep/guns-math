@@ -2324,3 +2324,42 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
 }
 /* 질문 목록 구분선 — 기본 .rows 는 검정 반투명이라 어두운 화면에서 사라집니다 */
 .ask-list .rows, .ask-list .rows > article { border-color: var(--hairline); }
+
+/* =========================================================
+   게임 틀 — 미니게임(quick-game.html)과 수학 탈출(escape.html)이 함께 씁니다
+   예전에는 두 게임이 서로 다른 화면이었습니다. 미니게임은 큰 라임 카드에
+   가는 큰 제목, 수학 탈출은 가운데 54px 시계·50px 방 이름·90px '탈출 성공!'.
+   이제 위는 다른 쪽과 같은 머리 띠(.page-head), 아래는 같은 카드 셋:
+     시작(.start-panel) · 진행(.quiz-panel) · 결과(.result-panel)
+   진행 카드 맨 위 한 줄에 '어디까지 · 남은 시간', 그 아래 진행 막대와 점수.
+   --game-color 는 미니게임마다 다른 강조색(없으면 라임).
+   ========================================================= */
+.back-link { display: inline-flex; margin-bottom: 20px; font-size: 15px; font-weight: 650; text-decoration: none; }
+.start-panel, .quiz-panel, .result-panel {
+  max-width: 900px; margin: 24px auto 0;
+  padding: clamp(22px, 4vw, 38px);
+  border: 1px solid var(--hairline); border-radius: 20px; background: var(--surface-soft);
+}
+.start-panel h2, .result-panel h2 { margin: 0 0 12px; font-size: 26px; }
+.quiz-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.progress-label, .timer { font-size: 15px; font-weight: 700; }
+.timer { font-family: var(--mono); font-size: 18px; }
+.timer.warning { color: #b82424; }
+.progress-track { height: 9px; border-radius: 99px; background: var(--hairline); overflow: hidden; margin-bottom: 20px; }
+.progress-bar { height: 100%; background: var(--game-color, var(--block-lime)); transition: width .25s; }
+.score-line { display: flex; flex-wrap: wrap; gap: 18px; margin: 0 0 20px; font-size: 14px; }
+.question-tag { display: inline-block; padding: 5px 10px; border-radius: 99px; background: var(--game-color, var(--block-lime)); color: #000; font-size: 13px; font-weight: 750; }
+.result-score { margin: 18px 0; font-family: var(--mono); font-size: clamp(40px, 7vw, 64px); line-height: 1; }
+.result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 22px 0; }
+.result-stat { padding: 16px; border-radius: 12px; background: var(--canvas); text-align: center; }
+.result-stat b { display: block; font-size: 24px; }
+.result-stat span { font-size: 13px; }
+.result-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.quiz-actions { display: flex; justify-content: flex-end; margin-top: 24px; }
+@media (max-width: 600px) {
+  .start-panel, .quiz-panel, .result-panel { border-radius: 16px; }
+  .result-grid { grid-template-columns: 1fr; }
+  .result-actions { display: grid; }
+  .quiz-top { align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { .progress-bar { transition: none; } }
