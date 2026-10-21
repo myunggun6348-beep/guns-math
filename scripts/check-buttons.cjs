@@ -9,7 +9,8 @@
    '주 단추'(바탕이 글자색과 같은 꽉 찬 단추)가 전부
      · 알약 모양이고
      · 높이가 48(보통) 또는 40(작게)인지
-   봅니다. 새 페이지를 만들며 단추를 또 따로 그리면 여기서 걸립니다.
+   봅니다. 칩(학년·과목 고르기)은 모두 알약·높이 40, 켜지면 라임인지도 봅니다.
+   새 페이지를 만들며 단추를 또 따로 그리면 여기서 걸립니다.
 
    빼는 것: 늘 같은 색인 색 블록(.block) 안의 단추, 켜진 칩·탭(고르는 것이지 누르면 일어나는 게 아님 — 칩 정리는
    따로 합니다), 풀이 화면의 그리기 도구 줄(도구 상자라 일부러 작음).
@@ -63,6 +64,18 @@ const 쪽들 = ["index.html", "games.html", "files.html", "library.html", "map.h
             if (![40, 48].includes(높이)) 걸린.push(`'${이름}' 높이 ${높이}px (48 또는 40 이어야 합니다)`);
             if (c.color !== 바탕색) 걸린.push(`'${이름}' 글자색이 바탕색과 다릅니다(${c.color})`);
           }
+          /* 칩: 켜지면 라임, 모두 알약, 높이 40. 검정 칩은 주 단추와 헷갈립니다. */
+          const 라임 = (() => { const t = document.createElement("i"); t.style.color = "var(--chip-on)"; document.body.append(t); const v = getComputedStyle(t).color; t.remove(); return v; })();
+          const 칩들 = ".library-grade-tabs button,.cmap-grade button,.cmap-relation button,.grade-tab,.pick-button,.wrong-tab";
+          for (const el of document.querySelectorAll(칩들)) {
+            if (!el.checkVisibility()) continue;
+            const c = getComputedStyle(el), 높이 = Math.round(el.getBoundingClientRect().height);
+            const 이름 = el.textContent.trim().replace(/s+/g, " ").slice(0, 14);
+            본.push("칩:" + 이름);
+            if (parseFloat(c.borderTopLeftRadius) < 20) 걸린.push(`칩 '${이름}' 알약이 아닙니다`);
+            if (높이 !== 40) 걸린.push(`칩 '${이름}' 높이 ${높이}px (40 이어야 합니다)`);
+            if (el.classList.contains("on") && c.backgroundColor !== 라임) 걸린.push(`켜진 칩 '${이름}' 이 라임이 아닙니다(${c.backgroundColor})`);
+          }
           return { 걸린, 본 };
         });
         본수 += 결과.본.length;
@@ -73,5 +86,5 @@ const 쪽들 = ["index.html", "games.html", "files.html", "library.html", "map.h
   } finally { await b.close(); 서버.close(); }
   assert.ok(본수 > 10, "주 단추를 하나도 못 찾았습니다 — 검사가 잘못 짜였을 수 있습니다");
   if (탈.length) { console.log("주 단추가 제각각입니다:\n- " + [...new Set(탈)].join("\n- ")); process.exitCode = 1; }
-  else console.log(`단추 검사 통과: 주 단추 ${본수}개가 밝은·어두운 화면 모두 같은 알약(48 또는 40)`);
+  else console.log(`단추 검사 통과: 주 단추·칩 ${본수}개 — 주 단추는 같은 검정 알약, 켜진 칩은 라임, 밝은·어두운 화면 모두`);
 })().catch(e => { console.error(e); 서버.close(); process.exitCode = 1; });

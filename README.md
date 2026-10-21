@@ -116,7 +116,8 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-admin-password.cjs` | 선생님 방 암호 — 바꾸기·여벌 열쇠·되돌리기 (인터넷 필요 없음) |
 | `node scripts\check-phone.cjs` | 휴대폰 3종 — 가로 넘침·누르기 작은 단추·아이폰 확대·콘솔 오류 |
 | `node scripts\check-hidden.cjs` | 숨긴 칸이 정말 숨겨졌는지 (전체 15쪽) |
-| `node scripts\check-buttons.cjs` | 주 단추가 모든 쪽에서 같은 검정 알약인지 (밝은·어두운 화면) |
+| `node scripts\check-buttons.cjs` | 주 단추는 같은 검정 알약, 칩은 같은 알약·켜지면 라임인지 (밝은·어두운 화면) |
+| `node scripts\check-wrong-notes.cjs` | 오답노트 — 빈 때는 한 덩이, 기록이 생기면 숫자·탭·카드 그대로 |
 | `node scripts\check-escape-entry.cjs` | 수학 탈출 들어가는 길 — 혼자 오면 단추 하나, 링크로 오면 이름만 |
 | `node scripts\verify-exam-library.cjs` | 진짜 브라우저로 자료실을 열어 확인 (먼저 `폰으로 보기.bat` 으로 서버를 켜 둘 것) |
 
@@ -306,6 +307,17 @@ chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
 크기는 보통(48px)·작게(40px) 두 가지뿐. 새 단추는 `btn btn-primary` /
 `btn btn-secondary` 를 쓰거나, 따로 그려야 하면 `--btn-*` 값을 가져다 쓴다.
 `scripts/check-buttons.cjs` 가 어긋난 주 단추를 잡는다.
+
+**칩**(학년·과목처럼 고르는 것)은 `--chip-*` 를 쓴다. 흰 알약 + 가는 테두리,
+높이 40, **켜지면 라임**. 검정은 주 단추의 색이라 칩에 쓰지 않는다 — 한때 개념
+지도·자료실만 켜진 칩이 검정이라 주 단추와 헷갈렸다. 같은 검사가 칩도 본다.
+
+**페이지 머리 띠**(`.page-head`)는 모든 쪽이 같은 것을 쓴다(수학 탈출도). 공부 쪽은
+라임, 찾기 쪽은 라일락, 놀이·질문 쪽은 코랄. 폰에서는 제목 한 줄만 남기고 설명을
+감춘다 — 설명까지 넣으면 띠 하나가 첫 화면의 1/4 을 차지했다(62~134px → 모두 54px).
+
+**빈 화면**은 한 덩이로. 처음 온 학생에게 `0 · 0 · 0` 숫자 카드나 고를 것 없는 탭을
+보여 주지 않는다(오답노트 — `scripts/check-wrong-notes.cjs`).
 
 홈은 한때 남색 테마(배경·글자·테두리)를 따로 갖고 있어서 다른 사이트처럼 보였다.
 `assets/home.css` 의 `--home-*` 는 이제 사이트 공통 색을 가리킨다.

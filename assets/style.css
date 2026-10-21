@@ -72,6 +72,17 @@
   --btn-font: 16px;
   --btn-font-sm: 14px;
   --btn-weight: 650;
+
+  /* --- 칩 (학년·과목처럼 '고르는 것') ---
+     켜지면 라임. 검정은 주 단추('누르면 일어남')의 색이라 칩에 쓰지 않습니다.
+     예전에는 개념 지도·자료실만 켜진 칩이 검정이라 주 단추와 헷갈렸고,
+     높이도 39~64px 로 제각각이었습니다. */
+  --chip-h: 40px;
+  --chip-pad: 0 14px;
+  --chip-font: 14px;
+  --chip-weight: 650;
+  --chip-on: var(--block-lime);
+  --chip-on-ink: #111;
   --r-full: 9999px;
 
   /* --- 서체 --- */
@@ -1953,8 +1964,8 @@ html.theme-dark .canvas-host {
 .qa-photo-link{display:block;width:min(100%,360px);margin-top:12px}.qa-photo-link img{display:block;width:100%;max-height:300px;object-fit:contain;border-radius:var(--r-md);background:#fff}
 .adm-q-image{display:block;width:min(100%,420px);margin:0 0 var(--md)}.adm-q-image img{display:block;width:100%;max-height:360px;object-fit:contain;border:1px solid var(--hairline);border-radius:var(--r-md);background:#fff}
 .library-grade-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 var(--lg)}
-.library-grade-tabs button{padding:9px 15px;border:1px solid var(--hairline);border-radius:var(--r-full);background:var(--canvas);color:var(--ink);font:600 14px inherit;cursor:pointer}
-.library-grade-tabs button:hover{border-color:var(--ink)}.library-grade-tabs button.on{background:var(--block-lime);border-color:var(--block-lime);color:#111}
+.library-grade-tabs button{display:inline-flex;align-items:center;justify-content:center;min-height:var(--chip-h);padding:var(--chip-pad);border:1px solid var(--hairline);border-radius:var(--r-pill);background:var(--canvas);color:var(--ink);font:inherit;font-size:var(--chip-font);font-weight:var(--chip-weight);cursor:pointer}
+.library-grade-tabs button:hover{border-color:var(--ink)}.library-grade-tabs button.on{border-color:var(--chip-on);background:var(--chip-on);color:var(--chip-on-ink)}
 .library-grade-tabs button span{margin-left:5px;opacity:.62;font-family:var(--mono);font-size:12px}
 .card-main{display:flex;flex:1;flex-direction:column;color:inherit;text-decoration:none}
 .card-related{display:flex;gap:7px;margin-top:15px;padding-top:13px;border-top:1px solid var(--hairline)}
@@ -1963,9 +1974,9 @@ html.theme-dark .canvas-host {
 
 .cmap-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
 .cmap-grade,.cmap-relation{display:flex;flex-wrap:wrap;gap:7px}
-.cmap-grade button,.cmap-relation button{min-height:40px;padding:8px 13px;border:1px solid var(--hairline);border-radius:var(--r-full);background:var(--canvas);color:var(--ink);font:600 14px inherit;cursor:pointer}
+.cmap-grade button,.cmap-relation button{display:inline-flex;align-items:center;justify-content:center;min-height:var(--chip-h);padding:var(--chip-pad);border:1px solid var(--hairline);border-radius:var(--r-pill);background:var(--canvas);color:var(--ink);font:inherit;font-size:var(--chip-font);font-weight:var(--chip-weight);cursor:pointer}
 .cmap-grade button:hover,.cmap-relation button:hover{border-color:var(--ink)}
-.cmap-grade button.on,.cmap-relation button.on{border-color:var(--ink);background:var(--ink);color:var(--canvas)}
+.cmap-grade button.on,.cmap-relation button.on{border-color:var(--chip-on);background:var(--chip-on);color:var(--chip-on-ink)}
 .cmap-grade button span{margin-left:4px;opacity:.6;font-family:var(--mono);font-size:11px}
 .cmap-search{flex:0 1 270px}.cmap-search input{width:100%;min-height:42px;padding:9px 13px;border:1px solid var(--hairline);border-radius:var(--r-md);background:var(--canvas);color:var(--ink);font:15px inherit}
 .cmap-search input:focus{outline:2px solid var(--primary);outline-offset:1px}
@@ -2281,3 +2292,17 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
 @media(max-width:450px){.study-journey{padding:17px}.journey-head h3{font-size:18px}.study-journey li{gap:8px}.journey-task-state{white-space:normal;width:40px;flex-shrink:0;text-align:right}.journey-actions{flex-direction:column}.journey-actions a{display:block;width:100%}}
 .journey-achievement{margin:18px 0;padding:20px;border:1px solid #9ebfab;border-radius:14px;background:var(--surface-soft)}.journey-achievement-head{display:flex;align-items:center;gap:12px}.journey-achievement-head>span{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#39795d;color:#fff;font-size:20px}.journey-achievement-head h4{margin:0;font-size:20px;line-height:1.4}.journey-achievement-head p{margin:5px 0 0;font-size:12px;line-height:1.6;color:var(--home-muted,var(--muted))}.journey-achievement-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:20px 0}.journey-achievement-stats>div{min-width:0;padding:12px 8px;border-radius:10px;background:var(--home-card,var(--canvas));text-align:center}.journey-achievement-stats dt{font-size:12px;color:var(--home-muted,var(--muted))}.journey-achievement-stats dd{margin:6px 0 0;font-size:24px;font-weight:750;line-height:1.4}.journey-achievement-stats dd small{margin-left:3px;font-size:11px;font-weight:500}.journey-achievement .journey-reflection{margin:12px 0;padding:0;background:none;font-size:13px}.journey-achievement-hints,.journey-achievement-review{margin:8px 0;font-size:13px;line-height:1.6}.journey-achievement-note{display:block;margin-top:14px;font-size:11px;line-height:1.6;color:var(--home-muted,var(--muted))}.journey-completed-details>summary{min-height:44px;padding:12px 0;cursor:pointer;font-size:13px;font-weight:650}@media(max-width:450px){.journey-achievement{padding:15px}.journey-achievement-stats{gap:5px}.journey-achievement-stats>div{padding:10px 3px}.journey-achievement-stats dt{font-size:11px}.journey-achievement-stats dd{font-size:22px}}
 .study-plan-days{list-style:none;padding:0;margin:16px 0;display:grid;gap:12px}.study-plan-days>li{display:grid;grid-template-columns:88px minmax(0,1fr);gap:12px;padding:14px;border:1px solid var(--hairline);border-radius:12px}.study-plan-date{font-weight:700}.study-plan-date small{display:block;white-space:normal;line-height:1.5}.study-plan-days p{margin:7px 0;font-size:13px;line-height:1.65}.study-plan-days a{display:inline-block;min-height:44px;padding:8px 0}.study-plan-review{margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--hairline)}.student-weekly-plan{grid-column:1/-1;margin:0;border-top:1px solid var(--hairline)}@media(max-width:450px){.study-plan-days>li{grid-template-columns:1fr;gap:8px}.study-plan-date{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}}
+
+/* =========================================================
+   폰에서 페이지 머리 띠는 제목 한 줄만
+   설명 서너 줄이 작은 글씨로 들어가서, 띠 하나가 첫 화면의 1/4 을
+   차지했습니다(자료실·직접 보는 수학). 폰에서는 아이콘 + 제목만 남깁니다.
+   설명은 컴퓨터 화면에서는 그대로 보입니다.
+   ========================================================= */
+@media (max-width: 650px) {
+  .page-head { padding: 10px 14px; gap: 10px; margin-bottom: 14px; }
+  .page-head-icon { width: 34px; height: 34px; border-radius: 9px; }
+  .page-head-icon svg { width: 18px; height: 18px; }
+  html .page-head h1 { font-size: 19px; }
+  html .page-head p { display: none; }
+}

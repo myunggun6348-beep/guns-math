@@ -31,6 +31,16 @@
     if(conceptFilter)items=items.filter(x=>noteKey(x)===conceptFilter);
     if(journeyMode&&progress)items=all.filter(note=>progress.noteIds.includes(note.id));
     const selected=store.stats().find(x=>x.key===conceptFilter);
+    /* 아직 아무 기록이 없을 때는 한 덩이만 보여 줍니다. 예전에는 빈 진단 카드,
+       0·0·0 숫자 카드 셋, 고를 것도 없는 탭 넷, '표시할 문제가 없습니다' 카드를
+       차례로 늘어놓고 '오늘의 학습 시작'을 두 번 보여 줬습니다. 처음 온 학생에게
+       0 을 세 번 보여 줄 이유가 없습니다. */
+    if(!counts.all&&!store.stats().length&&!(journeyMode&&progress)){
+      app.innerHTML='<div id="wrongJourney"></div><div class="wrong-empty wrong-first"><h2>아직 모인 오답이 없습니다</h2>'+
+        '<p>오늘의 학습이나 미니게임에서 틀린 문제가 여기로 저절로 모입니다. 다시 맞힌 문제도 1일·3일·7일 뒤에 한 번 더 확인합니다.</p>'+
+        '<a class="btn btn-primary" href="today.html">오늘의 학습 시작 →</a></div>';
+      return;
+    }
     const summary='<div class="wrong-summary"><div class="wrong-stat"><b>'+counts.active+'</b><span>복습 필요</span></div><div class="wrong-stat"><b>'+counts.mastered+'</b><span>복습 완료</span></div><div class="wrong-stat"><b>'+counts.all+'</b><span>전체 기록</span></div></div>';
     const tools='<div class="wrong-tools"><div><div class="wrong-tabs"><button class="wrong-tab '+(filter==="active"?"on":"")+'" data-filter="active">복습 필요</button><button class="wrong-tab '+(filter==="mastered"?"on":"")+'" data-filter="mastered">복습 완료</button><button class="wrong-tab '+(filter==="all"?"on":"")+'" data-filter="all">전체</button></div>'+(selected?'<button class="concept-filter-clear" id="clearConcept">'+esc(selected.name)+'만 보는 중 ×</button>':'')+'</div>'+(counts.mastered?'<button class="wrong-clear" id="clearMastered">완료 기록 정리</button>':'')+'</div>';
     app.innerHTML='<div id="wrongJourney">'+window.StudyJourney.view(progress)+'</div><div'+(journeyMode&&progress?' hidden':'')+'>'+dashboard()+summary+tools+'</div>'+(journeyMode&&progress?'<p>오늘 정한 복습 '+progress.noteIds.length+'문제입니다. 정답 여부와 별도로 제출한 활동을 완료 표시해요. <a href="wrong-notes.html">전체 오답 보기 →</a></p>':'')+(items.length?'<div class="wrong-list" id="journeyReviewList">'+items.map(card).join("")+'</div>':empty(selected));
