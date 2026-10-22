@@ -31,14 +31,21 @@
     if(conceptFilter)items=items.filter(x=>noteKey(x)===conceptFilter);
     if(journeyMode&&progress)items=all.filter(note=>progress.noteIds.includes(note.id));
     const selected=store.stats().find(x=>x.key===conceptFilter);
-    /* 아직 아무 기록이 없을 때는 한 덩이만 보여 줍니다. 예전에는 빈 진단 카드,
-       0·0·0 숫자 카드 셋, 고를 것도 없는 탭 넷, '표시할 문제가 없습니다' 카드를
-       차례로 늘어놓고 '오늘의 학습 시작'을 두 번 보여 줬습니다. 처음 온 학생에게
-       0 을 세 번 보여 줄 이유가 없습니다. */
-    if(!counts.all&&!store.stats().length&&!(journeyMode&&progress)){
-      app.innerHTML='<div id="wrongJourney"></div><div class="wrong-empty wrong-first"><h2>아직 모인 오답이 없습니다</h2>'+
-        '<p>오늘의 학습이나 미니게임에서 틀린 문제가 여기로 저절로 모입니다. 다시 맞힌 문제도 1일·3일·7일 뒤에 한 번 더 확인합니다.</p>'+
-        '<a class="btn btn-primary" href="today.html">오늘의 학습 시작 →</a></div>';
+    /* 오답이 하나도 없으면 숫자 카드(0·0·0)와 탭(복습 필요·완료·전체)을 보여 주지
+       않습니다. 셋 다 오답을 세고 거르는 것이라 오답이 없으면 0 만 세 번 보이고
+       고를 것도 없습니다. 한 덩이 + '오늘의 학습 시작' 하나면 됩니다.
+       처음에는 '푼 기록도 전혀 없을 때'만 이렇게 했더니, 오늘의 5문제를 다 맞힌
+       학생에게는 여전히 0·0·0 이 나왔습니다. 그래서 '오답이 없을 때'로 넓힙니다.
+       문제를 푼 기록이 있으면 개념별 진단은 그대로 보여 줍니다(진짜 정보라서). */
+    if(!counts.all&&!(journeyMode&&progress)){
+      const 진단있음=store.stats().length>0;
+      app.innerHTML='<div id="wrongJourney">'+window.StudyJourney.view(progress)+'</div>'+(진단있음?dashboard():'')+
+        '<div class="wrong-empty wrong-first"><h2>'+(진단있음?'지금 복습할 오답이 없습니다':'아직 모인 오답이 없습니다')+'</h2>'+
+        '<p>'+(진단있음?'지금까지 푼 문제를 모두 맞혔습니다. 틀린 문제가 생기면 여기로 저절로 모입니다.'
+                     :'오늘의 학습이나 미니게임에서 틀린 문제가 여기로 저절로 모입니다. 다시 맞힌 문제도 1일·3일·7일 뒤에 한 번 더 확인합니다.')+'</p>'+
+        // 오늘의 학습 진행 칸이 떠 있으면 그 안에 다음 단계 단추가 있으므로 하나 더 두지 않습니다
+        (progress?'':'<a class="btn btn-primary" href="today.html">오늘의 학습 시작 →</a>')+'</div>';
+      app.querySelectorAll("[data-concept]").forEach(btn=>btn.addEventListener("click",()=>{conceptFilter=conceptFilter===btn.dataset.concept?"":btn.dataset.concept;draw()}));
       return;
     }
     const summary='<div class="wrong-summary"><div class="wrong-stat"><b>'+counts.active+'</b><span>복습 필요</span></div><div class="wrong-stat"><b>'+counts.mastered+'</b><span>복습 완료</span></div><div class="wrong-stat"><b>'+counts.all+'</b><span>전체 기록</span></div></div>';
