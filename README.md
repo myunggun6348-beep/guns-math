@@ -117,6 +117,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-phone.cjs` | 휴대폰 3종 — 가로 넘침·누르기 작은 단추·아이폰 확대·콘솔 오류 |
 | `node scripts\check-hidden.cjs` | 숨긴 칸이 정말 숨겨졌는지 (전체 15쪽) |
 | `node scripts\check-buttons.cjs` | 주 단추는 같은 검정 알약, 칩은 같은 알약·켜지면 라임인지 (밝은·어두운 화면) |
+| `node scripts\check-page-help.cjs` | 학생 페이지 아홉 곳의 '?' 쓰는 법 — 펼침·접힘·세 줄 이내·위치 |
 | `node scripts\check-games.cjs` | 미니게임·수학 탈출이 같은 게임 틀인지 (수학 탈출을 한 판 돌려 봄) |
 | `node scripts\check-wrong-notes.cjs` | 오답노트 — 빈 때는 한 덩이, 기록이 생기면 숫자·탭·카드 그대로 |
 | `node scripts\check-escape-entry.cjs` | 수학 탈출 들어가는 길 — 혼자 오면 단추 하나, 링크로 오면 이름만 |
@@ -341,6 +342,13 @@ chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
 남은 시간', 그 아래 진행 막대와 점수. 한때 미니게임은 큰 라임 카드에 가는 58px
 제목, 수학 탈출은 가운데 54px 시계·50px 방 이름·90px '탈출 성공!' 이라 둘이 서로
 다른 화면이었다. `scripts/check-games.cjs` 가 수학 탈출을 한 판 돌려 확인한다.
+
+**쓰는 법은 머리 띠 오른쪽 `?` 에 둔다.** 학생 페이지 아홉 곳(오늘의 학습·오답노트·자료실·
+직접 보는 수학·개념 지도·게임·미니게임·수학 탈출·질문)에 같은 모양으로 붙고, 누르면 띠 아래로
+세 줄이 펼쳐진다. 평소엔 접혀 있다 — 안내 창을 처음부터 띄우면 학생들은 읽지 않고 닫는다.
+문구는 `assets/page-help.js` 의 '도움말' 한 곳에만 있다(쪽마다 세 줄 이내, 단추 이름은 화면 그대로).
+홈 '이 사이트에 있는 것'의 한 줄 설명은 '무엇인지'가 아니라 '언제 쓰는지'로 적는다.
+`scripts/check-page-help.cjs` 가 아홉 곳을 컴퓨터·폰으로 열어 펼침·접힘·위치를 본다.
 
 **짙은 색 판을 쓰지 않는다.** 질문 쪽은 한때 쓰는 칸과 목록을 짙은 남색 판에 넣어서
 폰 첫 화면이 거의 남색이었고 입력칸 글씨가 흐렸다. 이제 쓰는 칸은 밝은 카드

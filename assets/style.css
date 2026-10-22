@@ -2360,3 +2360,29 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
   .quiz-top { align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { .progress-bar { transition: none; } }
+
+/* =========================================================
+   페이지 쓰는 법 — 머리 띠 오른쪽 '?' 와 그 아래 펼쳐지는 세 줄 (assets/page-help.js)
+   '?' 는 아이콘 칸과 같은 반투명 흰 바탕이라 띠 색(라임·라일락·코랄)과 어울립니다.
+   ========================================================= */
+.page-help-btn {
+  flex: none; display: grid; place-items: center;
+  width: 40px; height: 40px; margin-left: auto;
+  border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.6); color: #111;
+  font: 700 17px var(--sans); cursor: pointer;
+}
+.page-head-meta + .page-help-btn { margin-left: 12px; }
+.page-help-btn:hover, .page-help-btn[aria-expanded="true"] { background: #fff; }
+.page-help {
+  margin: -12px 0 24px; padding: 16px 20px;
+  border: 1px solid var(--hairline); border-radius: 14px; background: var(--surface-soft);
+  font-size: 14px; line-height: 1.6;
+}
+.page-help-title { display: block; margin-bottom: 6px; font-size: 13px; }
+.page-help ol { margin: 0; padding-left: 20px; }
+.page-help li + li { margin-top: 4px; }
+@media (max-width: 650px) {
+  .page-help { margin: -6px 0 16px; padding: 14px 16px; }
+  /* 폰에서는 날짜 칸(.page-head-meta)을 감추므로 '?' 가 제목 옆에 붙지 않게 오른쪽 끝으로 */
+  .page-head-meta + .page-help-btn { margin-left: auto; }
+}
