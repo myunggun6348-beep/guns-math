@@ -128,7 +128,8 @@ document.querySelectorAll("[data-filter]").forEach(box => box.addEventListener("
 
 /* ---------- 오리기 ---------- */
 const docs = new Map(), pages = new Map();
-const getDoc = url => { if (!docs.has(url)) docs.set(url, pdfjsLib.getDocument({ url }).promise); return docs.get(url); };
+// 받다가 끊기면 기억해 둔 실패를 지워서 다음에 다시 받게 합니다(배포 뒤 시험에서 9문항 중 1문항이 한 번 끊겼습니다)
+const getDoc = url => { if (!docs.has(url)) docs.set(url, pdfjsLib.getDocument({ url }).promise.catch(e => { docs.delete(url); throw e; })); return docs.get(url); };
 const SCALE = 2.2;
 
 async function pageInfo(url, no) {
@@ -216,7 +217,7 @@ async function make() {
   let failed = 0;
   for (const [i, row] of list.entries()) {
     const li = $("wsQ" + i);
-    try { const src = await cut(row, i + 1); li.querySelector(".ws-q-wait").outerHTML = '<img src="' + src + '" alt="' + (i + 1) + '번 문제">'; }
+    try { const src = await cut(row, i + 1).catch(() => cut(row, i + 1)); li.querySelector(".ws-q-wait").outerHTML = '<img src="' + src + '" alt="' + (i + 1) + '번 문제">'; }
     catch { failed++; li.querySelector(".ws-q-wait").textContent = (i + 1) + "번은 원본에서 오리지 못했어요. 출처를 보고 원본을 확인해 주세요."; }
   }
   const btn = $("wsPrint"); btn.disabled = false; btn.textContent = "인쇄 · PDF 저장"; btn.onclick = () => print();
