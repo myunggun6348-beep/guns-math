@@ -20,7 +20,7 @@ async function request(password){const result={};await handler({method:"POST",bo
   try{
     assert.equal((await request("wrong")).code,401);
     const result=await request("attention-test-password");assert.equal(result.code,200);const data=result.data;
-    const review=data.students.find(row=>row.id==='active01').review;assert.equal(review.confirmed,2);assert.equal(review.completed,1);assert.equal(review.due,1);assert.equal(review.active,2);assert.equal(review.days.length,7);assert.equal(review.concepts[0].name,'미분');assert.equal(data.students.find(row=>row.id==='idle0001').review.confirmed,0);assert.equal(JSON.stringify(review).includes('solutionImage'),false);assert.equal(JSON.stringify(review).includes('prompt'),false);
+    const review=data.students.find(row=>row.id==='active01').review;assert.equal(review.confirmed,2);assert.equal(review.completed,2);assert.equal(review.due,1);assert.equal(review.active,1);assert.equal(review.days.length,7);assert.equal(review.concepts[0].name,'미분');assert.equal(data.students.find(row=>row.id==='idle0001').review.confirmed,0);assert.equal(JSON.stringify(review).includes('solutionImage'),false);assert.equal(JSON.stringify(review).includes('prompt'),false);
     assert.equal(data.summary.inactive7,2);assert.equal(data.summary.notStarted,2);
     assert.equal(data.students.find(row=>row.id==="new00001").inactive7,false,"가입 7일 전 학생이 미학습 처리됨");
     assert.equal(data.students.find(row=>row.id==="edge0001").inactive7,false,"정확히 7일 경계의 학습이 빠짐");

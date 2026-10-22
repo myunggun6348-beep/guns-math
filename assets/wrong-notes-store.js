@@ -5,7 +5,7 @@
   function deletions(){try{const value=JSON.parse(localStorage.getItem(DELETED_KEY)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return{}}}
   function operationTime(id){const note=read().find(row=>row.id===id);return new Date(Math.max(Date.now(),Date.parse(window.StudyState.noteStamp(note||{}))||0,Date.parse(deletions()[id])||0)+1).toISOString()}
   const canUseLocal=()=>window.StudentSync?.canUseLocal?.()!==false;
-  function read(){if(!canUseLocal())return[];try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
+  function read(){if(!canUseLocal())return[];try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v.map(window.StudyState.settle):[]}catch{return[]}}
   function persist(items){if(!canUseLocal())throw new Error('계정 기록을 분리한 뒤 저장해 주세요.');localStorage.setItem(KEY,JSON.stringify(items));window.StudentSync?.changed();window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
   function write(items){
     try{return persist(items.slice(0,200))}catch{return false}
@@ -55,12 +55,14 @@
   function idFor(data){return hash([data.source||"",data.sourceKey||"",data.prompt||""].join("|"))}
   function problemId(data){return hash([data.sourceKey||'',data.prompt||''].join('|'))}
   function solutionImage(value){const image=String(value||"");return /^data:image\/(?:png|webp|jpeg);base64,/.test(image)&&image.length<350000?image:""}
-  function due(note){return !note.mastered&&(!note.nextReviewAt||Date.parse(note.nextReviewAt)<=Date.now())}
+  /* 복습 규칙 — 다시 맞히면 바로 완료, 틀리면 다시 '복습 필요'.
+     예전에는 1일·3일·7일 뒤에 다시 풀 차례가 오고 네 번째에야 완료였는데 없앴다.
+     '오늘 다시 풀 것'은 이제 아직 완료하지 않은 오답 전부다. */
+  function due(note){return !note.mastered}
   function review(note,isCorrect,now){
     if(!isCorrect)return{reviewStage:0,nextReviewAt:"",lastReviewAt:now,mastered:false,masteredAt:"",lastWrongAt:now};
-    if(note.mastered||!due(note))return{};
-    const stage=Math.min(4,(Number(note.reviewStage)||0)+1),days=[1,3,7][stage-1];
-    return{reviewStage:stage,lastReviewAt:now,nextReviewAt:days?new Date(Date.parse(now)+days*86400000).toISOString():"",mastered:stage===4,masteredAt:stage===4?now:""};
+    if(note.mastered)return{};
+    return{reviewStage:4,lastReviewAt:now,nextReviewAt:"",mastered:true,masteredAt:now};
   }
   function record(data,isCorrect,countAttempt=true){
     if(!canUseLocal())return false;

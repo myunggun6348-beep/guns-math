@@ -86,7 +86,21 @@
     return{profile:latest(b.profile,a.profile),pref:latest(b.pref,a.pref),records,notes,stats,deletedNotes,journeys:mergeJourneys(a.journeys,b.journeys)};
   }
   const koreaDay=at=>new Date(at+9*3600000).toISOString().slice(0,10);
+  /* 1일·3일·7일 간격 복습을 없앴다(선생님 요청). 이제 규칙은 하나 —
+     '다시 풀기에서 맞히면 바로 복습 완료, 틀리면 다시 복습 필요'.
+     없애기 전에 이미 한두 번 다시 맞혀 1~3단계에 있던 오답은 새 규칙으로 보면
+     이미 완료이므로 완료로 읽는다. 날짜(nextReviewAt)는 더 쓰지 않으므로 비운다.
+     기록을 지우지 않고 '읽을 때'만 이렇게 본다 — 다음에 저장할 때 정리된 모양으로 남는다.
+     reviewStage 4 는 예전부터 '마지막 확인까지 마침'이라 주간 복습 성과·홈 집계가
+     그대로 완료로 센다. 학생 쪽(오답 저장소)과 서버(선생님 방 집계)가 같이 쓴다. */
+  function settle(note){
+    if(!note||typeof note!=='object')return note;
+    const stage=note.reviewStage;
+    if(!note.mastered&&Number.isInteger(stage)&&stage>=1&&stage<=3)return{...note,reviewStage:4,mastered:true,masteredAt:note.masteredAt||note.lastReviewAt||note.updatedAt||'',nextReviewAt:''};
+    return note.nextReviewAt?{...note,nextReviewAt:''}:note;
+  }
   function recentReviews(value,now=Date.now()){
+    value=(Array.isArray(value)?value:[]).map(settle);
     const start=Date.parse(koreaDay(now)+'T00:00:00+09:00')-6*86400000,end=Math.min(now+1000,start+7*86400000-1);
     const unique=new Map(),time=note=>Math.max(...[note.updatedAt,note.lastReviewAt,note.lastWrongAt,note.createdAt].map(at=>Date.parse(at)||0));
     (Array.isArray(value)?value:[]).forEach(note=>{if(!note||!validId(note.id))return;const old=unique.get(note.id);if(!old||time(note)>=time(old))unique.set(note.id,note)});
@@ -94,13 +108,13 @@
   }
   // shortcut: 보관 중인 노트의 마지막 확인만 집계한다. 전체 복습 시도 분석은 별도 이벤트 기록이 필요하다.
   function reviewSummary(value,now=Date.now()){
-    const notes=(Array.isArray(value)?value:[]).filter(note=>note&&typeof note==='object'),recent=recentReviews(notes,now),start=Date.parse(koreaDay(now)+'T00:00:00+09:00')-6*86400000;
+    const notes=(Array.isArray(value)?value:[]).filter(note=>note&&typeof note==='object').map(settle),recent=recentReviews(notes,now),start=Date.parse(koreaDay(now)+'T00:00:00+09:00')-6*86400000;
     const days=Array.from({length:7},(_,i)=>({date:koreaDay(start+i*86400000),confirmed:0,completed:0})),concepts=new Map();
     recent.forEach(note=>{const completed=Boolean(note.mastered&&note.reviewStage===4),day=days.find(day=>day.date===koreaDay(Date.parse(note.lastReviewAt)));day.confirmed++;if(completed)day.completed++;
       const conceptId=typeof note.conceptId==='string'?note.conceptId:'',name=typeof note.conceptName==='string'?note.conceptName.slice(0,80):'',key=conceptId||name||'other',row=concepts.get(key)||{conceptId,name:name||'수학',confirmed:0,completed:0};row.confirmed++;if(completed)row.completed++;concepts.set(key,row);
     });
-    return{startDate:days[0].date,endDate:days[6].date,confirmed:recent.length,completed:recent.filter(note=>note.mastered&&note.reviewStage===4).length,due:notes.filter(note=>!note.mastered&&(!note.nextReviewAt||Date.parse(note.nextReviewAt)<=now)).length,active:notes.filter(note=>!note.mastered).length,days,concepts:[...concepts.values()].sort((a,b)=>b.confirmed-a.confirmed||a.name.localeCompare(b.name,'ko'))};
+    return{startDate:days[0].date,endDate:days[6].date,confirmed:recent.length,completed:recent.filter(note=>note.mastered&&note.reviewStage===4).length,due:notes.filter(note=>!note.mastered).length,active:notes.filter(note=>!note.mastered).length,days,concepts:[...concepts.values()].sort((a,b)=>b.confirmed-a.confirmed||a.name.localeCompare(b.name,'ko'))};
   }
-  const api={safeState,merge,totals,noteStamp,recentReviews,reviewSummary,learningEvents,journeys,mergeJourneys};
+  const api={safeState,merge,totals,noteStamp,settle,recentReviews,reviewSummary,learningEvents,journeys,mergeJourneys};
   if(typeof module!=="undefined"&&module.exports)module.exports=api;else root.StudyState=api;
 })(typeof window!=="undefined"?window:globalThis);

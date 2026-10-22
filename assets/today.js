@@ -187,7 +187,7 @@
     if(!isCorrect&&!wrongSaved){const message=document.createElement("p");message.setAttribute("role","alert");message.textContent="오답 저장에 실패했습니다. 임시 풀이를 유지하고 완료할 때 다시 저장합니다.";slot.append(message)}
     if(similarMode){
       document.getElementById("showHint").disabled=true;
-      if(hintCount){const message=document.createElement("p");message.textContent="힌트 "+hintCount+"단계의 도움을 받아 풀었어요. 다음 복습에서는 혼자 풀어 보세요.";slot.append(message)}
+      if(hintCount){const message=document.createElement("p");message.textContent="힌트 "+hintCount+"단계의 도움을 받아 풀었어요. 다음에는 힌트 없이 풀어 보세요.";slot.append(message)}
       if(!isCorrect&&wrongSaved){
         const id=window.WrongNotes.idFor({source:"similar",sourceKey:trackKey,prompt:q.prompt}),reason=document.createElement("label");reason.className="wrong-reason";reason.textContent="어디에서 막혔나요? (선택 사항)";
         const select=document.createElement("select");select.id="wrongReason";select.innerHTML='<option value="">나중에 기록할게요</option>'+Object.entries(window.WrongNotes.reasons).map(([key,label])=>'<option value="'+key+'">'+esc(label)+'</option>').join("");select.value=window.WrongNotes.all().find(note=>note.id===id)?.wrongReason||"";

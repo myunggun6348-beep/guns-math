@@ -5,7 +5,8 @@
   const params=new URLSearchParams(location.search),journeyMode=params.get('journey')==='1';
   function journey(){let pref={};try{pref=JSON.parse(localStorage.getItem('math-home-profile-v1')||'{}')||{}}catch{}return window.StudyJourney.get(params.get('grade')||pref.grade,params.get('subject')||pref.track)}
   let filter=new URLSearchParams(location.search).get("view")||"active",conceptFilter="";
-  if(!["due","active","mastered","all"].includes(filter))filter="active";
+  if(filter==="due")filter="active";   // '오늘 복습'은 간격 복습과 함께 없앴다 — 옛 링크는 '복습 필요'로
+  if(!["active","mastered","all"].includes(filter))filter="active";
   const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   const norm=v=>String(v).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"");
   const solutionImage=v=>/^data:image\/(?:png|webp|jpeg);base64,/.test(String(v||""))?String(v):"";
@@ -42,21 +43,21 @@
       app.innerHTML='<div id="wrongJourney">'+window.StudyJourney.view(progress)+'</div>'+(진단있음?dashboard():'')+
         '<div class="wrong-empty wrong-first"><h2>'+(진단있음?'지금 복습할 오답이 없습니다':'아직 모인 오답이 없습니다')+'</h2>'+
         '<p>'+(진단있음?'지금까지 푼 문제를 모두 맞혔습니다. 틀린 문제가 생기면 여기로 저절로 모입니다.'
-                     :'오늘의 학습이나 미니게임에서 틀린 문제가 여기로 저절로 모입니다. 다시 맞힌 문제도 1일·3일·7일 뒤에 한 번 더 확인합니다.')+'</p>'+
+                     :'오늘의 학습이나 미니게임에서 틀린 문제가 여기로 저절로 모입니다. 다시 풀어서 맞히면 바로 복습 완료예요.')+'</p>'+
         // 오늘의 학습 진행 칸이 떠 있으면 그 안에 다음 단계 단추가 있으므로 하나 더 두지 않습니다
         (progress?'':'<a class="btn btn-primary" href="today.html">오늘의 학습 시작 →</a>')+'</div>';
       app.querySelectorAll("[data-concept]").forEach(btn=>btn.addEventListener("click",()=>{conceptFilter=conceptFilter===btn.dataset.concept?"":btn.dataset.concept;draw()}));
       return;
     }
-    const summary='<div class="wrong-summary"><div class="wrong-stat"><b>'+counts.active+'</b><span>복습 필요</span></div><div class="wrong-stat"><b>'+counts.mastered+'</b><span>복습 완료</span></div><div class="wrong-stat"><b>'+counts.all+'</b><span>전체 기록</span></div></div>';
-    const tools='<div class="wrong-tools"><div><div class="wrong-tabs"><button class="wrong-tab '+(filter==="active"?"on":"")+'" data-filter="active">복습 필요</button><button class="wrong-tab '+(filter==="mastered"?"on":"")+'" data-filter="mastered">복습 완료</button><button class="wrong-tab '+(filter==="all"?"on":"")+'" data-filter="all">전체</button></div>'+(selected?'<button class="concept-filter-clear" id="clearConcept">'+esc(selected.name)+'만 보는 중 ×</button>':'')+'</div>'+(counts.mastered?'<button class="wrong-clear" id="clearMastered">완료 기록 정리</button>':'')+'</div>';
-    app.innerHTML='<div id="wrongJourney">'+window.StudyJourney.view(progress)+'</div><div'+(journeyMode&&progress?' hidden':'')+'>'+dashboard()+summary+tools+'</div>'+(journeyMode&&progress?'<p>오늘 정한 복습 '+progress.noteIds.length+'문제입니다. 정답 여부와 별도로 제출한 활동을 완료 표시해요. <a href="wrong-notes.html">전체 오답 보기 →</a></p>':'')+(items.length?'<div class="wrong-list" id="journeyReviewList">'+items.map(card).join("")+'</div>':empty(selected));
+    /* 오답 문제가 첫 화면에 오도록 순서를 바꿨다 — 탭 → 오답 카드 → (맨 아래) 개념별 진단.
+       예전에는 개념 진단·숫자 카드 셋(복습 필요·완료·전체)·탭이 위를 차지해, 폰에서 첫 오답이
+       1,500px 아래에서 시작했다. 숫자는 탭에 붙이고 숫자 카드는 없앴다. */
+    const tools='<div class="wrong-tools"><div><div class="wrong-tabs"><button class="wrong-tab '+(filter==="active"?"on":"")+'" data-filter="active">복습 필요 '+counts.active+'</button><button class="wrong-tab '+(filter==="mastered"?"on":"")+'" data-filter="mastered">복습 완료 '+counts.mastered+'</button><button class="wrong-tab '+(filter==="all"?"on":"")+'" data-filter="all">전체 '+counts.all+'</button></div>'+(selected?'<button class="concept-filter-clear" id="clearConcept">'+esc(selected.name)+'만 보는 중 ×</button>':'')+'</div>'+(counts.mastered?'<button class="wrong-clear" id="clearMastered">완료 기록 정리</button>':'')+'</div>';
+    app.innerHTML='<div id="wrongJourney">'+window.StudyJourney.view(progress)+'</div><div'+(journeyMode&&progress?' hidden':'')+'>'+tools+'</div>'+(journeyMode&&progress?'<p>오늘 정한 복습 '+progress.noteIds.length+'문제입니다. 정답 여부와 별도로 제출한 활동을 완료 표시해요. <a href="wrong-notes.html">전체 오답 보기 →</a></p>':'')+(items.length?'<div class="wrong-list" id="journeyReviewList">'+items.map(card).join("")+'</div>':empty(selected))+(journeyMode&&progress?'':'<details class="wrong-dash-fold"><summary>개념별 진단 보기</summary>'+dashboard()+'</details>');
     if(journeyMode&&progress?.next?.id==='review'){const link=app.querySelector('#wrongJourney .journey-actions a');link.href='#journeyReviewList';link.textContent='아래 복습 문제부터 풀기 →'}
-    const dueTab=document.createElement("button");dueTab.type="button";dueTab.className="wrong-tab"+(filter==="due"?" on":"");dueTab.dataset.filter="due";dueTab.textContent="오늘 복습 "+counts.due+"문제";app.querySelector(".wrong-tabs").prepend(dueTab);
-    app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered)return;const label=document.createElement("p");label.className="retry-status";label.textContent=note.reviewStage?"복습 확인 "+note.reviewStage+"/4 · "+(store.due(note)?"오늘 다시 풀 차례":dateText(note.nextReviewAt)+" 다시 확인"):"다시 맞힌 뒤 1일·3일·7일 간격으로 확인합니다.";element.querySelector(".wrong-card-top").after(label)});
-    app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered||note.reviewStage>0)element.querySelector(".wrong-card-actions").insertAdjacentHTML("afterbegin",similarLink(note))});
+    app.querySelectorAll("[data-card]").forEach(element=>{const note=all.find(x=>x.id===element.dataset.card);if(note.mastered)element.querySelector(".wrong-card-actions").insertAdjacentHTML("afterbegin",similarLink(note))});
     app.querySelectorAll("[data-card]").forEach(element=>{
-      const note=all.find(x=>x.id===element.dataset.card),label=document.createElement("label");label.className="wrong-reason";label.textContent="오답 원인 (선택 사항)";
+      const note=all.find(x=>x.id===element.dataset.card),label=document.createElement("label");label.className="wrong-reason";label.textContent="왜 틀렸나요? (선택)";
       const select=document.createElement("select");select.innerHTML='<option value="">아직 기록하지 않았어요</option>'+Object.entries(store.reasons).map(([key,text])=>'<option value="'+key+'">'+esc(text)+'</option>').join("");select.value=note.wrongReason||"";
       select.onchange=()=>{if(store.setReason(note.id,select.value)){note.wrongReason=select.value;toast("오답 원인을 저장했습니다.")}else{select.value=note.wrongReason||"";toast("저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.")}};label.append(select);element.querySelector(".wrong-detail").before(label);
       if(note.difficulty||note.hintsUsed){const info=document.createElement("small");info.textContent=({basic:"기초",standard:"표준",challenge:"도전"}[note.difficulty]||"")+(note.hintsUsed?" · 힌트 "+note.hintsUsed+"단계 사용":"");label.append(info)}
@@ -68,7 +69,7 @@
     app.querySelectorAll("[data-annotate]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.open(btn.dataset.annotate,draw)));
     app.querySelectorAll("[data-download]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.download(btn.dataset.download)));
     app.querySelectorAll("[data-share]").forEach(btn=>btn.addEventListener("click",()=>window.WrongWorkTools.share(btn.dataset.share)));
-    app.querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click",()=>{toast(store.remove(btn.dataset.remove)?"오답 기록을 지웠습니다.":"삭제 내용을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.");draw()}));
+    app.querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click",()=>{if(!confirm("이 오답 기록을 지울까요? 되돌릴 수 없습니다."))return;toast(store.remove(btn.dataset.remove)?"오답 기록을 지웠습니다.":"삭제 내용을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.");draw()}));
     document.getElementById("clearConcept")?.addEventListener("click",()=>{conceptFilter="";draw()});
     document.getElementById("clearMastered")?.addEventListener("click",()=>{toast(store.clearMastered()?"완료한 기록을 정리했습니다.":"정리 내용을 저장하지 못했습니다. 기기 저장 공간을 확인해 주세요.");draw()});
   }
@@ -76,8 +77,8 @@
     const concept=note.conceptName?'<span class="wrong-tag">'+esc(note.conceptName)+'</span>':"";
     const feedback=solutionImage(note.feedbackImage),solution=feedback||solutionImage(note.solutionImage);
     const work=solution?'<figure class="wrong-work"><figcaption><b>내 풀이</b><span>'+(feedback?'첨삭이 저장된 풀이':'오답을 제출했을 때의 풀이판')+'</span></figcaption><img src="'+esc(solution)+'" alt="저장된 문제 풀이"><div class="wrong-work-actions"><button type="button" class="wrong-button" data-annotate="'+note.id+'">✎ 풀이 첨삭</button><button type="button" class="wrong-button" data-download="'+note.id+'">PNG 저장</button><button type="button" class="wrong-button primary" data-share="'+note.id+'">선생님께 제출</button></div></figure>':"";
-    const links=(note.conceptId?'<a class="wrong-link" href="map.html?n='+encodeURIComponent(note.conceptId)+'">개념 복습 →</a>':'')+(note.reviewHref?'<a class="wrong-link" href="'+esc(note.reviewHref)+'">원문 다시 풀기 →</a>':'');
-    return '<article class="wrong-card '+(note.mastered?"mastered":"")+'" data-card="'+note.id+'"><div class="wrong-card-top"><div class="wrong-tags"><span class="wrong-tag source">'+esc(note.sourceTitle)+'</span>'+concept+(note.mastered?'<span class="wrong-tag">복습 완료</span>':'')+'</div><span class="wrong-date">'+dateText(note.lastWrongAt)+'</span></div><h2 class="wrong-question" data-math>'+esc(note.prompt)+'</h2><dl class="wrong-answer"><dt>내가 쓴 답</dt><dd data-math>'+esc(note.userAnswer||"답하지 않음")+'</dd></dl>'+work+'<details class="wrong-detail"><summary>정답과 해설 보기</summary><div data-math><b>정답: '+esc(note.correctAnswer)+'</b><br>'+esc(note.explanation)+'</div></details><div class="wrong-card-actions">'+(!note.mastered?'<button class="wrong-button primary" data-retry="'+note.id+'">다시 풀기</button>':'')+links+'<button class="wrong-button remove" data-remove="'+note.id+'">기록 삭제</button></div><div class="retry-slot" id="retry-'+note.id+'"></div></article>';
+    const links=(note.conceptId?'<a class="wrong-textlink" href="map.html?n='+encodeURIComponent(note.conceptId)+'">개념 복습 →</a>':'')+(note.reviewHref?'<a class="wrong-textlink" href="'+esc(note.reviewHref)+'">원문 다시 풀기 →</a>':'');
+    return '<article class="wrong-card '+(note.mastered?"mastered":"")+'" data-card="'+note.id+'"><div class="wrong-card-top"><div class="wrong-tags"><span class="wrong-tag source">'+esc(note.sourceTitle)+'</span>'+concept+(note.mastered?'<span class="wrong-tag">복습 완료</span>':'')+'</div><span class="wrong-date">'+dateText(note.lastWrongAt)+'</span></div><h2 class="wrong-question" data-math>'+esc(note.prompt)+'</h2><dl class="wrong-answer"><dt>내가 쓴 답</dt><dd data-math>'+esc(note.userAnswer||"답하지 않음")+'</dd></dl>'+work+'<details class="wrong-detail"><summary>정답과 해설 보기</summary><div data-math><b>정답: '+esc(note.correctAnswer)+'</b><br>'+esc(note.explanation)+'</div></details><div class="wrong-card-actions">'+(!note.mastered?'<button class="wrong-button primary" data-retry="'+note.id+'">다시 풀기</button>':'')+(links?'<div class="wrong-textlinks">'+links+'</div>':'')+'</div><div class="retry-slot" id="retry-'+note.id+'"></div><button type="button" class="wrong-remove" data-remove="'+note.id+'">기록 삭제</button></article>';
   }
   function empty(selected){
     const text=selected?selected.name+"에서 현재 조건에 맞는 오답이 없습니다.":filter==="active"?"지금 복습할 오답이 없습니다. 오늘의 학습을 풀면 틀린 문제가 자동으로 들어옵니다.":filter==="mastered"?"아직 복습 완료한 문제가 없습니다.":"아직 저장된 오답이 없습니다.";
@@ -109,14 +110,14 @@
       }
       slot.querySelector(".retry-submit").disabled=true;
       if(ok){
-        const saved=store.all().find(x=>x.id===id),box=slot.querySelector('.retry-box');status.textContent=saved.mastered?"정답입니다. 마지막 확인을 마쳐 복습 완료했습니다.":"정답입니다. "+dateText(saved.nextReviewAt)+"에 다시 확인하세요.";status.className="retry-status correct";
+        const saved=store.all().find(x=>x.id===id),box=slot.querySelector('.retry-box');status.textContent="정답입니다. 복습 완료로 옮겼어요.";status.className="retry-status correct";
         const growth=document.createElement('section');growth.className='review-growth';growth.setAttribute('aria-label','이번 복습 성과');
         const title=document.createElement('strong');title.textContent=(window.TODAY_CONCEPTS?.[saved.conceptId]?.name||saved.conceptName||'수학')+' 오답을 다시 맞혔어요.';
-        const detail=document.createElement('p');detail.textContent=saved.mastered?'1일·3일·7일 간격의 마지막 확인까지 마쳤어요.':saved.reviewStage>(before?.reviewStage||0)?'복습 확인 '+saved.reviewStage+'/4를 마쳤어요. 다음 확인에서도 개념을 적용해 보세요.':'예정일 전 연습에서도 다시 맞혔어요. 복습 단계 '+saved.reviewStage+'/4와 예정일은 유지됩니다.';growth.append(title,detail);box.append(growth);
-        toast(saved.mastered?"복습을 완료했습니다.":"다음 복습 일정을 저장했습니다.");const link=similarLink(saved);if(link)box.insertAdjacentHTML('beforeend',link);
+        const detail=document.createElement('p');detail.textContent='복습 완료 탭에서 다시 볼 수 있어요. 비슷한 문제로 한 번 더 확인해 보세요.';growth.append(title,detail);box.append(growth);
+        toast("복습을 완료했습니다.");const link=similarLink(saved);if(link)box.insertAdjacentHTML('beforeend',link);
         const back=document.createElement('button');back.type='button';back.className='wrong-button';back.textContent='복습 목록으로';back.onclick=draw;box.append(back);
       }
-      else{status.textContent="아직 다릅니다. 해설을 확인한 뒤 다시 풀어 보세요. 복습 단계는 처음부터 시작합니다.";status.className="retry-status wrong";slot.querySelector(".retry-submit").disabled=false}
+      else{status.textContent="아직 다릅니다. 해설을 확인한 뒤 다시 풀어 보세요.";status.className="retry-status wrong";slot.querySelector(".retry-submit").disabled=false}
     });
   }
   window.addEventListener("wrong-work-message",event=>toast(event.detail));

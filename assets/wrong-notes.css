@@ -15,3 +15,17 @@ body.work-editor-open{overflow:hidden}.work-editor{position:fixed;z-index:1200;i
 
 /* 처음 온 학생 — 기록이 하나도 없을 때의 한 덩이 */
 .wrong-first p { max-width: 34em; margin-left: auto; margin-right: auto; line-height: 1.65; }
+
+/* 카드 아래 — 주 단추는 '다시 풀기' 하나. 개념 복습·원문은 글씨 링크, 삭제는 맨 아래 작은 글씨.
+   예전에는 다섯 개가 같은 크기 단추로 쌓여 폰에서 카드 하나가 화면을 거의 다 차지했습니다. */
+.wrong-textlinks { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.wrong-textlink { color: var(--ink); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; padding: 6px 0; }
+.wrong-remove { display: block; margin: 10px 0 0 auto; padding: 6px 0; border: 0; background: none; color: var(--ink); opacity: .55; font-size: 13px; text-decoration: underline; cursor: pointer; }
+.wrong-remove:hover { opacity: 1; }
+.wrong-reason { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 12px 0; font-size: 13px; opacity: .85; }
+.wrong-reason select { min-height: 34px; padding: 0 10px; border: 1px solid var(--hairline); border-radius: var(--r-pill); background: var(--canvas); color: var(--ink); font: inherit; }
+/* 개념별 진단은 맨 아래에 접어 둡니다 — 첫 화면에는 틀린 문제가 먼저 보여야 합니다 */
+.wrong-dash-fold { margin-top: 28px; border-top: 1px solid var(--hairline); padding-top: 14px; }
+.wrong-dash-fold > summary { cursor: pointer; font-weight: 650; padding: 8px 0; }
+.wrong-reason select { width: auto; max-width: 100%; }
+.retry-slot:empty { margin: 0; }

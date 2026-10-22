@@ -192,7 +192,10 @@
 - 반 미설정 계정은 반 공통 취약 개념에서 제외한다.
 - 동기화된 기록 기준이며 비회원 학습은 교사 현황에 집계되지 않는다.
 
-### 간격 복습 — `077de63`
+### 간격 복습 — `077de63` (2026-10 없앰)
+
+> 선생님 요청으로 1·3·7일 간격을 없앴다. 지금 규칙: 다시 맞히면 바로 복습 완료(`reviewStage:4`), 다시 틀리면 복습 필요(0). 예전 1~3단계 기록은 `StudyState.settle`이 읽을 때 완료로 바꿔 보이며 저장 원본은 그대로다. `nextReviewAt`은 늘 비어 있어 이를 읽는 곳은 모든 미완료 오답을 ‘지금’으로 본다. `wrong-notes.html?view=due`는 ‘복습 필요’ 탭으로 연결된다. 아래는 예전 기록이다.
+
 
 - 오답을 처음 다시 맞히면 그 시점부터 1일 뒤 확인한다.
 - 예정일에 맞히면 그 시점부터 3일 뒤, 다시 맞히면 7일 뒤 확인한다.
@@ -242,7 +245,7 @@
 - `assets/similar-practice-data.js`: 문항별 난도·힌트와 도전 문항, `window.SIMILAR_QUESTIONS`
 - `assets/today.js`: 기존 5문제와 확인 문제 화면, 난도 선택·힌트·오답 원인 UI
 - `today.html`, `wrong-notes.html`: 데이터와 스크립트 로딩
-- `assets/wrong-notes-store.js`: 기록·간격 복습·`reasons`·`setReason`
+- `assets/wrong-notes-store.js`: 기록·복습 완료 규칙·`reasons`·`setReason`
 - `assets/wrong-notes.js`: 복습 필터·정답 후 확인 문제 버튼·오답 원인 수정
 - `assets/home-personal.js`: 홈의 오늘 복습 연결
 - `assets/study-state.js`, `assets/student-sync.js`: 병합·동기화

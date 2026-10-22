@@ -33,9 +33,9 @@ const 서버=http.createServer((q,r)=>{const 길=new URL(q.url,"http://x").pathn
  // 기록이 생기면 예전처럼 다 보여야 합니다
  await p.evaluate(()=>localStorage.setItem("math-wrong-notes-v1",JSON.stringify([{id:"a",mastered:false,prompt:"1+1?",createdAt:new Date().toISOString(),subject:"공통수학1",conceptName:"다항식",type:"short",correctAnswer:"2",userAnswer:"3"}])));
  await p.reload({waitUntil:"networkidle"});await p.waitForTimeout(400);
- const 찬=await p.evaluate(()=>({숫자카드:document.querySelectorAll(".wrong-stat").length,탭:document.querySelectorAll(".wrong-tab").length,카드:document.querySelectorAll("[data-card]").length}));
+ const 찬=await p.evaluate(()=>{const c=document.querySelector("[data-card]"),r=c.getBoundingClientRect(),del=c.querySelector(".wrong-remove");return{숫자카드:document.querySelectorAll(".wrong-stat").length,탭:document.querySelectorAll(".wrong-tab").length,카드:document.querySelectorAll("[data-card]").length,카드위:Math.round(r.top),카드높이:Math.round(r.height),큰단추:c.querySelectorAll(".wrong-button").length,삭제높이:Math.round(del.getBoundingClientRect().height),진단접힘:!document.querySelector(".wrong-dash-fold")?.open,간격글:/1일|3일|7일/.test(document.body.innerText)}});
  console.log("빈 때:",JSON.stringify(빈),"\n찬 때:",JSON.stringify(찬),"\n오류:",오류.join(" / ")||"없음");
  assert.equal(빈.영,0,"빈 화면에 숫자 카드가 남아 있습니다");assert.equal(빈.탭,0);assert.equal(빈.시작단추,1,"시작 단추는 하나여야 합니다");
- assert.equal(찬.숫자카드,3);assert.ok(찬.탭>=3);assert.equal(찬.카드,1);assert.equal(오류.length,0);
- console.log("오답노트 검사 통과: 오답이 없으면(처음 온 학생·다 맞힌 학생 모두) 0·0·0 없이 한 덩이·시작 단추 하나, 오답이 생기면 숫자·탭·카드 그대로");
+ assert.equal(찬.숫자카드,0,"숫자 카드가 다시 생겼습니다");assert.equal(찬.탭,3);assert.equal(찬.카드,1);assert.ok(찬.카드위<844,`첫 오답 카드가 폰 첫 화면 밖(${찬.카드위}px)에 있습니다`);assert.ok(찬.카드높이<450,`카드가 너무 깁니다(${찬.카드높이}px)`);assert.equal(찬.큰단추,1,"카드 안 큰 단추는 다시 풀기 하나여야 합니다");assert.ok(찬.삭제높이<=34,"기록 삭제가 큰 단추입니다");assert.equal(찬.진단접힘,true);assert.equal(찬.간격글,false,"1·3·7일 글이 남아 있습니다");assert.equal(오류.length,0);
+ console.log("오답노트 검사 통과: 오답이 없으면(처음 온 학생·다 맞힌 학생 모두) 0·0·0 없이 한 덩이·시작 단추 하나, 오답이 생기면 탭(개수 포함)과 카드 — 폰 첫 화면에 첫 카드, 큰 단추는 다시 풀기 하나, 삭제는 작은 글씨, 진단은 접힘");
  await b.close();서버.close();})().catch(e=>{console.error(e);process.exitCode=1;process.exit(1)});
