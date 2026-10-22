@@ -11,7 +11,7 @@
 @media(max-width:400px){
   .home-page .brand{font-size:15px;gap:6px}.home-page .brand svg{width:20px;height:20px}
   .home-page .nav .wrap{gap:8px}.home-page .nav-right{gap:6px}
-  .home-page .student-account-button{width:54px;padding:0 6px}.home-page .home-nav-more{font-size:12px}
+  .home-page .student-account-button{width:54px;padding:0 6px}
 }
 .home-page .nav { background: var(--home-card); border-bottom: 1px solid var(--home-border); }
 .home-page .home-personal { padding: 38px 0 22px; background: transparent; }

@@ -112,7 +112,21 @@ const server=http.createServer((req,res)=>{
 
       /* '둘러보기'를 누르면 접힌 칸이 실제로 펼쳐져야 합니다
          (전에는 그 자리로 내려가기만 하고 닫힌 채였습니다). */
-      await page.locator(".home-nav-more").click();   // 홈 카드의 '자료 둘러보기'는 뺐습니다(같은 일)
+      /* 홈 맨 위는 다른 쪽과 같은 메뉴입니다 — 컴퓨터는 메뉴 줄, 폰은 ☰.
+         한때 홈만 메뉴를 숨기고 '둘러보기'를 두어서, 로그인한 학생은 카드가 길면 다른 쪽으로
+         가는 길이 첫 화면에 없었습니다. ☰ 를 눌러 메뉴가 실제로 열리는지까지 봅니다. */
+      assert.equal(await page.locator(".home-nav-more").count(),0,"홈에 '둘러보기'가 다시 생겼습니다");
+      const 메뉴=await page.evaluate(()=>[...document.querySelectorAll("#navLinks a")].map(a=>a.textContent.trim()));
+      assert.deepEqual(메뉴,["오늘의 학습","오답노트","자료실","직접 보는 수학","개념 지도","게임","질문"],"홈 메뉴가 다른 쪽과 다릅니다: "+메뉴.join(", "));
+      if(viewport.width>=900){
+        assert.equal(await page.locator("#navLinks").isVisible(),true,"컴퓨터 홈에 메뉴 줄이 안 보입니다");
+      }else{
+        assert.equal(await page.locator(".nav-toggle").isVisible(),true,"폰 홈에 ☰ 가 없습니다");
+        await page.locator("#navToggle").click();await page.waitForTimeout(250);
+        assert.equal(await page.locator("#navLinks a").first().isVisible(),true,"☰ 를 눌러도 메뉴가 안 열립니다");
+        await page.locator("#navToggle").click();await page.waitForTimeout(250);
+      }
+      await page.evaluate(()=>document.getElementById("more").scrollIntoView());
       await page.waitForTimeout(300);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
       await page.locator(".home-more>summary").click();   // 다시 닫고 아래 검사를 이어 갑니다
@@ -214,6 +228,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 첫 카드는 로그인/로그인 없이 둘 + 회원가입 한 줄·로그인 입구·가입·계정 찾기·명시적 체험·학년/과목 동기화·공개 자료·PC/태블릿/모바일");
+    console.log("메인 검사 통과: 맨 위 메뉴는 다른 쪽과 같음(☰ 열림)·첫 카드는 로그인/로그인 없이 둘 + 회원가입 한 줄·로그인 입구·가입·계정 찾기·명시적 체험·학년/과목 동기화·공개 자료·PC/태블릿/모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});
