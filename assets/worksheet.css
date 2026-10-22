@@ -1,0 +1,65 @@
+/* 기출 문제지 만들기 — 고르는 화면은 사이트와 같은 단추·칩, 문제지는 늘 흰 종이 */
+.ws-main { padding-top: 24px; }
+.ws-back { font-size: 14px; font-weight: 650; color: var(--ink); text-decoration: none; }
+.ws-search { margin: 22px 0 12px; }
+.ws-search input { width: 100%; min-height: 52px; padding: 0 20px; border: 1px solid var(--hairline); border-radius: var(--r-pill); background: var(--canvas); color: var(--ink); font: inherit; font-size: 17px; }
+.ws-grades, .ws-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ws-grades button, .ws-chips button { min-height: var(--chip-h); padding: var(--chip-pad); border: 1px solid var(--hairline); border-radius: var(--r-pill); background: var(--canvas); color: var(--ink); font: inherit; font-size: var(--chip-font); font-weight: var(--chip-weight); cursor: pointer; }
+.ws-grades button.on { background: var(--chip-on); border-color: var(--chip-on); color: var(--chip-on-ink); }
+.ws-results { margin-top: 22px; }
+.ws-hint { margin: 0 0 12px; line-height: 1.6; }
+.ws-hint small { opacity: .65; }
+.ws-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 15px; }
+.ws-bar-links { display: flex; gap: 14px; }
+.ws-link { padding: 6px 0; border: 0; background: none; color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ws-list { list-style: none; margin: 0 0 18px; padding: 0; border-top: 1px solid var(--hairline); }
+.ws-list li { border-bottom: 1px solid var(--hairline); }
+.ws-list label { display: flex; align-items: flex-start; gap: 12px; padding: 12px 4px; cursor: pointer; }
+.ws-list input { width: 20px; height: 20px; margin-top: 2px; accent-color: #111; flex: none; }
+.ws-list span { display: flex; flex-direction: column; gap: 2px; }
+.ws-list small { opacity: .7; font-size: 13px; }
+.ws-make { min-height: var(--btn-h); padding: var(--btn-pad); border: 0; border-radius: var(--r-pill); background: #111; color: #fff; font: inherit; font-size: var(--btn-font); font-weight: var(--btn-weight); cursor: pointer; }
+.ws-make:disabled { opacity: .45; cursor: default; }
+.ws-sheet-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 18px; }
+.ws-note { font-size: 13px; opacity: .7; }
+
+/* 종이 — 어두운 화면에서도 흰 종이로 */
+.ws-paper { max-width: 210mm; margin: 0 auto 24px; padding: 14mm 12mm; background: #fff; color: #111; border: 1px solid var(--hairline); border-radius: 6px; }
+.ws-paper-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px; padding-bottom: 8px; margin-bottom: 14px; border-bottom: 2px solid #111; }
+.ws-paper-head h2 { margin: 0; font-size: 22px; outline: none; }
+.ws-paper-head p { margin: 0; font-size: 13px; }
+.ws-qs { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 9mm; column-rule: 1px solid #ccc; }
+/* 문제 아래 풀이 칸 */
+.ws-q { break-inside: avoid; margin: 0 0 6px; padding-bottom: 34mm; }
+.ws-q img { display: block; width: 100%; height: auto; }
+.ws-q-wait { padding: 30px 0; font-size: 14px; color: #666; }
+.ws-q-src { margin: 4px 0 0; font-size: 10.5px; color: #666; text-align: right; }
+.ws-answers table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+.ws-answers th, .ws-answers td { padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: left; }
+.ws-answers th:first-child, .ws-answers td:first-child { width: 4.5em; white-space: nowrap; }
+.ws-keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.ws-keys figure { margin: 0; break-inside: avoid; }
+.ws-keys figcaption { display: flex; flex-direction: column; gap: 2px; font-size: 13px; margin-bottom: 6px; }
+.ws-keys figcaption small { color: #555; }
+.ws-keys img { display: block; max-width: 100%; border: 1px solid #ddd; }
+.ws-keys .ws-link { color: #111; }
+.ws-credit { margin: 16px 0 0; font-size: 11px; color: #666; }
+
+@media (max-width: 650px) {
+  .ws-paper { padding: 16px 12px; }
+  .ws-qs { columns: 1; }
+  .ws-q { padding-bottom: 18px; }
+}
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff !important; }
+  .nav, .ws-tools, .ws-sheet-bar, .ws-screen { display: none !important; }
+  .ws-main, .ws-main .wrap { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .ws-paper { max-width: none; margin: 0; padding: 0; border: 0; border-radius: 0; }
+  .ws-qs { columns: 2; }
+  .ws-q { padding-bottom: 34mm; }
+  .ws-answers { break-before: page; }
+}
+/* 목록이 길어도 '문제지 만들기' 는 늘 화면 아래에 */
+#wsMake { position: sticky; bottom: 16px; width: 100%; max-width: 420px; display: block; margin: 0 auto; box-shadow: 0 6px 18px rgba(0,0,0,.18); }

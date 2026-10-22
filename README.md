@@ -41,6 +41,7 @@ ask.html                    질문 — 풀이·공부법·제안 분류, 문제 
 --- 선생님만 보는 페이지 (암호 · 검색에 안 잡히게 noindex) ---
 admin.html                  선생님 방 — 질문 답하기 · 공지 · 자료 올리기 · 알림 · 방문 · 암호 바꾸기
 question-bank.html          문항 관리 — 문항 만들기·엑셀 일괄 등록·개념/난이도 추천
+worksheet.html              기출 문제지 만들기(선생님용) — 단원 검색 → 문항 고르기 → 원본에서 오려 A4·정답표
 review.html                 제출한 풀이 보기 — 학생이 낸 태블릿 풀이 확인
 
 files/                      위 자료실이 내려주는 PDF 들 (올리는 법은 그 안 README)
@@ -97,6 +98,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-file-archive.cjs` | 자료실의 학년 저장·필터·모바일 배치 |
 | `node scripts\check-escape.js` | 수학 탈출의 문항 조합·채점·기록 |
 | `node scripts\check-study-sync.cjs` | 필기 보존·오답 삭제 전파·여러 기기 합산·재전송·동시 저장 충돌 |
+| `node scripts\check-worksheet.cjs` | 기출 문제지: 검색·원본에서 오림·정답표·인쇄 땐 종이만 (인터넷 필요) |
 | `node scripts\check-spaced-review.cjs` | 다시 맞히면 바로 복습 완료·다시 틀리면 복습 필요·예전 1~3단계 기록은 완료로 보존·동기화 |
 | `node scripts\check-spaced-review-ui.cjs` | PC·모바일 예전 주소(view=due)·정답 숨김·맞히면 바로 완료 |
 | `node scripts\check-similar-practice.cjs` | 난도 3종·단계별 힌트·도전 정답 검산·오답 원인, PC·모바일 채점·기존 일정/오늘 점수 보존 |

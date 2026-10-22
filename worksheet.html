@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<script src="assets/theme.js"></script>
+<title>기출 문제지 만들기 | 수학을 보다</title>
+<meta name="description" content="단원을 검색하면 최근 모의고사 기출을 모아 A4 문제지로 만들어 줍니다." />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='13.5' cy='13.5' r='9' fill='%23d9f26e'/%3E%3Cpath d='M6 16q3.75-8 7.5-2.5t7.5-2.5' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/vendor/fonts/pretendard.css" />
+<link rel="stylesheet" href="assets/style.css" />
+<link rel="stylesheet" href="assets/worksheet.css" />
+</head>
+<body>
+<!-- 선생님용 — 위쪽 메뉴에는 넣지 않고 선생님 방에서만 들어옵니다 -->
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="13.5" cy="13.5" r="9" fill="#d9f26e"/><path d="M6 16q3.75-8 7.5-2.5t7.5-2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="13.5" cy="13.5" r="9" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M20 20l7.5 7.5" stroke="currentColor" stroke-width="3"/></svg>수학을 보다</a>
+    <div class="nav-right"><a class="ws-back" href="admin.html">← 선생님 방</a></div>
+  </div>
+</header>
+
+<main class="section ws-main">
+  <div class="wrap">
+    <div class="ws-tools">
+      <header class="page-head g-find"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/></svg></span><div class="page-head-text"><h1>기출 문제지 만들기</h1><p>단원을 검색하고 문항을 고르면 원본에서 문제를 오려 A4 문제지로 묶습니다.</p></div></header>
+
+      <form id="wsSearch" class="ws-search" role="search">
+        <input id="wsQuery" type="search" list="wsSuggest" placeholder="예: 속도와 거리, 인수분해, 조건부확률" autocomplete="off" aria-label="단원 검색" />
+        <datalist id="wsSuggest"></datalist>
+      </form>
+      <div class="ws-grades" id="wsGrades" role="group" aria-label="학년">
+        <button type="button" class="on" data-grade="">전체</button><button type="button" data-grade="1">고1</button><button type="button" data-grade="2">고2</button><button type="button" data-grade="3">고3</button>
+      </div>
+
+      <section id="wsResults" class="ws-results" aria-live="polite"></section>
+    </div>
+
+    <!-- 만든 문제지 — 인쇄하면 이 부분만 나갑니다 -->
+    <section id="wsSheet" class="ws-sheet" hidden></section>
+  </div>
+</main>
+
+<script src="assets/today-data.js"></script>
+<script src="assets/past-practice-data.js"></script>
+<script type="module" src="assets/worksheet.js"></script>
+</body>
+</html>
