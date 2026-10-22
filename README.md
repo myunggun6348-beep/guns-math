@@ -746,3 +746,17 @@ Vercel 이 알아서 다시 배포한다. 폰에서 새로고침하면 바뀌어
 
 > `files.html`(자료실)은 `DEMOS` 와 **상관없다.** 그쪽은 내려받는 파일이라
 > 코드가 아니라 저장소(`api/files.js`)에서 목록을 읽는다.
+
+## 기출 문제지 — 문항 분류 다시 만들기
+
+`worksheet.html`(선생님 방 → 기출 문제지)은 `assets/exam-questions.json` 의 문항
+목록(최근 3년 39회분, 1,442문항: 시험·번호·쪽·배점·형식·과목·단원·유형)으로 찾는다.
+문제 그림은 저장하지 않고 열 때마다 EBSi 원본 PDF 에서 오린다.
+
+- **분류가 틀렸을 때**: 문제지 페이지에서 문항 옆 '분류 고치기'. 선생님 방 암호로
+  저장소(`api/worksheet-tags.js`, Redis `기출분류`)에 따로 적히고, 원래 목록보다 앞선다.
+- **새 기출이 나왔을 때**: `기출 목록 새로 받기.bat` 으로 시험 목록을 받은 뒤 Claude 에게
+  "새 기출 분류해 줘"라고 하면 된다. 순서는 `scripts/exam-questions/` 안에서
+  `extract.cjs`(문항 위치·배점) → `extract-intents.cjs`(해설의 출제의도) → `classify.cjs`(규칙으로 분류)
+  → 출제의도가 없는 평가원 모평 등은 `sheets.cjs` 로 모아 보고 `manual.txt` 에 직접 적음 → `build.cjs`.
+  `manual.txt` 는 문항 id 로 적혀 있어 새 시험이 끼어도 밀리지 않는다.

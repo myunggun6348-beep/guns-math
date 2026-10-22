@@ -27,12 +27,16 @@
       <header class="page-head g-find"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/></svg></span><div class="page-head-text"><h1>기출 문제지 만들기</h1><p>단원을 검색하고 문항을 고르면 원본에서 문제를 오려 A4 문제지로 묶습니다.</p></div></header>
 
       <form id="wsSearch" class="ws-search" role="search">
-        <input id="wsQuery" type="search" list="wsSuggest" placeholder="예: 속도와 거리, 인수분해, 조건부확률" autocomplete="off" aria-label="단원 검색" />
+        <input id="wsQuery" type="search" list="wsSuggest" placeholder="예: 속도와 거리, 인수분해, 조건부확률, 수학Ⅱ" autocomplete="off" aria-label="단원 검색" />
         <datalist id="wsSuggest"></datalist>
       </form>
-      <div class="ws-grades" id="wsGrades" role="group" aria-label="학년">
-        <button type="button" class="on" data-grade="">전체</button><button type="button" data-grade="1">고1</button><button type="button" data-grade="2">고2</button><button type="button" data-grade="3">고3</button>
+      <div class="ws-filters">
+        <div class="ws-grades" data-filter="grade" role="group" aria-label="학년"><button type="button" class="on" data-v="">전 학년</button><button type="button" data-v="1">고1</button><button type="button" data-v="2">고2</button><button type="button" data-v="3">고3</button></div>
+        <!-- 배점이 난도 대신입니다: 2점 쉬움 · 3점 보통 · 4점 어려움 -->
+        <div class="ws-grades" data-filter="pts" role="group" aria-label="배점"><button type="button" class="on" data-v="">모든 배점</button><button type="button" data-v="2">2점</button><button type="button" data-v="3">3점</button><button type="button" data-v="4">4점</button></div>
+        <div class="ws-grades" data-filter="mc" role="group" aria-label="형식"><button type="button" class="on" data-v="">모든 형식</button><button type="button" data-v="1">객관식</button><button type="button" data-v="0">단답형</button></div>
       </div>
+      <datalist id="wsCourses"></datalist><datalist id="wsUnits"></datalist><datalist id="wsTypes"></datalist>
 
       <section id="wsResults" class="ws-results" aria-live="polite"></section>
     </div>
@@ -42,8 +46,6 @@
   </div>
 </main>
 
-<script src="assets/today-data.js"></script>
-<script src="assets/past-practice-data.js"></script>
 <script type="module" src="assets/worksheet.js"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 /* 기출 문제지 만들기 — 단원 검색 → 문항 고르기 → A4 문제지.
-   문항 목록은 개념별 기출 연습과 같은 window.PAST_PRACTICE(시험·과목·번호·쪽·유형)를 씁니다.
+   문항 목록은 assets/exam-questions.json(최근 3년 EBSi 기출 전 문항의 시험·번호·쪽·배점·형식·과목·단원·유형·출제의도).
+   선생님이 '분류 고치기' 로 바꾼 것은 /api/worksheet-tags 에 따로 있고, 그쪽이 이깁니다.
    문제 그림은 사이트에 저장하지 않고, 바로 풀기 화면처럼 EBSi 원본 PDF 를 열어 그 자리에서 오립니다.
    오리는 자리: 그 쪽 글자 중 단 왼쪽 끝에 있는 'N.' 을 찾아, 같은 단의 다음 번호 바로 위(없으면 쪽 아래)까지. */
 import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
@@ -7,75 +8,123 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = "/assets/vendor/pdfjs/pdf.worker.min.mj
 
 const $ = id => document.getElementById(id);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
-const concepts = window.TODAY_CONCEPTS || {}, bank = window.PAST_PRACTICE || {};
 const results = $("wsResults"), sheet = $("wsSheet"), query = $("wsQuery");
-let exams = new Map(), grade = "", found = [], picked = new Set();
+let exams = new Map(), rows = [], fixes = {}, found = [], picked = new Set();
+const filter = { grade: "", pts: "", mc: "" };
+const 많으면 = 20; // 이보다 많이 찾으면 처음엔 아무것도 고르지 않음 — 수십 문항짜리 문제지가 실수로 만들어지지 않게
 
-// 모든 문항을 한 줄로 — 검색할 글은 단원 이름·유형·과목
-const rows = Object.entries(bank).flatMap(([key, list]) => list.map(row => ({ ...row, key, concept: concepts[key]?.name || "" })));
-const keyOf = row => row.exam + "|" + row.subject + "|" + row.number;
+// 과목은 2015·2022 교육과정 이름이 섞여 있어서 어느 이름으로 찾아도 나오게
+const 다른이름 = { "수학Ⅰ": "대수 수학1 수1", "수학Ⅱ": "미적분Ⅰ 미적분1 수학2 수2", "미적분": "미적분Ⅱ 미적분2 미적", "확률과 통계": "확통", "공통수학1": "수학(상) 수학상", "공통수학2": "수학(하) 수학하", "중학 복습": "중학교 중3" };
+const ord = new Map();
 
 // '속도와 거리' → ['속도','거리'] : 낱말이 모두 들어 있으면 찾음(띄어쓰기 무시)
 const words = text => text.split(/[\s,]+/).flatMap(w => w.split(/[와과](?=.)/)).map(w => w.replace(/[와과]$/, "")).filter(Boolean);
 const flat = text => text.replace(/\s+/g, "").toLowerCase();
+const tagOf = row => fixes[row.id] || row;
 
 function examName(row) {
   const exam = exams.get(row.exam);
-  return exam ? (exam.examYear ? exam.examYear + " " : "") + exam.title + (exam.grade === "3" ? " · " + row.subject : "") : row.exam;
+  return exam ? (exam.examYear ? exam.examYear + " " : "") + exam.title + (row.label ? " · " + row.label : "") : row.exam;
+}
+
+function index() {
+  // 처음 화면: 과목마다 단원 칩
+  const byCourse = new Map();
+  rows.forEach(row => { const t = tagOf(row); if (!byCourse.has(t.c)) byCourse.set(t.c, new Set()); byCourse.get(t.c).add(t.u); });
+  return '<p class="ws-hint">단원이나 유형을 넣으세요. 눌러서 바로 찾을 수도 있어요.</p>' + [...byCourse].sort((a, b) => (ord.get(a[0]) ?? 99) - (ord.get(b[0]) ?? 99)).map(([c, units]) =>
+    '<div class="ws-course"><b>' + esc(c) + '</b><div class="ws-chips">' + [...units].map(u => '<button type="button" data-q="' + esc(u) + '">' + esc(u) + "</button>").join("") + "</div></div>").join("");
 }
 
 function search() {
   const ws = words(query.value.trim()).map(flat);
-  if (!ws.length) {
-    results.innerHTML = '<p class="ws-hint">단원 이름을 넣으세요. 눌러서 바로 찾을 수도 있어요.</p><div class="ws-chips">' +
-      Object.keys(bank).filter(k => concepts[k]).map(k => '<button type="button" data-q="' + esc(concepts[k].name) + '">' + esc(concepts[k].name) + "</button>").join("") + "</div>";
-    return;
-  }
-  const seen = new Set();
+  if (!ws.length) { found = []; results.innerHTML = index(); return; }
   found = rows.filter(row => {
-    const exam = exams.get(row.exam);
-    if (!exam || (grade && exam.grade !== grade) || seen.has(keyOf(row))) return false;
-    const hay = flat(row.concept + row.intent + row.subject);
-    if (!ws.every(w => hay.includes(w))) return false;
-    seen.add(keyOf(row)); return true;
+    const exam = exams.get(row.exam), t = tagOf(row);
+    if (!exam || (filter.grade && exam.grade !== filter.grade) || (filter.pts && String(row.pts) !== filter.pts) || (filter.mc && String(row.mc) !== filter.mc)) return false;
+    const hay = flat([t.c, 다른이름[t.c] || "", t.u, t.t, row.intent, examName(row)].join(" "));
+    return ws.every(w => hay.includes(w));
   }).sort((a, b) => {
-    const A = exams.get(a.exam), B = exams.get(b.exam);
-    return A.grade.localeCompare(B.grade) || B.examDate.localeCompare(A.examDate) || a.number - b.number;
+    const A = tagOf(a), B = tagOf(b), x = exams.get(a.exam), y = exams.get(b.exam);
+    return (ord.get(A.c) ?? 99) - (ord.get(B.c) ?? 99) || A.u.localeCompare(B.u, "ko") || A.t.localeCompare(B.t, "ko") || x.grade.localeCompare(y.grade) || y.examDate.localeCompare(x.examDate) || a.number - b.number;
   });
-  picked = new Set(found.map(keyOf));
+  picked = found.length <= 많으면 ? new Set(found.map(r => r.id)) : new Set();
   draw();
+}
+
+function barText() {
+  return "<b>" + found.length + "문항</b> 찾음 · " + picked.size + "개 고름" + (found.length > 많으면 && !picked.size ? " — 많아서 비워 뒀어요. 골라 주세요." : "");
 }
 
 function draw() {
   if (!found.length) {
-    results.innerHTML = '<p class="ws-hint">맞는 기출을 아직 찾지 못했어요. 더 짧게(예: ‘거리’) 넣어 보거나 학년을 ‘전체’로 바꿔 보세요.<br><small>지금은 분류해 둔 ' + rows.length + "문항 안에서 찾습니다.</small></p>";
+    results.innerHTML = '<p class="ws-hint">맞는 기출을 찾지 못했어요. 더 짧게(예: ‘거리’) 넣어 보거나 학년·배점을 ‘전체’로 바꿔 보세요.</p>';
     return;
   }
-  results.innerHTML = '<div class="ws-bar"><span><b>' + found.length + "문항</b> 찾음 · " + picked.size + '개 고름</span><span class="ws-bar-links"><button type="button" class="ws-link" data-all="1">모두 고르기</button><button type="button" class="ws-link" data-all="0">모두 빼기</button></span></div><ul class="ws-list">' +
-    found.map(row => { const k = keyOf(row); return '<li><label><input type="checkbox" data-key="' + esc(k) + '"' + (picked.has(k) ? " checked" : "") + '><span><b>' + esc(row.intent) + '</b><small>' + esc(examName(row)) + " " + row.number + "번</small></span></label></li>"; }).join("") +
+  let group = "";
+  results.innerHTML = '<div class="ws-bar"><span>' + barText() + '</span><span class="ws-bar-links"><button type="button" class="ws-link" data-all="1">모두 고르기</button><button type="button" class="ws-link" data-all="0">모두 빼기</button></span></div><ul class="ws-list">' +
+    found.map(row => {
+      const t = tagOf(row), g = t.c + " › " + t.u + " › " + t.t;
+      const head = g !== group ? '<li class="ws-group">' + esc(g) + "</li>" : ""; group = g;
+      return head + '<li data-row="' + esc(row.id) + '"><label><input type="checkbox" data-key="' + esc(row.id) + '"' + (picked.has(row.id) ? " checked" : "") + '><span><b>' + esc(row.intent || t.t) + '</b><small>' + esc(examName(row)) + " " + row.number + "번" + (row.pts ? " · " + row.pts + "점" : "") + " · " + (row.mc ? "객관식" : "단답형") + (fixes[row.id] ? " · 고친 분류" : "") + '</small></span></label><button type="button" class="ws-link ws-fix-open" data-fix="' + esc(row.id) + '">분류 고치기</button></li>';
+    }).join("") +
     '</ul><button type="button" class="ws-make" id="wsMake"' + (picked.size ? "" : " disabled") + ">문제지 만들기 (" + picked.size + "문항)</button>";
+}
+
+/* ---------- 분류 고치기 (선생님 방 암호) ---------- */
+const 암호열쇠 = "수학을보다-암호"; // 선생님 방·문항 관리와 같은 이름 — 거기서 기억해 뒀으면 다시 묻지 않음
+const stored = () => { try { return localStorage.getItem(암호열쇠) || sessionStorage.getItem(암호열쇠) || ""; } catch { return ""; } };
+const post = body => fetch("/api/worksheet-tags", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(async r => ({ ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) }));
+async function password() {
+  const saved = stored(); if (saved) return saved;
+  const pw = prompt("분류를 고치려면 선생님 방 암호를 넣어 주세요."); if (!pw) return "";
+  const r = await post({ password: pw, check: true });
+  if (!r.ok) { alert(r.data.오류 || "암호를 확인하지 못했습니다."); return ""; }
+  try { sessionStorage.setItem(암호열쇠, pw); } catch { /* 저장 못 해도 이번엔 씀 */ }
+  return pw;
+}
+function openFix(id) {
+  const li = results.querySelector('[data-row="' + CSS.escape(id) + '"]'); if (!li || li.querySelector(".ws-fix")) return;
+  const row = rows.find(r => r.id === id), t = tagOf(row);
+  li.insertAdjacentHTML("beforeend", '<form class="ws-fix"><label>과목<input name="c" list="wsCourses" value="' + esc(t.c) + '" maxlength="40" required></label><label>단원<input name="u" list="wsUnits" value="' + esc(t.u) + '" maxlength="40" required></label><label>유형<input name="t" list="wsTypes" value="' + esc(t.t) + '" maxlength="40" required></label><div class="ws-fix-actions"><button type="submit" class="ws-make">저장</button>' + (fixes[id] ? '<button type="button" class="ws-link" data-reset="1">원래 분류로</button>' : "") + '<button type="button" class="ws-link" data-close="1">닫기</button><span class="ws-note" role="status"></span></div></form>');
+  const form = li.querySelector(".ws-fix"), note = form.querySelector(".ws-note");
+  const send = async body => {
+    const pw = await password(); if (!pw) return;
+    note.textContent = "저장 중…";
+    const r = await post({ password: pw, id, ...body });
+    if (r.status === 401) { try { sessionStorage.removeItem(암호열쇠); } catch { /* 없음 */ } note.textContent = "암호가 맞지 않습니다. 다시 눌러 주세요."; return; }
+    if (!r.ok) { note.textContent = r.data.오류 || "저장하지 못했습니다."; return; }
+    if (body.reset) delete fixes[id]; else fixes[id] = r.data;
+    draw();
+  };
+  form.onsubmit = e => { e.preventDefault(); send({ c: form.c.value.trim(), u: form.u.value.trim(), t: form.t.value.trim() }); };
+  form.querySelector("[data-close]").onclick = () => form.remove();
+  form.querySelector("[data-reset]")?.addEventListener("click", () => send({ reset: true }));
 }
 
 results.addEventListener("click", e => {
   const chip = e.target.closest("[data-q]");
   if (chip) { query.value = chip.dataset.q; search(); return; }
   const all = e.target.closest("[data-all]");
-  if (all) { picked = all.dataset.all === "1" ? new Set(found.map(keyOf)) : new Set(); draw(); return; }
+  if (all) { picked = all.dataset.all === "1" ? new Set(found.map(r => r.id)) : new Set(); draw(); return; }
+  const fix = e.target.closest("[data-fix]");
+  if (fix) { openFix(fix.dataset.fix); return; }
   if (e.target.id === "wsMake") make();
 });
 results.addEventListener("change", e => {
   const k = e.target.dataset.key; if (!k) return;
   e.target.checked ? picked.add(k) : picked.delete(k);
-  draw();
+  // 다시 그리지 않고 숫자만 — 다시 그리면 펼쳐 둔 '분류 고치기' 가 닫힙니다
+  results.querySelector(".ws-bar span").innerHTML = barText();
+  const btn = $("wsMake"); btn.disabled = !picked.size; btn.textContent = "문제지 만들기 (" + picked.size + "문항)";
 });
 query.addEventListener("input", search);
 $("wsSearch").addEventListener("submit", e => { e.preventDefault(); search(); });
-$("wsGrades").addEventListener("click", e => {
-  const b = e.target.closest("[data-grade]"); if (!b) return;
-  grade = b.dataset.grade;
-  $("wsGrades").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+document.querySelectorAll("[data-filter]").forEach(box => box.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  filter[box.dataset.filter] = b.dataset.v;
+  box.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
   search();
-});
+}));
 
 /* ---------- 오리기 ---------- */
 const docs = new Map(), pages = new Map();
@@ -88,8 +137,12 @@ async function pageInfo(url, no) {
     const page = await (await getDoc(url)).getPage(no), vp = page.getViewport({ scale: 1 }), W = vp.width, H = vp.height;
     const items = (await page.getTextContent()).items.map(i => ({ s: i.str.trim(), x: i.transform[4], y: i.transform[5], h: i.height, w: i.width }));
     // 문항 번호: 'N.' 이 단 왼쪽 끝(왼쪽 단 또는 가운데 바로 오른쪽)에 있고 글자가 가장 큰 것들
-    let marks = items.filter(i => /^\d{1,2}\.$/.test(i.s) && (i.x < W * .15 || (i.x > W * .48 && i.x < W * .58)));
+    const edge = i => i.x < W * .15 || (i.x > W * .48 && i.x < W * .58);
+    let marks = items.filter(i => /^\d{1,2}\.$/.test(i.s) && edge(i));
     const big = Math.max(0, ...marks.map(m => m.h)); marks = marks.filter(m => m.h >= big - 1.5);
+    // 마침표 없이 '27' 만 찍힌 시험지가 있습니다 — 다른 번호와 글자 크기가 같은 것만 번호로 칩니다
+    // (쪽 번호는 더 크거나 작아서 빠집니다)
+    if (big) marks.push(...items.filter(i => /^\d{1,2}$/.test(i.s) && edge(i) && Math.abs(i.h - big) <= 1).map(i => ({ ...i, s: i.s + "." })));
     return { page, W, H, marks, canvas: null };
   })());
   return pages.get(id);
@@ -139,13 +192,13 @@ async function cut(row, newNo) {
 }
 
 async function make() {
-  const list = found.filter(row => picked.has(keyOf(row)));
+  const list = found.filter(row => picked.has(row.id));
   if (!list.length) return;
   const title = (query.value.trim() || "기출") + " 기출 문제지";
   // 정답 그림은 시험·과목마다 한 장
   const keys = new Map();
   list.forEach((row, i) => {
-    const set = exams.get(row.exam).sets.find(s => s.subject === row.subject), id = row.exam + "|" + row.subject;
+    const set = exams.get(row.exam).sets.find(s => s.subject === row.subject), id = row.exam + "|" + (row.label || row.subject);
     if (!keys.has(id)) keys.set(id, { name: examName(row), url: set?.files?.answer?.url, solution: set?.files?.solution?.url, nos: [] });
     keys.get(id).nos.push((i + 1) + "번 ← " + row.number + "번");
   });
@@ -154,7 +207,7 @@ async function make() {
     '<article class="ws-paper"><header class="ws-paper-head"><h2 contenteditable="true" spellcheck="false">' + esc(title) + '</h2><p>학번 ________ 이름 ______________</p></header><ol class="ws-qs">' +
     list.map((row, i) => '<li class="ws-q" id="wsQ' + i + '"><div class="ws-q-wait">' + (i + 1) + '번 불러오는 중…</div><p class="ws-q-src">' + esc(examName(row)) + " " + row.number + "번</p></li>").join("") +
     '</ol></article><article class="ws-paper ws-answers"><header class="ws-paper-head"><h2>정답</h2></header><table><thead><tr><th>문제지</th><th>출처</th></tr></thead><tbody>' +
-    list.map((row, i) => "<tr><td>" + (i + 1) + "번</td><td>" + esc(examName(row)) + " " + row.number + "번 · " + esc(row.intent) + "</td></tr>").join("") +
+    list.map((row, i) => "<tr><td>" + (i + 1) + "번</td><td>" + esc(examName(row)) + " " + row.number + "번 · " + esc(row.intent || tagOf(row).t) + "</td></tr>").join("") +
     '</tbody></table><div class="ws-keys">' +
     [...keys.values()].map(k => '<figure><figcaption><b>' + esc(k.name) + "</b> 정답표<small>" + esc(k.nos.join(" · ")) + "</small></figcaption>" + (k.url ? '<img src="' + esc(k.url) + '" alt="' + esc(k.name) + ' 정답표" referrerpolicy="no-referrer">' : "") + (k.solution ? '<a class="ws-link ws-screen" target="_blank" rel="noopener" href="' + esc(k.solution) + '">해설 PDF 열기 →</a>' : "") + "</figure>").join("") +
     '</div><p class="ws-credit">문항 출처: EBSi 기출문제(한국교육과정평가원·시도교육청). 수업용으로만 쓰세요.</p></article>';
@@ -171,9 +224,18 @@ async function make() {
 }
 
 /* ---------- 시작 ---------- */
-document.getElementById("wsSuggest").innerHTML = [...new Set(rows.flatMap(r => [r.concept, r.intent]).filter(Boolean))].map(t => '<option value="' + esc(t) + '">').join("");
-fetch("assets/exam-catalog.json").then(r => r.json()).then(data => {
-  exams = new Map(data.items.map(x => [x.id, x]));
+Promise.all([
+  fetch("assets/exam-catalog.json").then(r => r.json()),
+  fetch("assets/exam-questions.json").then(r => r.json()),
+  fetch("/api/worksheet-tags").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+]).then(([catalog, bank, saved]) => {
+  exams = new Map(catalog.items.map(x => [x.id, x]));
+  bank.courses.forEach((c, i) => ord.set(c, i));
+  rows = bank.items.map(q => ({ id: q.e + "|" + (q.l || q.s) + "|" + q.n, exam: q.e, subject: q.s, label: q.l || "", number: q.n, page: q.p, pts: q.pt, mc: q.mc, intent: q.i || "", c: q.c, u: q.u, t: q.t }));
+  fixes = saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+  const list = (key, id) => { $(id).innerHTML = [...new Set(rows.map(r => tagOf(r)[key]))].sort((a, b) => a.localeCompare(b, "ko")).map(v => '<option value="' + esc(v) + '">').join(""); };
+  list("c", "wsCourses"); list("u", "wsUnits"); list("t", "wsTypes");
+  $("wsSuggest").innerHTML = [...new Set(rows.flatMap(r => [tagOf(r).u, tagOf(r).t]))].map(t => '<option value="' + esc(t) + '">').join("");
   const q = new URLSearchParams(location.search).get("q");
   if (q) query.value = q;
   search();
