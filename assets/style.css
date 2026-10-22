@@ -2063,23 +2063,21 @@ html.theme-dark .canvas-host {
 .home-start-card .home-setup-lead { margin-bottom: 24px; }
 .home-start-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
 .home-start-go { min-width: 240px; min-height: var(--btn-h); justify-content: center; font-size: var(--btn-font); text-decoration: none; }
-.home-start-browse {
-  display: inline-flex; align-items: center; min-height: 44px;
-  color: var(--ink); font-size: 15px; font-weight: 650; text-decoration: underline; text-underline-offset: 4px;
+/* 로그인 아래 '처음이에요? 회원가입' 한 줄 — 글씨처럼 보이는 단추 */
+.home-join-line { margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+.home-text-link {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px;
+  border: 0; background: none; color: var(--ink); font: inherit; font-weight: 650;
+  text-decoration: underline; text-underline-offset: 4px; cursor: pointer;
 }
-.home-join { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--hairline); }
-.home-join > p { margin: 0 0 12px; font-size: 14px; line-height: 1.6; opacity: 0.8; }
-.home-join-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
-.home-join-btn {
-  min-height: 40px; padding: 0 18px;
-  border: 1px solid var(--ink); border-radius: 999px; background: transparent; color: var(--ink);
-  font-family: inherit; font-size: 14px; font-weight: 650; cursor: pointer;
-}
-.home-join-actions .home-fork-login { padding: 0; font-size: 13px; opacity: 0.75; }
-.home-join .home-fork-note { margin-top: 12px; }
+/* 구분선 아래 '로그인 없이 써 보기' — 보조 단추 하나 */
+.home-join { margin-top: 18px; padding-top: 22px; border-top: 1px solid var(--hairline); }
+.home-try { min-width: 240px; text-decoration: none; }
+.home-join .home-fork-note { margin-top: 10px; }
 @media (max-width: 700px) {
-  .home-start-go { width: 100%; }
+  .home-start-go, .home-try { width: 100%; }
   .home-start-actions { justify-content: center; }
+  .home-join-line, .home-join { text-align: center; }
 }
 
 /* =========================================================

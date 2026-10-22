@@ -33,7 +33,7 @@ const 폰들 = [
 
 const 볼것 = [
   { 이름: "홈", 길: "/index.html", 준비: async p => { await p.evaluate(() => localStorage.clear()); await p.reload({ waitUntil: "networkidle" }); } },
-  { 이름: "홈-둘러보기", 길: "/index.html", 준비: async p => { await p.evaluate(() => localStorage.clear()); await p.reload({ waitUntil: "networkidle" }); await p.click(".home-start-browse"); await p.waitForTimeout(600); } },
+  { 이름: "홈-둘러보기", 길: "/index.html", 준비: async p => { await p.evaluate(() => localStorage.clear()); await p.reload({ waitUntil: "networkidle" }); await p.click(".home-nav-more"); await p.waitForTimeout(600); } },
   { 이름: "선생님방-문앞", 길: "/admin.html" },
   { 이름: "선생님방-암호", 길: "/admin.html", 준비: async p => {
       await p.evaluate(() => { document.getElementById("문앞").hidden = true; document.getElementById("안쪽").hidden = false; document.querySelector(".adm-pass").open = true; document.getElementById("암호되돌리기").hidden = false; });

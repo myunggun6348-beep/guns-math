@@ -61,7 +61,6 @@
 .home-page .home-start-go { border-radius: var(--r-pill); background: var(--ink); color: var(--canvas); }
 .home-page .home-entry-benefits{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;font-size:12px;color:var(--home-muted)}
 .home-page .home-entry-benefits span{padding:5px 9px;border:1px solid var(--home-border);border-radius:6px}
-.home-page .home-start-actions .home-join-btn{min-height:var(--btn-h);padding:var(--btn-pad);border-radius:var(--r-pill);border-color:var(--hairline);color:inherit;font-size:var(--btn-font)}
 .home-page .home-setup-lead { color: var(--home-muted); opacity: 1; }
 .home-page .home-join { border-color: var(--home-border); }
 .home-page .footer { background: transparent; color: var(--home-muted); border-top: 1px solid var(--home-border); }
@@ -86,8 +85,7 @@
   .home-page .home-more { margin-top: 18px; }
   .home-page .home-start-go { min-width: 0; }
   .home-page .home-start-card.has-art .home-start-art{display:none}
-  .home-page .home-start-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .home-page .home-start-actions .home-start-go,.home-page .home-start-actions .home-join-btn{width:100%;min-width:0}
+    .home-page .home-start-actions .home-start-go{width:100%;min-width:0}
   .home-page .home-more .home-start { padding-top: 20px; }
   .home-page .home-more .home-start-head { padding-top: 0; margin-bottom: 14px; }
   .home-page .home-more .home-start-head .headline { font-size: 20px; }

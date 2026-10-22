@@ -67,26 +67,26 @@
         '<div class="home-start-art"></div>'+
         '<div class="home-start-body">'+
         '<span class="eyebrow">나의 수학 공부</span><h2>로그인하고<br>내 공부를 이어가세요</h2>'+
-        '<p class="home-setup-lead">나에게 맞는 문제를 풀고, 내 오답과 복습 기록을 한곳에서 확인하세요. 계정으로 로그인하면 다른 기기에서도 학습 기록을 이어 볼 수 있습니다.</p>'+
+        /* 고를 것은 둘뿐입니다 — 로그인 / 로그인 없이. 회원가입은 로그인 아래 한 줄.
+           예전에는 로그인·회원가입·자료 둘러보기·가입 없이 체험하기·아이디 찾기 다섯 개였는데,
+           '자료 둘러보기'는 바로 아래 '이 사이트에 있는 것'·위쪽 메뉴 '둘러보기'와 같은 일이고,
+           '아이디·비밀번호 찾기'는 로그인 창 안에 이미 있습니다(잊은 학생도 로그인부터 누릅니다). */
+        '<p class="home-setup-lead">내 오답과 복습 기록을 한곳에서. 로그인하면 다른 기기에서도 이어 볼 수 있습니다.</p>'+
         '<div class="home-entry-benefits"><span>맞춤 5문제</span><span>개인 오답노트</span><span>주간 복습 성과</span></div>'+
         '<div class="home-start-actions">'+
           '<button type="button" class="btn btn-primary home-start-go" id="homeLogin">로그인 →</button>'+
-          '<button type="button" class="home-join-btn" id="homeJoin">회원가입</button>'+
         '</div>'+
+        '<p class="home-join-line">처음이에요? <button type="button" class="home-text-link" id="homeJoin">회원가입</button></p>'+
         '<div class="home-join">'+
-          '<div class="home-join-actions">'+
-            '<a class="home-start-browse" href="#more">자료 둘러보기</a>'+
-            '<a class="home-start-browse" id="homeTry" href="'+(pending?pending.href:'today.html')+'">'+(pending?'체험 학습 이어하기':'가입 없이 체험하기')+'</a>'+
-            '<button type="button" class="student-text-action" id="homeRecover">아이디·비밀번호 찾기</button>'+
-          '</div>'+
-          '<small class="home-fork-note">체험 기록은 이 브라우저에 저장됩니다. 계정 학습 기록은 동기화되며 필기와 임시 풀이는 기기에 보관됩니다.</small>'+
+          // '체험'은 맛보기처럼 들리지만 실제로는 기록도 남고 오답노트도 쓰는 제대로 된 길이라 이름을 바꿉니다
+          '<a class="btn btn-secondary home-try" id="homeTry" href="'+(pending?pending.href:'today.html')+'">'+(pending?'로그인 없이 이어하기':'로그인 없이 써 보기')+'</a>'+
+          '<small class="home-fork-note">기록은 이 기기에만 남습니다.</small>'+
         '</div>'+
         '</div>'+
       '</div></div>';
     그림넣기();
     root.querySelector("#homeJoin").onclick=()=>window.StudentAccountUI?.열기("register");
     root.querySelector("#homeLogin").onclick=()=>window.StudentAccountUI?.열기("login");
-    root.querySelector('#homeRecover').onclick=()=>window.StudentAccountUI?.열기('recover');
     root.querySelector('#homeTry').onclick=()=>{try{sessionStorage.setItem('math-home-explore','true')}catch{}};
   }
 

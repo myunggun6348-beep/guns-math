@@ -73,6 +73,14 @@ const server=http.createServer((req,res)=>{
       assert.equal(await page.locator(".home-start-go").count(),1,"큰 문이 하나가 아닙니다");
       assert.equal(await page.locator(".home-start-go").getAttribute("id"),"homeLogin","첫 입구가 로그인이어야 합니다");
       assert.equal(await page.locator("#homeProfileForm").count(),0,"첫 화면에 입력 칸이 또 생겼습니다");
+      /* 고를 것은 둘 — 로그인 / 로그인 없이 써 보기. 회원가입은 로그인 아래 글씨 한 줄.
+         이 입구는 두 번이나 다시 늘어났습니다(한때 로그인·회원가입·자료 둘러보기·
+         가입 없이 체험하기·아이디 찾기 다섯 개). 아이디 찾기는 로그인 창 안에 있습니다. */
+      const 입구=await page.evaluate(()=>{const 카드=document.querySelector(".home-start-card");
+        const 누를것=[...카드.querySelectorAll("a,button")].filter(e=>e.checkVisibility());
+        return {단추:누를것.filter(e=>e.classList.contains("btn")).map(e=>e.textContent.trim()),글씨:누를것.filter(e=>!e.classList.contains("btn")).map(e=>e.textContent.trim())};});
+      assert.deepEqual(입구.단추,["로그인 →","로그인 없이 써 보기"],"홈 첫 카드의 단추가 둘이 아닙니다: "+입구.단추.join(", "));
+      assert.deepEqual(입구.글씨,["회원가입"],"홈 첫 카드에 글씨 링크가 늘었습니다: "+입구.글씨.join(", "));
 
       assert.equal(await page.evaluate(()=>Boolean(document.getElementById('homePersonal').compareDocumentPosition(document.getElementById('more'))&Node.DOCUMENT_POSITION_FOLLOWING)),true,'전체 메뉴가 학습 카드 아래에 와야 합니다');
       assert.equal(await page.locator(".student-account-button").isVisible(),true,"로그인 입구가 없습니다");
@@ -104,7 +112,7 @@ const server=http.createServer((req,res)=>{
 
       /* '둘러보기'를 누르면 접힌 칸이 실제로 펼쳐져야 합니다
          (전에는 그 자리로 내려가기만 하고 닫힌 채였습니다). */
-      await page.locator(".home-start-browse").first().click();
+      await page.locator(".home-nav-more").click();   // 홈 카드의 '자료 둘러보기'는 뺐습니다(같은 일)
       await page.waitForTimeout(300);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
       await page.locator(".home-more>summary").click();   // 다시 닫고 아래 검사를 이어 갑니다
@@ -206,6 +214,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 로그인 입구·가입·계정 찾기·명시적 체험·학년/과목 동기화·공개 자료·PC/태블릿/모바일");
+    console.log("메인 검사 통과: 첫 카드는 로그인/로그인 없이 둘 + 회원가입 한 줄·로그인 입구·가입·계정 찾기·명시적 체험·학년/과목 동기화·공개 자료·PC/태블릿/모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});
