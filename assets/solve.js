@@ -186,12 +186,24 @@ function drawStroke(ctx, stroke, width, height) {
     ctx.arc(points[0].x * width, points[0].y * height, baseWidth / 2, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    for (let i = 1; i < points.length; i += 1) {
-      const a = points[i - 1], b = points[i];
-      ctx.lineWidth = stroke.tool === "pen" ? baseWidth * (.75 + (b.p || .5) * .5) : baseWidth;
-      ctx.beginPath();
-      ctx.moveTo(a.x * width, a.y * height);
-      ctx.lineTo(b.x * width, b.y * height);
+    // 점과 점을 곧은 선으로 이으면 펜 글씨가 각져 보여서, 두 점의 가운데를 지나는 곡선으로 잇습니다.
+    // 펜은 누르는 힘에 따라 굵기가 달라 마디마다 따로 긋고, 형광펜은 한 번에 그어 겹친 자리가 진해지지 않게 합니다.
+    const P = points.map(p => ({ x: p.x * width, y: p.y * height, p: p.p }));
+    const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+    const piece = i => { // i번째 점을 꼭짓점으로 하는 마디: 앞 가운데점 → (i) → 뒤 가운데점
+      const from = i === 1 ? P[0] : mid(P[i - 1], P[i]), to = i === P.length - 1 ? P[i] : mid(P[i], P[i + 1]);
+      return [from, P[i], to];
+    };
+    if (stroke.tool === "pen") {
+      for (let i = 1; i < P.length; i += 1) {
+        const [from, c, to] = piece(i);
+        ctx.lineWidth = baseWidth * (.75 + (P[i].p || .5) * .5);
+        ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.quadraticCurveTo(c.x, c.y, to.x, to.y); ctx.stroke();
+      }
+    } else {
+      ctx.lineWidth = baseWidth;
+      ctx.beginPath(); ctx.moveTo(P[0].x, P[0].y);
+      for (let i = 1; i < P.length; i += 1) { const [, c, to] = piece(i); ctx.quadraticCurveTo(c.x, c.y, to.x, to.y); }
       ctx.stroke();
     }
   }
@@ -363,8 +375,25 @@ function updateInkSettings() {
   if (penDot) penDot.style.background = state.penColor;
   if (highlighterDot) highlighterDot.style.background = state.highlighterColor;
 }
+// 펜이 움직일 때마다 그 쪽의 모든 선을 다시 그리면 따라가지 못해 펜 위치를 놓치고 글씨가 각졌습니다.
+// 화면이 한 번 바뀔 때(1/60초) 한 번만 그립니다.
+let redrawQueued = false;
+function queueRedraw() {
+  if (redrawQueued) return;
+  redrawQueued = true;
+  requestAnimationFrame(() => { redrawQueued = false; redrawInk(); });
+}
+
+// 캔버스는 브라우저가 스크롤하지 않게 막아 두었습니다(touch-action:none) — 태블릿 펜 움직임을
+// 브라우저가 스크롤로 가로채 선이 끊기던 문제. 대신 '펜으로 풀기'를 끈 채 손가락으로 끌면 여기서 직접 넘깁니다.
+// 펜으로 쓰는 중에 닿은 손바닥은 무시합니다.
+let fingerPan = null;
 inkCanvas.addEventListener("pointerdown", event => {
-  if (state.tool === "hand" || (event.pointerType === "touch" && !$("#fingerDraw").checked)) return;
+  if (event.pointerType === "touch" && !$("#fingerDraw").checked) {
+    if (!state.drawing) fingerPan = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    return;
+  }
+  if (state.tool === "hand") return;
   event.preventDefault();
   inkCanvas.setPointerCapture(event.pointerId);
   state.drawing = true;
@@ -384,20 +413,29 @@ inkCanvas.addEventListener("pointerdown", event => {
 });
 
 inkCanvas.addEventListener("pointermove", event => {
+  if (fingerPan && event.pointerId === fingerPan.id) {
+    area.scrollBy(fingerPan.x - event.clientX, fingerPan.y - event.clientY);
+    fingerPan.x = event.clientX; fingerPan.y = event.clientY;
+    return;
+  }
   if (!state.drawing) return;
   event.preventDefault();
-  const events = event.getCoalescedEvents ? event.getCoalescedEvents() : [event];
+  // 사이사이 펜 위치까지 모두 받되, 비어서 오는 브라우저가 있어 그때는 이 위치 하나라도
+  const coalesced = event.getCoalescedEvents ? event.getCoalescedEvents() : [];
+  const events = coalesced.length ? coalesced : [event];
   events.forEach(sample => {
     const point = canvasPoint(sample);
     if (state.tool === "eraser") eraseAt(point);
     else if (state.activeStroke && ["line", "rect", "ellipse"].includes(state.tool)) state.activeStroke.points[1] = point;
     else if (state.activeStroke) state.activeStroke.points.push(point);
   });
-  redrawInk();
+  queueRedraw();
 });
 
 function endPointer(event) {
+  if (fingerPan && event && event.pointerId === fingerPan.id) { fingerPan = null; return; }
   if (!state.drawing) return;
+  redrawInk(); // 마지막 점까지 바로 그림
   if (event) event.preventDefault();
   state.drawing = false;
   state.activeStroke = null;

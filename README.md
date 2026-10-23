@@ -98,6 +98,7 @@ node scripts\update-exam-catalog.js --years 2024-2026
 | `node scripts\check-file-archive.cjs` | 자료실의 학년 저장·필터·모바일 배치 |
 | `node scripts\check-escape.js` | 수학 탈출의 문항 조합·채점·기록 |
 | `node scripts\check-study-sync.cjs` | 필기 보존·오답 삭제 전파·여러 기기 합산·재전송·동시 저장 충돌 |
+| `node scripts\check-solve-pen.cjs` | 바로 풀기 태블릿 펜: '펜으로 풀기' 맨 앞·스크롤에 안 뺏김·몰아 그리기·끄면 손가락은 넘기기 (인터넷 필요) |
 | `node scripts\check-worksheet.cjs` | 기출 문제지: 검색·원본에서 오림·정답표·인쇄 땐 종이만 (인터넷 필요) |
 | `node scripts\check-spaced-review.cjs` | 다시 맞히면 바로 복습 완료·다시 틀리면 복습 필요·예전 1~3단계 기록은 완료로 보존·동기화 |
 | `node scripts\check-spaced-review-ui.cjs` | PC·모바일 예전 주소(view=due)·정답 숨김·맞히면 바로 완료 |

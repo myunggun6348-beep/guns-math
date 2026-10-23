@@ -37,7 +37,7 @@ const 서버=http.createServer((req,res)=>{const 길=new URL(req.url,"http://x")
    /* 학생 쪽에는 선생님 방 가는 길이 없어야 합니다. 위쪽 단추 → 푸터 한 줄 →
       없앰으로 세 번 옮겨 다녔고, 스크립트(theme.js)가 모든 쪽에 몰래 붙이기도
       했습니다. 선생님은 즐겨찾기나 폰 홈 화면 아이콘으로 들어갑니다. */
-   if(!["admin.html","question-bank.html","review.html"].includes(쪽)){
+   if(!["admin.html","question-bank.html","review.html","worksheet.html"].includes(쪽)){
      let 문=0; try{ 문=await p.locator('a[href*="admin.html"]').count(); }catch{}
      if(문) 탈.push(쪽+" → 학생 화면에 선생님 방 링크가 "+문+"개 있습니다");
    }

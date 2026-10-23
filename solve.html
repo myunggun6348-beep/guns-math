@@ -40,6 +40,10 @@
 
 <main class="solve-app">
   <section class="solve-toolbar" aria-label="풀이 도구">
+    <!-- 맨 앞에 둡니다. 맨 끝에 있을 때는 태블릿에서 펜으로 쓰려던 사람이 찾지 못했습니다
+         (손가락처럼 잡히는 펜은 이걸 켜야 써집니다. 켜지 않으면 끌어서 넘기기). -->
+    <label class="finger-toggle"><input id="fingerDraw" type="checkbox" /> 펜으로 풀기</label>
+    <div class="tool-divider" aria-hidden="true"></div>
     <div class="tool-group page-tools" aria-label="페이지 이동">
       <button type="button" class="tool-button" id="prevPage" aria-label="이전 페이지">←</button>
       <label class="page-field"><input id="pageNumber" type="number" min="1" value="1" inputmode="numeric" aria-label="현재 페이지" /><span>/ <b id="pageCount">–</b></span></label>
@@ -72,7 +76,6 @@
       <button type="button" class="tool-button danger-button" id="clearButton">현재 쪽 지우기</button>
     </div>
     <div class="tool-spacer"></div>
-    <label class="finger-toggle"><input id="fingerDraw" type="checkbox" /> 손가락 필기</label>
     <div class="tool-group zoom-tools" aria-label="확대와 축소">
       <button type="button" class="tool-button" id="zoomOut" aria-label="축소">−</button>
       <button type="button" class="tool-button zoom-value" id="zoomFit" title="화면 너비에 맞추기">맞춤</button>
