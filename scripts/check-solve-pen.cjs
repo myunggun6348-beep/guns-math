@@ -94,10 +94,33 @@ const 서버 = http.createServer((q, r) => {
     assert.equal(집기.배율, "200%", "두 손가락 사이를 두 배로 벌린 뒤 배율이 200% 가 아닙니다: " + 집기.배율);
     assert.equal(집기.남은늘림, "", "손을 뗀 뒤에도 임시 늘림이 남았습니다");
 
+    // 두 손가락을 그대로 끌면 쪽 안에서 내려감 — '펜으로 풀기' 를 켜 한 손가락이 필기일 때도. 선은 안 생기고 배율도 그대로
+    await p.setViewportSize({ width: 820, height: 1000 });
+    await p.click("#zoomFit"); await p.waitForTimeout(2000);
+    await p.check("#fingerDraw");
+    // 앞 검사에서 그은 선이 없는 빈 쪽에서
+    await p.fill("#pageNumber", "5"); await p.press("#pageNumber", "Enter"); await p.waitForTimeout(1500);
+    const 두손가락 = await p.evaluate(() => new Promise(res => {
+      const c = document.getElementById("inkCanvas"), a = document.getElementById("documentArea"), r = c.getBoundingClientRect();
+      a.scrollTop = 0;
+      const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let 전 = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) 전++;
+      const 보냄 = (type, id, x, y) => c.dispatchEvent(new PointerEvent(type, { pointerId: id, pointerType: "touch", isPrimary: id === 21, bubbles: true, cancelable: true, clientX: x, clientY: y, buttons: 1 }));
+      const x = r.left + 300, y = 700;
+      보냄("pointerdown", 21, x - 40, y); 보냄("pointerdown", 22, x + 40, y);
+      for (let i = 1; i <= 10; i++) { 보냄("pointermove", 21, x - 40, y - i * 20); 보냄("pointermove", 22, x + 40, y - i * 20); }
+      보냄("pointerup", 22, x + 40, y - 200); 보냄("pointerup", 21, x - 40, y - 200);
+      setTimeout(() => { const e = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let 후 = 0; for (let i = 3; i < e.length; i += 4) if (e[i]) 후++; res({ 내려감: a.scrollTop, 선: 후 - 전, 배율: document.getElementById("zoomFit").textContent }); }, 500);
+    }));
+    assert.ok(두손가락.내려감 >= 150, "두 손가락으로 끌었는데 쪽 안에서 내려가지 않습니다(" + 두손가락.내려감 + "px)");
+    assert.ok(Math.abs(두손가락.선) < 50, "두 손가락으로 끌었는데 선이 생겼습니다 " + JSON.stringify(두손가락));
+    assert.equal(두손가락.배율, "맞춤", "두 손가락으로 끌기만 했는데 배율이 바뀌었습니다");
+    await p.uncheck("#fingerDraw");
+
     // 쪽 넘기기: 맨 아래 '다음 쪽' 단추, 맨 아래에서 휠로 더 내리면 다음 쪽, 맨 위에서 더 올리면 앞 쪽
     await p.setViewportSize({ width: 1024, height: 700 });
     const 쪽 = () => p.inputValue("#pageNumber");
-    await p.waitForTimeout(800);
+    await p.fill("#pageNumber", "1"); await p.press("#pageNumber", "Enter");
+    await p.waitForTimeout(1200);
     assert.equal(await 쪽(), "1");
     assert.match(await p.locator("#nextPageBottom").innerText(), /다음 쪽.*2 \/ 12/);
     await p.locator("#nextPageBottom").click();
@@ -122,7 +145,7 @@ const 서버 = http.createServer((q, r) => {
     assert.equal(await p.locator("#pageTurn").isVisible(), false, "마지막 쪽에도 '다음 쪽' 이 보입니다");
 
     assert.equal(오류.length, 0, 오류.join("\n"));
-    console.log("태블릿 펜 검사 통과: '펜으로 풀기' 맨 앞, 쪽 끝 '다음 쪽'·맨 아래에서 더 내리면 다음 쪽·맨 위에서 더 올리면 앞 쪽, 굵기 점 다섯·굵기 반영, 확대 단추 늘 보임(390·768·1024px)·두 손가락 확대, 스크롤에 안 뺏김, 펜 선·한 화면에 몰아 그림(" + 펜.그림 + "번/움직임 120), 끄면 손가락은 넘기기만(스크롤 " + 손.스크롤 + "px)·켜면 필기");
+    console.log("태블릿 펜 검사 통과: '펜으로 풀기' 맨 앞, 두 손가락으로 끌면 쪽 안에서 내려감(선·배율 그대로), 쪽 끝 '다음 쪽'·맨 아래에서 더 내리면 다음 쪽·맨 위에서 더 올리면 앞 쪽, 굵기 점 다섯·굵기 반영, 확대 단추 늘 보임(390·768·1024px)·두 손가락 확대, 스크롤에 안 뺏김, 펜 선·한 화면에 몰아 그림(" + 펜.그림 + "번/움직임 120), 끄면 손가락은 넘기기만(스크롤 " + 손.스크롤 + "px)·켜면 필기");
     await p.close();
   } finally { await b.close(); 서버.close(); }
 })().catch(e => { console.error(e); 서버.close(); process.exitCode = 1; });

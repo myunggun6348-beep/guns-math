@@ -395,19 +395,25 @@ let fingerPan = null;
 const touches = new Map();
 let pinch = null;
 const touchGap = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+const touchMid = () => { const [a, b] = [...touches.values()]; return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
 function startPinch() {
   fingerPan = null;
   if (state.drawing) { // 첫 손가락이 긋기 시작한 선은 지웁니다
     if (state.activeStroke) { const list = pageStrokes(), i = list.indexOf(state.activeStroke); if (i >= 0) list.splice(i, 1); }
     state.drawing = false; state.activeStroke = null; finishAction(); redrawInk();
   }
-  pinch = { start: touchGap(), zoom: state.zoom, scale: 1 };
+  // 두 손가락을 그대로 끌면 쪽 안에서 위아래로 움직이고(펜으로 풀기를 켜 한 손가락은 필기일 때도),
+  // 손가락 사이를 15% 넘게 벌리거나 오므리면 그때부터 확대·축소입니다(두 손가락 위치가 한 번에 하나씩 와서
+  // 그냥 끌 때도 사이가 잠깐 10% 남짓 벌어져 보입니다).
+  pinch = { start: touchGap(), zoom: state.zoom, scale: 1, mid: touchMid(), zooming: false };
+  newPullGesture(); // 두 손가락으로 끄는 것도 쪽 끝에서는 다음·앞 쪽으로
 }
 function endPinch() {
   paper.style.transform = "";
+  const zooming = pinch.zooming;
   state.zoom = Math.max(.55, Math.min(2.5, Math.round(pinch.zoom * pinch.scale * 10) / 10));
   pinch = null;
-  renderPage().catch(showRenderError);
+  if (zooming) renderPage().catch(showRenderError);
 }
 
 inkCanvas.addEventListener("pointerdown", event => {
@@ -443,8 +449,17 @@ inkCanvas.addEventListener("pointermove", event => {
   if (touches.has(event.pointerId)) touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (pinch) {
     if (touches.size >= 2) {
-      pinch.scale = Math.max(.55 / pinch.zoom, Math.min(2.5 / pinch.zoom, touchGap() / pinch.start));
-      paper.style.transform = "scale(" + pinch.scale + ")";
+      const mid = touchMid();
+      // 쪽을 넘긴 직후 남은 움직임은 버립니다 — 새 쪽이 맨 위부터 보이게
+      if (Date.now() >= pullRestUntil) area.scrollBy(pinch.mid.x - mid.x, pinch.mid.y - mid.y);
+      if (!pinch.zooming) pullPage(pinch.mid.y - mid.y);
+      pinch.mid = mid;
+      const ratio = touchGap() / pinch.start;
+      if (!pinch.zooming && Math.abs(ratio - 1) > .15) pinch.zooming = true;
+      if (pinch.zooming) {
+        pinch.scale = Math.max(.55 / pinch.zoom, Math.min(2.5 / pinch.zoom, ratio));
+        paper.style.transform = "scale(" + pinch.scale + ")";
+      }
     }
     return;
   }
@@ -467,8 +482,12 @@ inkCanvas.addEventListener("pointermove", event => {
   queueRedraw();
 });
 
+// 손가락을 필기 칸 밖(도구 줄 위 등)에서 떼도 알아야 합니다 — 남아 있으면 다음 한 손가락이 두 손가락으로 잡힙니다
+["pointerup", "pointercancel"].forEach(name => window.addEventListener(name, event => {
+  if (touches.delete(event.pointerId) && pinch && touches.size < 2) endPinch();
+}, true));
 function endPointer(event) {
-  if (event && touches.delete(event.pointerId) && pinch && touches.size < 2) { endPinch(); return; }
+  if (pinch) return;
   if (fingerPan && event && event.pointerId === fingerPan.id) { fingerPan = null; return; }
   if (!state.drawing) return;
   redrawInk(); // 마지막 점까지 바로 그림
@@ -632,7 +651,7 @@ let pull = 0, pullTimer = null, pullRestUntil = 0, pullEdge = { bottom: false, t
 const atBottom = () => area.scrollTop + area.clientHeight >= area.scrollHeight - 2, atTop = () => area.scrollTop <= 0;
 const newPullGesture = () => { pullEdge = { bottom: atBottom(), top: atTop() }; pull = 0; };
 function pullPage(dy) {
-  if (state.drawing || pinch || Date.now() < pullRestUntil) return false;
+  if (state.drawing || pinch?.zooming || Date.now() < pullRestUntil) return false;
   if ((dy > 0 && pullEdge.bottom && atBottom() && state.page < state.pageCount) || (dy < 0 && pullEdge.top && atTop() && state.page > 1)) pull += dy; else pull = 0;
   clearTimeout(pullTimer); pullTimer = setTimeout(() => { pull = 0; }, 450);
   if (Math.abs(pull) < 220) return false;
