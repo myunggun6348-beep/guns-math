@@ -62,8 +62,40 @@ const 서버 = http.createServer((q, r) => {
     await 긋기("touch", 380);
     await p.waitForTimeout(700);
     assert.ok(await 선수() > 펜뒤 + 500, "'펜으로 풀기' 를 켜고 그었는데 선이 안 생겼습니다");
+    // 굵기: 점 다섯 개, 누르면 그 점이 켜지고 다음 선이 굵어짐
+    assert.equal(await p.locator("[data-stroke-size]").count(), 5, "굵기 점이 다섯 개가 아닙니다");
+    await p.uncheck("#fingerDraw");
+    const 굵기선 = async 크기 => { await p.click('[data-stroke-size="' + 크기 + '"]'); const 전 = await 선수(); await 긋기("pen", 480 + 크기 * 40); await p.waitForTimeout(300); return (await 선수()) - 전; };
+    const 가는 = await 굵기선(1), 굵은 = await 굵기선(5);
+    assert.equal(await p.locator('[data-stroke-size="5"]').getAttribute("aria-pressed"), "true");
+    assert.ok(굵은 > 가는 * 2, `굵기 5 선(${굵은}점)이 굵기 1 선(${가는}점)보다 충분히 굵지 않습니다`);
+
+    // 확대·축소: 폰·태블릿 폭에서도 단추가 화면 안에 보이고, 누르면 배율이 바뀜. 두 손가락으로 벌리면 확대
+    for (const 폭 of [390, 768, 1024]) {
+      await p.setViewportSize({ width: 폭, height: 700 });
+      const 상자 = await p.locator("#zoomIn").boundingBox();
+      assert.ok(상자 && 상자.x + 상자.width <= 폭 && 상자.y + 상자.height <= 700, 폭 + "px 에서 확대 단추가 화면 밖입니다");
+    }
+    await p.click("#zoomIn");
+    await p.waitForFunction(() => document.getElementById("zoomFit").textContent === "110%");
+    await p.click("#zoomFit");
+    await p.waitForFunction(() => document.getElementById("zoomFit").textContent === "맞춤");
+    const 집기 = await p.evaluate(() => new Promise(res => {
+      const c = document.getElementById("inkCanvas"), r = c.getBoundingClientRect(), cx = r.left + 300, cy = r.top + 300;
+      const 보냄 = (type, id, dx) => c.dispatchEvent(new PointerEvent(type, { pointerId: id, pointerType: "touch", isPrimary: id === 11, bubbles: true, cancelable: true, clientX: cx + dx, clientY: cy, buttons: 1 }));
+      보냄("pointerdown", 11, -50); 보냄("pointerdown", 12, 50);
+      for (let i = 1; i <= 10; i++) { 보냄("pointermove", 11, -50 - i * 5); 보냄("pointermove", 12, 50 + i * 5); }
+      const 늘림 = document.getElementById("paper").style.transform;
+      보냄("pointerup", 12, 100); 보냄("pointerup", 11, -100);
+      setTimeout(() => res({ 늘림, 배율: document.getElementById("zoomFit").textContent, 남은늘림: document.getElementById("paper").style.transform }), 800);
+    }));
+    // 두 손가락 사이가 100px → 200px, 두 배
+    assert.equal(집기.늘림, "scale(2)", "두 손가락으로 벌리는 동안 종이가 커지지 않습니다: " + 집기.늘림);
+    assert.equal(집기.배율, "200%", "두 손가락 사이를 두 배로 벌린 뒤 배율이 200% 가 아닙니다: " + 집기.배율);
+    assert.equal(집기.남은늘림, "", "손을 뗀 뒤에도 임시 늘림이 남았습니다");
+
     assert.equal(오류.length, 0, 오류.join("\n"));
-    console.log("태블릿 펜 검사 통과: '펜으로 풀기' 맨 앞, 스크롤에 안 뺏김, 펜 선·한 화면에 몰아 그림(" + 펜.그림 + "번/움직임 120), 끄면 손가락은 넘기기만(스크롤 " + 손.스크롤 + "px)·켜면 필기");
+    console.log("태블릿 펜 검사 통과: '펜으로 풀기' 맨 앞, 굵기 점 다섯·굵기 반영, 확대 단추 늘 보임(390·768·1024px)·두 손가락 확대, 스크롤에 안 뺏김, 펜 선·한 화면에 몰아 그림(" + 펜.그림 + "번/움직임 120), 끄면 손가락은 넘기기만(스크롤 " + 손.스크롤 + "px)·켜면 필기");
     await p.close();
   } finally { await b.close(); 서버.close(); }
 })().catch(e => { console.error(e); 서버.close(); process.exitCode = 1; });

@@ -368,9 +368,10 @@ function updateInkSettings() {
     button.classList.toggle("on", on);
     button.setAttribute("aria-pressed", String(on));
   });
-  const slider = $("#strokeSize"), output = $("#strokeSizeValue");
-  if (slider) { slider.value = String(size); slider.disabled = !editable; }
-  if (output) output.textContent = String(size);
+  document.querySelectorAll("[data-stroke-size]").forEach(button => {
+    const on = Number(button.dataset.strokeSize) === size;
+    button.classList.toggle("on", on); button.setAttribute("aria-pressed", String(on)); button.disabled = !editable;
+  });
   const penDot = document.querySelector(".pen-dot"), highlighterDot = document.querySelector(".highlighter-dot");
   if (penDot) penDot.style.background = state.penColor;
   if (highlighterDot) highlighterDot.style.background = state.highlighterColor;
@@ -388,7 +389,33 @@ function queueRedraw() {
 // 브라우저가 스크롤로 가로채 선이 끊기던 문제. 대신 '펜으로 풀기'를 끈 채 손가락으로 끌면 여기서 직접 넘깁니다.
 // 펜으로 쓰는 중에 닿은 손바닥은 무시합니다.
 let fingerPan = null;
+
+// 두 손가락으로 벌리고 오므리면 확대·축소('펜으로 풀기' 를 켰든 껐든). 손가락을 떼면 그 배율로 다시 그립니다.
+// 움직이는 동안에는 종이를 늘였다 줄였다만 해서(transform) 무겁지 않게.
+const touches = new Map();
+let pinch = null;
+const touchGap = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+function startPinch() {
+  fingerPan = null;
+  if (state.drawing) { // 첫 손가락이 긋기 시작한 선은 지웁니다
+    if (state.activeStroke) { const list = pageStrokes(), i = list.indexOf(state.activeStroke); if (i >= 0) list.splice(i, 1); }
+    state.drawing = false; state.activeStroke = null; finishAction(); redrawInk();
+  }
+  pinch = { start: touchGap(), zoom: state.zoom, scale: 1 };
+}
+function endPinch() {
+  paper.style.transform = "";
+  state.zoom = Math.max(.55, Math.min(2.5, Math.round(pinch.zoom * pinch.scale * 10) / 10));
+  pinch = null;
+  renderPage().catch(showRenderError);
+}
+
 inkCanvas.addEventListener("pointerdown", event => {
+  if (event.pointerType === "touch") {
+    touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (touches.size === 2) { event.preventDefault(); startPinch(); return; }
+    if (pinch) return;
+  }
   if (event.pointerType === "touch" && !$("#fingerDraw").checked) {
     if (!state.drawing) fingerPan = { id: event.pointerId, x: event.clientX, y: event.clientY };
     return;
@@ -413,6 +440,14 @@ inkCanvas.addEventListener("pointerdown", event => {
 });
 
 inkCanvas.addEventListener("pointermove", event => {
+  if (touches.has(event.pointerId)) touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  if (pinch) {
+    if (touches.size >= 2) {
+      pinch.scale = Math.max(.55 / pinch.zoom, Math.min(2.5 / pinch.zoom, touchGap() / pinch.start));
+      paper.style.transform = "scale(" + pinch.scale + ")";
+    }
+    return;
+  }
   if (fingerPan && event.pointerId === fingerPan.id) {
     area.scrollBy(fingerPan.x - event.clientX, fingerPan.y - event.clientY);
     fingerPan.x = event.clientX; fingerPan.y = event.clientY;
@@ -433,6 +468,7 @@ inkCanvas.addEventListener("pointermove", event => {
 });
 
 function endPointer(event) {
+  if (event && touches.delete(event.pointerId) && pinch && touches.size < 2) { endPinch(); return; }
   if (fingerPan && event && event.pointerId === fingerPan.id) { fingerPan = null; return; }
   if (!state.drawing) return;
   redrawInk(); // 마지막 점까지 바로 그림
@@ -552,12 +588,12 @@ document.querySelectorAll("[data-ink-color]").forEach(button => button.addEventL
   else state.penColor = button.dataset.inkColor;
   saveToolPrefs(); updateInkSettings();
 }));
-$("#strokeSize").addEventListener("input", event => {
-  const value = Number(event.target.value);
+document.querySelectorAll("[data-stroke-size]").forEach(button => button.addEventListener("click", () => {
+  const value = Number(button.dataset.strokeSize);
   if (state.tool === "highlighter") state.highlighterSize = value;
   else state.penSize = value;
   saveToolPrefs(); updateInkSettings();
-});
+}));
 function updateGuideControls() {
   const grid = $("#gridToggle"), axes = $("#axesToggle"), snap = $("#snapToGrid");
   grid.classList.toggle("on", state.showGrid); grid.setAttribute("aria-pressed", String(state.showGrid));

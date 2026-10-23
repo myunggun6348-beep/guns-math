@@ -63,7 +63,8 @@
       <div class="ink-colors" role="group" aria-label="필기 색상">
         <button type="button" class="ink-color" data-ink-color="#19364a" aria-label="남색"></button><button type="button" class="ink-color" data-ink-color="#111111" aria-label="검정"></button><button type="button" class="ink-color" data-ink-color="#1769aa" aria-label="파랑"></button><button type="button" class="ink-color" data-ink-color="#c93636" aria-label="빨강"></button><button type="button" class="ink-color" data-ink-color="#198754" aria-label="초록"></button><button type="button" class="ink-color" data-ink-color="#ffd928" aria-label="노랑"></button>
       </div>
-      <label class="stroke-size">굵기 <input id="strokeSize" type="range" min="1" max="5" step="1" value="2"><output id="strokeSizeValue">2</output></label>
+      <!-- 굵기는 펜으로 끌기 어려운 작은 막대 대신, 눌러 고르는 점 다섯 개 -->
+      <div class="stroke-sizes" role="group" aria-label="굵기"><button type="button" class="stroke-size-btn" data-stroke-size="1" aria-label="아주 가늘게"><i style="--d:3px"></i></button><button type="button" class="stroke-size-btn" data-stroke-size="2" aria-label="가늘게"><i style="--d:5px"></i></button><button type="button" class="stroke-size-btn" data-stroke-size="3" aria-label="보통"><i style="--d:8px"></i></button><button type="button" class="stroke-size-btn" data-stroke-size="4" aria-label="굵게"><i style="--d:11px"></i></button><button type="button" class="stroke-size-btn" data-stroke-size="5" aria-label="아주 굵게"><i style="--d:15px"></i></button></div>
     </div>
     <div class="tool-group guide-tools" aria-label="수학 보조선">
       <button type="button" class="tool-button" id="gridToggle" aria-pressed="false"><span aria-hidden="true">▦</span> 모눈</button>
@@ -74,12 +75,6 @@
       <button type="button" class="tool-button" id="undoButton" title="되돌리기 (Ctrl+Z)" aria-label="되돌리기">↶</button>
       <button type="button" class="tool-button" id="redoButton" title="다시 실행 (Ctrl+Shift+Z)" aria-label="다시 실행">↷</button>
       <button type="button" class="tool-button danger-button" id="clearButton">현재 쪽 지우기</button>
-    </div>
-    <div class="tool-spacer"></div>
-    <div class="tool-group zoom-tools" aria-label="확대와 축소">
-      <button type="button" class="tool-button" id="zoomOut" aria-label="축소">−</button>
-      <button type="button" class="tool-button zoom-value" id="zoomFit" title="화면 너비에 맞추기">맞춤</button>
-      <button type="button" class="tool-button" id="zoomIn" aria-label="확대">＋</button>
     </div>
   </section>
 
@@ -94,6 +89,14 @@
       <canvas id="inkCanvas" aria-label="필기 영역"></canvas>
     </div>
   </section>
+
+  <!-- 확대·축소는 도구 줄 맨 끝에 있어 태블릿에서는 화면 밖으로 밀려 안 보였습니다.
+       문제지 오른쪽 아래에 늘 떠 있게 둡니다(두 손가락으로 벌리고 오므려도 됩니다). -->
+  <div class="tool-group zoom-tools zoom-float" aria-label="확대와 축소">
+    <button type="button" class="tool-button" id="zoomOut" aria-label="축소">−</button>
+    <button type="button" class="tool-button zoom-value" id="zoomFit" title="화면 너비에 맞추기">맞춤</button>
+    <button type="button" class="tool-button" id="zoomIn" aria-label="확대">＋</button>
+  </div>
 
   <footer class="solve-footer">
     <div class="timer" aria-label="풀이 시간">
