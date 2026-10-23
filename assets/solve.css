@@ -49,3 +49,7 @@
 .stroke-size-btn:disabled{opacity:.35;cursor:default}
 /* 태블릿 폭에서는 도구 줄을 두 줄로 — 한 줄로 두면 색·굵기·되돌리기가 오른쪽 밖으로 밀려 안 보였습니다 */
 @media(max-width:1280px){.solve-toolbar{flex-wrap:wrap;row-gap:6px;overflow-x:visible}.solve-toolbar .tool-divider,.solve-toolbar .tool-spacer{display:none}.solve-toolbar>.tool-group:not(.ink-settings){display:contents}.solve-toolbar{column-gap:5px}.solve-toolbar .tool-button{padding:0 8px;gap:5px}.solve-toolbar .finger-toggle,.solve-toolbar .snap-toggle{padding:0 8px}.stroke-size-btn{width:30px}}
+
+/* 쪽 끝의 '다음 쪽' */
+.page-turn{padding:18px 0 6px;line-height:normal}
+.page-turn-btn{min-height:var(--btn-h);padding:var(--btn-pad);border:1px solid var(--hairline);border-radius:999px;background:var(--canvas);color:var(--ink);font:var(--btn-weight) var(--btn-font) var(--sans);cursor:pointer}

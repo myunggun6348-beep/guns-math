@@ -94,8 +94,35 @@ const 서버 = http.createServer((q, r) => {
     assert.equal(집기.배율, "200%", "두 손가락 사이를 두 배로 벌린 뒤 배율이 200% 가 아닙니다: " + 집기.배율);
     assert.equal(집기.남은늘림, "", "손을 뗀 뒤에도 임시 늘림이 남았습니다");
 
+    // 쪽 넘기기: 맨 아래 '다음 쪽' 단추, 맨 아래에서 휠로 더 내리면 다음 쪽, 맨 위에서 더 올리면 앞 쪽
+    await p.setViewportSize({ width: 1024, height: 700 });
+    const 쪽 = () => p.inputValue("#pageNumber");
+    await p.waitForTimeout(800);
+    assert.equal(await 쪽(), "1");
+    assert.match(await p.locator("#nextPageBottom").innerText(), /다음 쪽.*2 \/ 12/);
+    await p.locator("#nextPageBottom").click();
+    await p.waitForFunction(() => document.getElementById("pageNumber").value === "2");
+    await p.waitForTimeout(800);
+    const 끝까지 = async () => p.evaluate(() => { const a = document.getElementById("documentArea"); a.scrollTop = a.scrollHeight; });
+    await 끝까지();
+    await p.mouse.move(500, 400);
+    await p.mouse.wheel(0, 120); await p.waitForTimeout(100);
+    assert.equal(await 쪽(), "2", "맨 아래에서 조금 내렸는데 바로 넘어갔습니다");
+    for (let i = 0; i < 3; i++) { await p.mouse.wheel(0, 120); await p.waitForTimeout(60); }
+    await p.waitForFunction(() => document.getElementById("pageNumber").value === "3", null, { timeout: 5000 }).catch(() => { throw new Error("맨 아래에서 더 내려도 다음 쪽으로 가지 않습니다"); });
+    assert.equal(await p.evaluate(() => document.getElementById("documentArea").scrollTop), 0, "다음 쪽이 맨 위부터 보이지 않습니다");
+    await p.waitForTimeout(900);
+    for (let i = 0; i < 4; i++) { await p.mouse.wheel(0, -120); await p.waitForTimeout(60); }
+    await p.waitForFunction(() => document.getElementById("pageNumber").value === "2", null, { timeout: 5000 }).catch(() => { throw new Error("맨 위에서 더 올려도 앞 쪽으로 가지 않습니다"); });
+    await p.waitForTimeout(600);
+    assert.ok(await p.evaluate(() => { const a = document.getElementById("documentArea"); return a.scrollTop + a.clientHeight >= a.scrollHeight - 2; }), "앞 쪽으로 가면 그 쪽의 맨 아래가 보여야 합니다");
+    await p.fill("#pageNumber", "12"); await p.press("#pageNumber", "Enter");
+    await p.waitForFunction(() => document.getElementById("pageNumber").value === "12");
+    await p.waitForTimeout(500);
+    assert.equal(await p.locator("#pageTurn").isVisible(), false, "마지막 쪽에도 '다음 쪽' 이 보입니다");
+
     assert.equal(오류.length, 0, 오류.join("\n"));
-    console.log("태블릿 펜 검사 통과: '펜으로 풀기' 맨 앞, 굵기 점 다섯·굵기 반영, 확대 단추 늘 보임(390·768·1024px)·두 손가락 확대, 스크롤에 안 뺏김, 펜 선·한 화면에 몰아 그림(" + 펜.그림 + "번/움직임 120), 끄면 손가락은 넘기기만(스크롤 " + 손.스크롤 + "px)·켜면 필기");
+    console.log("태블릿 펜 검사 통과: '펜으로 풀기' 맨 앞, 쪽 끝 '다음 쪽'·맨 아래에서 더 내리면 다음 쪽·맨 위에서 더 올리면 앞 쪽, 굵기 점 다섯·굵기 반영, 확대 단추 늘 보임(390·768·1024px)·두 손가락 확대, 스크롤에 안 뺏김, 펜 선·한 화면에 몰아 그림(" + 펜.그림 + "번/움직임 120), 끄면 손가락은 넘기기만(스크롤 " + 손.스크롤 + "px)·켜면 필기");
     await p.close();
   } finally { await b.close(); 서버.close(); }
 })().catch(e => { console.error(e); 서버.close(); process.exitCode = 1; });

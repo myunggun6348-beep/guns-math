@@ -513,6 +513,8 @@ async function renderPage() {
   $("#pageNumber").value = state.page;
   $("#prevPage").disabled = state.page <= 1;
   $("#nextPage").disabled = state.page >= state.pageCount;
+  $("#pageTurn").hidden = state.page >= state.pageCount;
+  $("#nextPageBottom").textContent = "다음 쪽 ↓  " + (state.page + 1) + " / " + state.pageCount;
   $("#zoomFit").textContent = state.zoom === 1 ? "맞춤" : Math.round(state.zoom * 100) + "%";
   updateEditButtons();
 }
@@ -620,6 +622,33 @@ $("#undoButton").addEventListener("click", undo);
 $("#redoButton").addEventListener("click", redo);
 $("#prevPage").addEventListener("click", () => goToPage(state.page - 1));
 $("#nextPage").addEventListener("click", () => goToPage(state.page + 1));
+$("#nextPageBottom").addEventListener("click", () => goToPage(state.page + 1));
+
+// 맨 아래에서 더 내리면 다음 쪽, 맨 위에서 더 올리면 앞 쪽(그 쪽의 맨 아래로).
+// 휠·트랙패드와 손가락 모두. 펜·손가락으로 쓰는 중이거나 두 손가락 확대 중에는 넘기지 않습니다.
+// 쪽이 화면에 다 들어올 만큼 작게 보면 위·아래 끝이 동시라 한 번 넘긴 뒤 잠깐 쉽니다.
+// 한 번 쓸어내려 끝에 닿았다고 바로 넘기지는 않습니다 — 끝에서 '새로' 한 번 더 내릴 때(손을 뗐다 다시, 휠은 잠깐 멈췄다 다시)만.
+let pull = 0, pullTimer = null, pullRestUntil = 0, pullEdge = { bottom: false, top: false }, lastWheel = 0;
+const atBottom = () => area.scrollTop + area.clientHeight >= area.scrollHeight - 2, atTop = () => area.scrollTop <= 0;
+const newPullGesture = () => { pullEdge = { bottom: atBottom(), top: atTop() }; pull = 0; };
+function pullPage(dy) {
+  if (state.drawing || pinch || Date.now() < pullRestUntil) return false;
+  if ((dy > 0 && pullEdge.bottom && atBottom() && state.page < state.pageCount) || (dy < 0 && pullEdge.top && atTop() && state.page > 1)) pull += dy; else pull = 0;
+  clearTimeout(pullTimer); pullTimer = setTimeout(() => { pull = 0; }, 450);
+  if (Math.abs(pull) < 220) return false;
+  const forward = pull > 0;
+  pull = 0; pullRestUntil = Date.now() + 700;
+  goToPage(state.page + (forward ? 1 : -1)).then(() => { if (!forward) area.scrollTo({ top: area.scrollHeight }); }).catch(showRenderError);
+  return true; // 넘겼음
+}
+// 넘긴 직후 잠깐은 남은 휠 움직임을 버립니다 — 안 그러면 새 쪽이 맨 위가 아니라 중간부터 보입니다
+area.addEventListener("wheel", event => { if (Date.now() - lastWheel > 250) newPullGesture(); lastWheel = Date.now(); if (Date.now() < pullRestUntil || pullPage(event.deltaY)) event.preventDefault(); }, { passive: false });
+let pullTouchY = null;
+area.addEventListener("touchstart", event => { pullTouchY = event.touches.length === 1 ? event.touches[0].clientY : null; newPullGesture(); }, { passive: true });
+area.addEventListener("touchmove", event => {
+  if (pullTouchY === null || event.touches.length !== 1) { pullTouchY = null; return; }
+  const y = event.touches[0].clientY; pullPage(pullTouchY - y); pullTouchY = y;
+}, { passive: true });
 $("#pageNumber").addEventListener("change", event => goToPage(event.target.value));
 $("#zoomOut").addEventListener("click", () => changeZoom(-.1));
 $("#zoomIn").addEventListener("click", () => changeZoom(.1));
