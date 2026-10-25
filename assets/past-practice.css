@@ -2,3 +2,45 @@
 
 /* 기출 연습: 학년·문항 수 이름표가 제목 띠 바로 아래로 옵니다 */
 .page-head + .past-meta { margin: -8px 0 4px; }
+/* 선택 흐름: 학년·과목 → 세부 개념 → 난도 → 문제 보기 */
+.past-context{min-height:24px;margin:0 0 14px;font-size:14px;opacity:.75}
+.past-context:empty{display:none}
+.past-chooser{display:grid;gap:20px;padding:24px;border:1px solid var(--hairline);border-radius:16px;background:var(--canvas)}
+.past-chooser fieldset{min-width:0;margin:0;padding:0;border:0}
+.past-chooser legend{margin-bottom:10px;font-size:16px;font-weight:700}
+.past-chooser legend>span{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:6px;border-radius:50%;background:var(--surface-soft);font:600 13px var(--mono)}
+.past-course-fields{display:grid;grid-template-columns:1fr 2fr;gap:12px}
+.past-chooser label:not(.past-level){display:grid;gap:6px;min-width:0;font-size:13px;font-weight:600}
+.past-chooser select{width:100%;min-width:0;min-height:48px;padding:8px 12px;border:1px solid var(--hairline);border-radius:8px;background:var(--canvas);color:var(--ink);font:inherit;font-size:16px}
+.past-chooser select:disabled{opacity:.55}
+.past-levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.past-level{position:relative;cursor:pointer}
+.past-level input{position:absolute;top:50%;left:12px;transform:translateY(-50%);accent-color:var(--ink);width:16px;height:16px;margin:0}
+.past-level>span{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;min-height:48px;padding:8px 8px 8px 32px;border:1px solid var(--hairline);border-radius:var(--r-pill);font-size:15px;font-weight:650}
+.past-level input:checked+span{background:var(--chip-on);border-color:var(--chip-on);color:var(--chip-on-ink)}
+.past-level input:focus-visible+span{outline:2px solid var(--ink);outline-offset:3px}
+.past-level small{font-size:12px;font-weight:500}
+.past-level-note{margin:10px 0 0;font-size:13px;opacity:.7}
+.past-chooser>.past-button{min-height:48px;cursor:pointer;justify-self:start}
+.past-chooser>.past-button:disabled{cursor:default;opacity:.45}
+.past-selection-status{margin:0;font-size:14px}
+#pastResults{margin-top:28px;scroll-margin-top:80px}
+#pastResults h2{margin:0;font-size:24px}
+.past-result-meta{margin:6px 0 14px;font-size:14px;opacity:.7}
+.past-guide{font-size:14px}
+.past-card h3{margin:6px 0;font-size:21px}
+.past-number{margin-top:12px;font-size:30px}
+.past-reason{margin:0 0 18px;font-size:14px}
+.past-reason summary{min-height:40px;display:list-item;cursor:pointer;align-content:center}
+.past-reason p{margin:8px 0 0}
+.past-empty{padding:20px;border-radius:12px;background:var(--surface-soft);font-size:15px}
+.past-empty p{margin:0 0 6px}
+@media(max-width:600px){
+ .past-chooser{padding:16px;gap:18px}
+ .past-course-fields{grid-template-columns:1fr}
+ .past-level>span{flex-direction:column;gap:1px;padding:10px 6px 10px 23px;font-size:14px}
+ .past-level input{left:8px;width:14px;height:14px}
+ .past-level small{font-size:11px}
+ .past-chooser>.past-button{justify-self:stretch}
+ #pastResults h2{font-size:21px}
+}
