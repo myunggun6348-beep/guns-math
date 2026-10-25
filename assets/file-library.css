@@ -1,16 +1,82 @@
-.grade-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:34px 0 18px}.grade-tab{display:inline-flex;align-items:center;justify-content:center;min-height:var(--chip-h);padding:var(--chip-pad);border:1px solid var(--hairline);border-radius:var(--r-pill);background:var(--canvas);color:var(--ink);font:inherit;font-size:var(--chip-font);font-weight:var(--chip-weight);cursor:pointer}.grade-tab span{margin-left:6px;font:500 12px var(--mono);opacity:.6}.grade-tab:hover{border-color:var(--ink)}.grade-tab.on{border-color:var(--chip-on);background:var(--chip-on);color:var(--chip-on-ink)}
-.archive-tools{display:grid;grid-template-columns:180px 180px minmax(240px,1fr);gap:10px;margin-bottom:38px}.archive-tools select,.archive-tools input{width:100%;height:50px;border:1px solid var(--hairline);border-radius:8px;background:var(--canvas);color:var(--ink);padding:0 14px;font:inherit}.archive-tools input:focus,.archive-tools select:focus{border-color:var(--ink)}.archive-summary{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:12px}.archive-summary h2{font-size:25px;margin:0}.archive-summary p{margin:0}.archive-year{margin:34px 0 10px;padding-bottom:9px;border-bottom:2px solid var(--ink);font:700 16px var(--mono)}
-.archive-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.archive-card{display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center;gap:18px;min-height:126px;padding:20px;border:1px solid var(--hairline);border-radius:12px;color:var(--ink);text-decoration:none;background:var(--canvas)}.archive-card:hover{border-color:var(--ink);background:var(--surface-soft)}.archive-grade{display:grid;place-items:center;align-self:stretch;min-height:70px;border-radius:8px;background:var(--block-lime);color:#14150f;font-weight:750;line-height:1.25;text-align:center}.archive-grade.common{background:var(--block-lilac)}.archive-copy{min-width:0}.archive-copy h3{margin:0 0 7px;font-size:19px;line-height:1.45}.archive-meta{display:flex;flex-wrap:wrap;gap:5px 12px;font-size:14px;opacity:.65}.archive-open{font-size:14px;font-weight:650;white-space:nowrap}.archive-empty{padding:60px 20px;text-align:center;background:var(--surface-soft);border-radius:12px}
-@media(max-width:850px){.archive-list{grid-template-columns:1fr}.archive-tools{grid-template-columns:1fr 1fr}.archive-tools input{grid-column:1/-1}}@media(max-width:600px){.grade-tabs{grid-template-columns:repeat(2,1fr)}.grade-tab:first-child{grid-column:1/-1}.archive-tools{grid-template-columns:1fr}.archive-tools input{grid-column:auto}.archive-card{grid-template-columns:58px minmax(0,1fr);padding:16px;gap:13px}.archive-open{grid-column:2}.archive-summary{align-items:start;flex-direction:column}.archive-grade{min-height:62px}.archive-copy h3{font-size:17px}}
-
-.exam-bundle{grid-template-columns:72px minmax(0,1fr);align-items:start}.exam-bundle:hover{background:var(--canvas)}.exam-bundle .archive-grade{min-height:70px}.exam-sets{display:grid;gap:9px;margin-top:16px}.exam-set{display:grid;grid-template-columns:100px minmax(0,1fr);align-items:center;gap:10px;padding-top:9px;border-top:1px solid var(--hairline)}.exam-set strong{font-size:13px}.exam-actions{display:flex;flex-wrap:wrap;gap:6px}.exam-file-button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:36px;padding:7px 11px;border:1px solid var(--hairline);border-radius:7px;color:var(--ink);background:var(--surface-soft);font-size:13px;font-weight:650;text-decoration:none}.exam-file-button:hover{border-color:var(--ink);background:var(--block-lime);color:#14150f}.exam-source{display:inline-block;margin-top:13px;color:var(--ink);font-size:12px;opacity:.58}.exam-source:hover{opacity:1}
-.exam-solve-button{border-color:#111;background:var(--block-lime);color:#111}.exam-solve-button:hover{background:#111;color:#fff}
-@media(max-width:600px){.exam-bundle{grid-template-columns:52px minmax(0,1fr)}.exam-set{grid-template-columns:1fr}.exam-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.exam-file-button{padding:7px 5px}.exam-solve-button{grid-column:1/-1}.exam-bundle .archive-grade{min-height:58px}}
-
-/* 연도 칸 — 가장 최근 연도만 펼쳐 두고 나머지는 눌러서 펼칩니다 */
-.archive-year-group>summary{display:flex;align-items:center;gap:10px;list-style:none;cursor:pointer}
-.archive-year-group>summary::-webkit-details-marker{display:none}
-.archive-year-group>summary span{font:500 13px var(--sans);opacity:.6}
+/* 자료실: 시험을 먼저 훑고, 필요한 과목과 파일만 펼칩니다. */
+#files{padding-top:28px}
+#files .page-head{padding:14px 18px;margin-bottom:20px}
+.grade-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:0 0 14px}
+.grade-tab{display:inline-flex;align-items:center;justify-content:center;min-height:var(--chip-h);padding:var(--chip-pad);border:1px solid var(--hairline);border-radius:var(--r-pill);background:var(--canvas);color:var(--ink);font:inherit;font-size:var(--chip-font);font-weight:var(--chip-weight);cursor:pointer}
+.grade-tab span{margin-left:6px;font:500 12px var(--mono);opacity:.65}
+.grade-tab:hover{border-color:var(--ink)}
+.grade-tab.on{border-color:var(--chip-on);background:var(--chip-on);color:var(--chip-on-ink)}
+.archive-tools{display:grid;grid-template-columns:repeat(3,minmax(140px,1fr)) minmax(240px,2fr);gap:8px;margin-bottom:22px}
+.archive-tools select,.archive-tools input{width:100%;min-width:0;height:44px;border:1px solid var(--hairline);border-radius:8px;background:var(--canvas);color:var(--ink);padding:0 12px;font:inherit;font-size:16px}
+.archive-tools input:focus,.archive-tools select:focus{border-color:var(--ink)}
+.archive-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.archive-summary h2{font-size:21px;margin:0}
+.archive-summary p{margin:0}
+.archive-year{margin:18px 0 8px;padding:6px 0;border-bottom:1px solid var(--hairline);font:700 15px var(--mono)}
+.archive-year-group>summary{display:flex;align-items:center;gap:8px;min-height:44px;list-style:none;cursor:pointer}
+.archive-year-group>summary::-webkit-details-marker,.exam-summary::-webkit-details-marker{display:none}
+.archive-year-group>summary span{font:500 13px var(--sans);opacity:.65}
 .archive-year-group>summary::after{content:"＋";margin-left:auto;font:400 20px var(--sans)}
 .archive-year-group[open]>summary::after{content:"－"}
-@media(max-width:860px){.archive-year-group>summary{min-height:44px}}
+.archive-list{display:grid;grid-template-columns:1fr;gap:8px}
+.archive-card{min-width:0;border:1px solid var(--hairline);border-radius:12px;color:var(--ink);text-decoration:none;background:var(--canvas);overflow-wrap:anywhere}
+.archive-card:hover{border-color:var(--ink)}
+.archive-copy{display:block;min-width:0}
+.exam-title{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.archive-copy h3{margin:0;font-size:17px;line-height:1.45;font-weight:700}
+.archive-grade{display:inline-flex;align-items:center;flex:none;min-height:24px;padding:1px 8px;border-radius:5px;background:var(--surface-soft);font-size:12px;font-weight:650}
+.archive-meta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:13px;opacity:.7}
+.archive-single{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px}
+.archive-single:hover{background:var(--surface-soft)}
+.archive-open{flex:none;font-size:14px;font-weight:650;white-space:nowrap}
+.archive-empty{padding:32px 18px;text-align:center;background:var(--surface-soft);border-radius:12px;font-size:15px}
+.exam-summary{display:flex;align-items:center;gap:16px;min-height:80px;padding:14px 18px;list-style:none;cursor:pointer}
+.exam-summary .archive-copy{flex:1}
+.exam-summary:hover{background:var(--surface-soft);border-radius:11px}
+.exam-subjects{max-width:42%;font-size:13px;opacity:.7;text-align:right}
+.exam-expand{display:grid;place-items:center;flex:none;width:28px;height:28px;border:1px solid var(--hairline);border-radius:50%;font-size:19px}
+.exam-expand::before{content:"＋"}
+.exam-bundle[open]>.exam-summary .exam-expand::before{content:"－"}
+.exam-content{padding:0 18px 14px}
+.exam-sets{display:grid}
+.exam-set{display:grid;grid-template-columns:minmax(110px,1fr) auto;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--hairline)}
+.exam-set strong{font-size:14px}
+.exam-actions,.exam-downloads{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.exam-downloads{gap:2px}
+.exam-file-button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:44px;padding:8px 12px;border-radius:var(--r-pill);color:var(--ink);font-size:14px;font-weight:650;text-decoration:none;white-space:nowrap}
+.exam-file-link{background:transparent;border:1px solid transparent;font-weight:500}
+.exam-file-link:hover{border-color:var(--hairline);background:var(--surface-soft)}
+.exam-solve-button{border:1px solid #111;background:var(--block-lime);color:#111}
+.exam-solve-button:hover{background:#111;color:#fff}
+.exam-source{display:inline-flex;align-items:center;min-height:32px;color:var(--ink);font-size:12px;opacity:.7}
+.exam-source:hover{opacity:1}
+.exam-summary:focus-visible,.archive-year:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:8px}
+@media(max-width:850px){
+  .archive-tools{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .archive-tools input{grid-column:1/-1}
+  .exam-subjects{max-width:34%}
+}
+@media(max-width:600px){
+  #files{padding-top:16px}
+  #files .page-head{padding:10px 14px;margin-bottom:14px}
+  .grade-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .grade-tab{flex:1 1 auto;min-height:44px;padding:0 10px}
+  .grade-tab span{margin-left:4px;font-size:11px}
+  .archive-tools{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}
+  .archive-tools #subjectFilter,.archive-tools input{grid-column:1/-1}
+  .archive-summary h2{font-size:19px}
+  .archive-year{margin-top:12px}
+  .exam-summary{display:grid;grid-template-columns:minmax(0,1fr) 28px;gap:5px 10px;padding:12px;min-height:76px}
+  .exam-summary .archive-copy{grid-column:1;grid-row:1}
+  .exam-subjects{grid-column:1;grid-row:2;max-width:none;text-align:left;font-size:12px}
+  .exam-expand{grid-column:2;grid-row:1/3}
+  .archive-copy h3{font-size:16px}
+  .archive-meta{font-size:12px}
+  .exam-content{padding:0 12px 10px}
+  .exam-set{grid-template-columns:1fr;gap:8px;padding:12px 0}
+  .exam-actions{display:grid;grid-template-columns:1fr;gap:4px}
+  .exam-downloads{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .exam-file-link{border-color:var(--hairline);padding:8px 4px}
+  .exam-solve-button{width:100%}
+  .archive-single{padding:12px}
+}

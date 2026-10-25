@@ -48,7 +48,7 @@ files/                      위 자료실이 내려주는 PDF 들 (올리는 법
 assets/demos.js            자료 목록 (DEMOS) — 홈의 찾기와 library.html 이 함께 씁니다
 assets/concepts.js         개념 목록 (NODES/LAYERS/EDGES) — 홈의 찾기와 map.html
 assets/exam-catalog.json   최근 3개년 EBSi 기출 목록
-assets/file-library.js     학년·연도·검색 필터와 기출 링크
+assets/file-library.js     학년·과목·종류·연도·검색 필터와 시험별 접기/펼치기·기출 링크
 assets/solve.js · solve.css 태블릿 풀이 화면과 필기 저장
 assets/theme.js            어두운 화면 켜고 끄기 — 다섯 페이지가 함께 씁니다
 assets/style.css           사이트 전체 공통 스타일
@@ -390,6 +390,12 @@ chrome --headless --window-size=512,512 --screenshot=assets\icon-512.png ^
 들어오면 펼친 채로 뜬다.
 
 ### 자료실 — 내려받는 파일 (`files.html`)
+
+자료실은 시험별로 접힌 목록을 보여 줍니다. 제목을 누르면 과목별 ‘바로 풀기’와 문제지·정답·해설 링크가 펼쳐집니다. 학년 탭을 선택하면 카드에 학년을 반복하지 않고, 전체 보기에서만 작은 중립색 학년 태그를 표시합니다. 연두색은 선택 학년과 ‘바로 풀기’에 사용합니다.
+
+과목 필터는 선택 학년의 실제 자료에서 만들며, 기출은 과목 묶음의 이름, 업로드 자료는 등록한 과목을 사용합니다. 과목 선택이나 검색 시 일치하는 시험·과목을 펼쳐 찾은 자료가 숨지 않게 합니다. 다른 학년으로 바꾸면 그 학년에 없는 선택 과목은 해제합니다. 기존 `grade`, `year`, `kind`, `q` 주소와 학년 기억을 유지하며 `subject` 주소도 지원합니다. 파일 원본과 풀이 링크의 시험 ID·과목, 필기 저장 방식은 유지합니다.
+
+`node scripts/check-file-archive.cjs`는 시험 접기/펼치기·과목/연도/종류/검색 조합·파일/풀이 주소·학습지 호환·학년 기억·320/390/820/1280px 밝은/어두운 화면을 검사합니다. 번들 Playwright 경로는 현재 사용자 홈을 기준으로 찾고 `PLAYWRIGHT_PATH`, `BROWSER_PATH`로 지정할 수도 있습니다. `ARCHIVE_SCREENSHOTS`를 지정하면 해당 폴더에 검사 화면을 저장합니다.
 
 파일은 **자료실에서 바로 올린다** — `files.html?admin` 으로 들어가 선생님 방과 같은
 암호를 넣으면 올리는 칸이 생긴다(`api/files-admin.js`). 올린 것이 없으면 "아직 올린

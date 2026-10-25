@@ -68,17 +68,18 @@
 </header>
 
 <!-- ===================== 자료실 ===================== -->
-<section class="section" id="files" style="padding-top: var(--xxl);">
+<section class="section" id="files">
   <div class="wrap">
-    <header class="page-head g-find"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg></span><div class="page-head-text"><h1>자료실</h1><p>학년별 수업 자료와 모의고사 문제·정답·해설을 모아 둡니다. <strong>바로 풀기</strong>를 누르면 태블릿 펜으로 문제지 위에 직접 풀이할 수 있습니다.</p></div></header>
+    <header class="page-head g-find"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg></span><div class="page-head-text"><h1>자료실</h1><p>시험을 펼쳐 과목별로 바로 풀거나 문제지·정답·해설을 열어 보세요.</p></div></header>
 
     <div class="grade-tabs" id="gradeTabs" role="group" aria-label="학년 선택"></div>
     <div class="archive-tools">
+      <select id="subjectFilter" aria-label="과목"><option value="">모든 과목</option></select>
       <select id="kindFilter" aria-label="자료 종류"><option>모든 자료 종류</option></select>
       <select id="yearFilter" aria-label="시행 연도"><option>모든 연도</option></select>
       <input type="search" id="fileSearch" placeholder="제목·과목·시험명 검색" aria-label="자료 검색" />
     </div>
-    <div class="archive-summary"><h2 id="archiveHeading">전체</h2><p class="caption" id="archiveCount"></p></div>
+    <div class="archive-summary"><h2 id="archiveHeading">전체</h2><p class="caption" id="archiveCount" role="status" aria-live="polite"></p></div>
     <div id="fileList"></div>
   </div>
 </section>
