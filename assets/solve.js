@@ -553,7 +553,7 @@ function changeZoom(delta) {
 
 function showRenderError(error) {
   console.error(error);
-  setLoading("문제지를 열지 못했습니다.", "잠시 후 다시 시도하거나 자료실에서 원본 문제를 열어 주세요.", true);
+  setLoading("문제지를 열지 못했습니다.", "잠시 후 다시 시도하거나 기출·학습자료에서 원본 문제를 열어 주세요.", true);
 }
 
 function setupDocument(item, subjectSet) {
@@ -878,7 +878,7 @@ window.addEventListener("pagehide", () => { if (state.docKey) persistNotes(); })
 updateEditButtons();
 start().catch(error => {
   console.error(error);
-  setLoading("문제지를 찾지 못했습니다.", "자료실에서 풀 문제를 다시 선택해 주세요.", true);
+  setLoading("문제지를 찾지 못했습니다.", "기출·학습자료에서 풀 문제를 다시 선택해 주세요.", true);
   $("#examTitle").textContent = "문제 선택이 필요합니다";
-  $("#examMeta").textContent = "자료실의 ‘바로 풀기’를 이용해 주세요.";
+  $("#examMeta").textContent = "기출·학습자료의 ‘바로 풀기’를 이용해 주세요.";
 });

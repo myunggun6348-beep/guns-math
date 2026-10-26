@@ -60,7 +60,7 @@
       <span class="eyebrow">Admin</span>
       <h1 class="display-lg">선생님 방</h1>
       <p class="body-lg" style="margin-top: var(--md); max-width: 30em;">
-        암호를 넣으면 질문에 답을 달고, 제출한 풀이를 확인하며 자료실을 관리할 수 있습니다.
+        암호를 넣으면 질문에 답을 달고, 제출한 풀이를 확인하며 기출·학습자료을 관리할 수 있습니다.
       </p>
       <form class="adm-login" id="로그인">
         <input type="password" placeholder="암호" autocomplete="current-password" required />
@@ -187,12 +187,12 @@
         <div id="공지목록"></div>
       </section>
 
-      <!-- ===== 자료실 ===== -->
+      <!-- ===== 기출·학습자료 ===== -->
       <section class="adm-block">
-        <h2 class="display-sm">자료실</h2>
+        <h2 class="display-sm">기출·학습자료</h2>
         <p class="body-sm adm-note">
           pdf · hwp · hwpx 파일을 올릴 수 있습니다. 하나에 50MB까지입니다.
-          올리는 즉시 자료실과 홈 검색에 나타납니다.
+          올리는 즉시 기출·학습자료과 홈 검색에 나타납니다.
         </p>
 
         <form class="adm-upload" id="파일올리기">
@@ -346,7 +346,7 @@
       (묶음[`${n.year} · ${n.subject}`] ||= []).push([id, n.name]);
     }
     칸.innerHTML =
-      `<option value="">개념 연결 안 함 (자료실에만 두기)</option>` +
+      `<option value="">개념 연결 안 함 (기출·학습자료에만 두기)</option>` +
       Object.entries(묶음).map(([제목, 것들]) =>
         `<optgroup label="${제목}">` +
         것들.map(([id, 이름]) =>
@@ -890,7 +890,7 @@
     }
   });
 
-  /* ---------- 자료실 ---------- */
+  /* ---------- 기출·학습자료 ---------- */
   let 수정중 = null; // 지금 제목을 고치고 있는 파일의 id (한 번에 하나만)
 
   function 학년선택(값) {
@@ -956,7 +956,7 @@
     try {
       const 응답 = await fetch("/api/files");
       if (응답.status === 503) {
-        파일목록.innerHTML = `<p class="empty">자료실 저장소를 준비하고 있습니다.</p>`;
+        파일목록.innerHTML = `<p class="empty">기출·학습자료 저장소를 준비하고 있습니다.</p>`;
         return;
       }
       파일들 = await 응답.json();
@@ -1117,7 +1117,7 @@
 
   const 쪽이름 = p => ({
     "/index.html": "홈", "/library.html": "직접 보는 수학", "/map.html": "개념 지도",
-    "/files.html": "자료실", "/ask.html": "질문",
+    "/files.html": "기출·학습자료", "/ask.html": "질문",
   })[p] || (typeof DEMOS !== "undefined" && (DEMOS.find(d => "/" + d.href === p) || {}).title) || p;
 
   const 날짜말 = (날, 요일도 = true) => {

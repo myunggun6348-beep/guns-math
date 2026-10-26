@@ -117,7 +117,7 @@ const server=http.createServer((req,res)=>{
          가는 길이 첫 화면에 없었습니다. ☰ 를 눌러 메뉴가 실제로 열리는지까지 봅니다. */
       assert.equal(await page.locator(".home-nav-more").count(),0,"홈에 '둘러보기'가 다시 생겼습니다");
       const 메뉴=await page.evaluate(()=>[...document.querySelectorAll("#navLinks a")].map(a=>a.textContent.trim()));
-      assert.deepEqual(메뉴,["오늘의 학습","오답노트","자료실","직접 보는 수학","개념 지도","게임","질문"],"홈 메뉴가 다른 쪽과 다릅니다: "+메뉴.join(", "));
+      assert.deepEqual(메뉴,["오늘의 학습","오답노트","기출·학습자료","직접 보는 수학","개념 지도","게임","질문"],"홈 메뉴가 다른 쪽과 다릅니다: "+메뉴.join(", "));
       if(viewport.width>=900){
         assert.equal(await page.locator("#navLinks").isVisible(),true,"컴퓨터 홈에 메뉴 줄이 안 보입니다");
       }else{

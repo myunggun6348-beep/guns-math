@@ -45,7 +45,7 @@
     <div class="nav-links" id="navLinks">
       <a href="today.html">오늘의 학습</a>
       <a href="wrong-notes.html">오답노트</a>
-      <a href="files.html">자료실</a>
+      <a href="files.html">기출·학습자료</a>
       <a href="library.html">직접 보는 수학</a>
       <a href="map.html" aria-current="page">개념 지도</a>
       <a href="games.html">게임</a>
@@ -125,7 +125,7 @@
         <li><a href="index.html#notice">공지</a></li>
         <li><a href="library.html">직접 보는 수학</a></li>
         <li><a href="map.html">개념 지도</a></li>
-        <li><a href="files.html">자료실</a></li>
+        <li><a href="files.html">기출·학습자료</a></li>
         <li><a href="ask.html">질문</a></li>
         <li><a href="games.html">게임</a></li>
       </ul>
@@ -171,9 +171,9 @@ const 주소수정 = (이름, 값) => {
 const before = id => EDGES.filter(e => e[1] === id).map(e => e[0]);
 const after  = id => EDGES.filter(e => e[0] === id).map(e => e[1]);
 
-/* ---------- 자료실 학습지 ----------
+/* ---------- 기출·학습자료 학습지 ----------
    선생님이 자료를 올릴 때 고른 개념을 여기서 읽어, 그 개념을 눌렀을 때
-   '볼 것(데모)' 옆에 '풀 것(학습지)'을 같이 놓습니다. 자료실은 수시로
+   '볼 것(데모)' 옆에 '풀 것(학습지)'을 같이 놓습니다. 기출·학습자료은 수시로
    바뀌므로 코드에 적어 두지 않고 /api/files 에서 그때그때 받아 옵니다. */
 let 파일들 = [];
 const 학습지 = id => 파일들.filter(f => f.concept === id);
@@ -415,7 +415,7 @@ function select(id, push) {
         <h3 class="caption">관련 기출문제</h3>
         <div class="cmap-links">
           <a class="cmap-exam-link" href="${기출주소(id)}">${n.year} ${기출과목(id)} 최근 3개년 기출 보기 →</a>
-          <span class="cmap-none">${n.name}과 연결되는 과목 기출을 자료실에서 바로 풉니다.</span>
+          <span class="cmap-none">${n.name}과 연결되는 과목 기출을 기출·학습자료에서 바로 풉니다.</span>
         </div>
       </div>
     </div>`;
@@ -512,7 +512,7 @@ clearPanel();
 필터적용();
 drawLines();
 
-/* 자료실에서 학습지 목록을 받아 옵니다. 늦게 도착하므로, 도착하면
+/* 기출·학습자료에서 학습지 목록을 받아 옵니다. 늦게 도착하므로, 도착하면
    상자의 숫자(볼 것 + 풀 것)를 다시 세고, 열려 있던 개념도 다시 그립니다. */
 fetch("/api/files")
   .then(r => (r.ok ? r.json() : []))
