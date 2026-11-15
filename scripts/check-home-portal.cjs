@@ -82,7 +82,9 @@ const server=http.createServer((req,res)=>{
       assert.deepEqual(입구.단추,["로그인 →","로그인 없이 써 보기"],"홈 첫 카드의 단추가 둘이 아닙니다: "+입구.단추.join(", "));
       assert.deepEqual(입구.글씨,["회원가입"],"홈 첫 카드에 글씨 링크가 늘었습니다: "+입구.글씨.join(", "));
 
-      assert.equal(await page.evaluate(()=>Boolean(document.getElementById('homePersonal').compareDocumentPosition(document.getElementById('more'))&Node.DOCUMENT_POSITION_FOLLOWING)),true,'전체 메뉴가 학습 카드 아래에 와야 합니다');
+      assert.equal(await page.evaluate(()=>document.getElementById('more').nextElementSibling?.id),'homePersonal','첫 방문에서 기능 목록을 로그인 위에 표시합니다');
+      assert.equal(await page.locator('#more .portal-card:visible').count(),8);
+      assert.equal(await page.locator('#more > summary').isVisible(),false);
       assert.equal(await page.locator(".student-account-button").isVisible(),true,"로그인 입구가 없습니다");
 
       /* 가입은 네 가지만 묻습니다 — 이름(선택)·학년·아이디·비밀번호.
@@ -129,8 +131,7 @@ const server=http.createServer((req,res)=>{
       await page.evaluate(()=>document.getElementById("more").scrollIntoView());
       await page.waitForTimeout(300);
       assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
-      await page.locator(".home-more>summary").click();   // 다시 닫고 아래 검사를 이어 갑니다
-      await page.locator(".home-more>summary").click();
+      assert.equal(await page.locator("#more .portal-card:visible").count(),8);
       await page.screenshot({path:"artifacts/home-"+viewport.name+".png",fullPage:false});
 
       /* 둘러보다 오늘의 5문제를 푼 학생 — 가입을 안 해도 홈이 그 사람 것이 됩니다 */

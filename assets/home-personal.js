@@ -3,6 +3,7 @@
   "use strict";
   const KEY="math-home-profile-v1",root=document.getElementById("homePersonal"),tracks=window.TODAY_TRACKS||{};
   if(!root)return;
+  const directory=document.getElementById("more");
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}};
   const valid=(grade,track)=>["1","2","3"].includes(String(grade))&&tracks[track]?.grades.includes(String(grade));
@@ -115,7 +116,13 @@
     if(account&&!account.ready){root.innerHTML='<div class="home-personal-shell"><p role="status">내 계정을 확인하고 있어요…</p></div>';return}
     if(window.StudentSync?.canUseLocal?.()===false){root.innerHTML='<div class="home-personal-shell"><p role="alert">'+esc(account?.error||'계정 기록을 준비하지 못했습니다. 다시 불러와 주세요.')+'</p><button type="button" class="btn btn-primary" id="retryAccount">기록 다시 불러오기</button></div>';root.querySelector('button').onclick=()=>account?.signedIn?window.StudentSync.sync():window.StudentSync.start();return}
     let exploring=false;try{exploring=sessionStorage.getItem('math-home-explore')==='true'}catch{}
-    if(!account?.signedIn&&!exploring){갈래(resume());return}
+    // 처음 방문한 학생에게는 전체 메뉴를 먼저 보여 줍니다.
+    if(!account?.signedIn&&!exploring){
+      if(directory && directory.nextElementSibling!==root) root.before(directory);
+      if(directory) directory.open=true;
+      갈래(resume());return;
+    }
+    if(directory && root.nextElementSibling!==directory) root.after(directory);
     const pending=resume();
     if(pending&&!valid(profile?.grade,profile?.track))profile={name:"",grade:pending.grade,track:pending.track};
     if(!profile||!valid(profile.grade,profile.track)){

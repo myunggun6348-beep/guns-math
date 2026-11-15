@@ -2386,3 +2386,27 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
   /* 폰에서는 날짜 칸(.page-head-meta)을 감추므로 '?' 가 제목 옆에 붙지 않게 오른쪽 끝으로 */
   .page-head-meta + .page-help-btn { margin-left: auto; }
 }
+
+/* 처음 방문했을 때 홈 기능을 로그인 카드 위에 표시합니다. */
+#more:has(+ #homePersonal) { margin-bottom: 0; }
+#more:has(+ #homePersonal) > summary { display: none; }
+#more:has(+ #homePersonal) .home-start { padding: 24px 0 0; }
+#more:has(+ #homePersonal) .home-start-head { margin-bottom: 16px; padding: 0; }
+#more:has(+ #homePersonal) .portal-card {
+  min-height: 62px;
+  padding-block: 8px;
+}
+#more + #homePersonal { padding-top: 24px; }
+@media (max-width: 650px) {
+  #more:has(+ #homePersonal) .home-start { padding-top: 16px; }
+  #more:has(+ #homePersonal) .home-start-head { margin-bottom: 10px; }
+  #more:has(+ #homePersonal) .portal-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 10px;
+    margin-top: 8px;
+  }
+  #more:has(+ #homePersonal) .portal-group > h3 { grid-column: 1 / -1; padding-bottom: 0; }
+  #more:has(+ #homePersonal) .portal-card { min-height: 55px; gap: 1px 4px; }
+  #more:has(+ #homePersonal) .portal-card h4 { font-size: 14px; overflow-wrap: anywhere; }
+  #more:has(+ #homePersonal) .portal-card span { font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+}
