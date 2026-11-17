@@ -47,45 +47,18 @@ const server=http.createServer((req,res)=>{
       const page=await browser.newPage({viewport});
       const errors=[];page.on("pageerror",e=>errors.push(e.message));
       await page.goto("http://127.0.0.1:5198/index.html",{waitUntil:"networkidle"});
-      /* 개수를 적어 두면 활동이 하나 늘 때마다 틀립니다(5 라고 적힌 채 9 가 됐었다).
-         대신 '학생이 갈 수 있는 페이지가 빠짐없이 적혀 있는가'를 봅니다 —
-         실제로 오늘의 학습·오답노트·자동 선별 기출·수학 탈출이 빠져 있었습니다. */
-      const 선생님것=["admin.html","question-bank.html","review.html"];
-      /* 홈 목록에 둘 자리가 아닌 쪽들.
-         solve·quick-game 은 주소에 ?id=·?game= 이 있어야 열립니다.
-         escape(수학 탈출)는 혼자서도 열리지만, 게임이 홈과 게임 목록 두 군데로
-         나뉘어 보이지 않게 일부러 게임 안쪽에만 둡니다 — 아래에서 게임 목록이
-         정말 데리고 가는지 따로 확인합니다. */
-      const 혼자못감=["index.html","solve.html","quick-game.html","escape.html"];
-      const 학생페이지=fs.readdirSync(root).filter(f=>f.endsWith(".html")&&!선생님것.includes(f)&&!혼자못감.includes(f));
-      const 적힌것=await page.locator(".portal-card").evaluateAll(els=>els.map(el=>el.getAttribute("href").split(/[?#]/)[0]));
-      const 빠진것=학생페이지.filter(f=>!적힌것.includes(f));
-      assert.equal(빠진것.length,0,"'이 사이트에 있는 것'에서 빠진 페이지: "+빠진것.join(", "));
-      assert.equal(new Set(적힌것).size,적힌것.length,"같은 페이지가 두 번 적혀 있습니다: "+적힌것.join(", "));
-      assert.ok(!적힌것.includes("escape.html"),"수학 탈출은 홈이 아니라 게임 안에만 있어야 합니다");
-      assert.equal(await page.locator(".home-main-action").count(),0);
-      assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true);
-      assert.equal(await page.locator(".portal-hero").isVisible(),false);
-      /* 첫 화면의 큰 문은 하나(오늘의 5문제)이고, 둘러보기는 글줄, 가입은 그 아래 한 줄입니다.
-         입력 칸도, 오른쪽 위 계정 단추도 여기서는 안 보입니다
-         (예전에는 문이 셋이라 같은 것을 두 군데서 고르게 돼 있었습니다). */
-      assert.equal(await page.locator(".home-start-card").count(),1);
-      assert.equal(await page.locator(".home-start-go").count(),1,"큰 문이 하나가 아닙니다");
-      assert.equal(await page.locator(".home-start-go").getAttribute("id"),"homeLogin","첫 입구가 로그인이어야 합니다");
-      assert.equal(await page.locator("#homeProfileForm").count(),0,"첫 화면에 입력 칸이 또 생겼습니다");
-      /* 고를 것은 둘 — 로그인 / 로그인 없이 써 보기. 회원가입은 로그인 아래 글씨 한 줄.
-         이 입구는 두 번이나 다시 늘어났습니다(한때 로그인·회원가입·자료 둘러보기·
-         가입 없이 체험하기·아이디 찾기 다섯 개). 아이디 찾기는 로그인 창 안에 있습니다. */
-      const 입구=await page.evaluate(()=>{const 카드=document.querySelector(".home-start-card");
-        const 누를것=[...카드.querySelectorAll("a,button")].filter(e=>e.checkVisibility());
-        return {단추:누를것.filter(e=>e.classList.contains("btn")).map(e=>e.textContent.trim()),글씨:누를것.filter(e=>!e.classList.contains("btn")).map(e=>e.textContent.trim())};});
-      assert.deepEqual(입구.단추,["로그인 →","로그인 없이 써 보기"],"홈 첫 카드의 단추가 둘이 아닙니다: "+입구.단추.join(", "));
-      assert.deepEqual(입구.글씨,["회원가입"],"홈 첫 카드에 글씨 링크가 늘었습니다: "+입구.글씨.join(", "));
-
-      assert.equal(await page.evaluate(()=>document.getElementById('more').nextElementSibling?.id),'homePersonal','첫 방문에서 기능 목록을 로그인 위에 표시합니다');
-      assert.equal(await page.locator('#more .portal-card:visible').count(),8);
-      assert.equal(await page.locator('#more > summary').isVisible(),false);
-      assert.equal(await page.locator(".student-account-button").isVisible(),true,"로그인 입구가 없습니다");
+      const groups = page.locator("#navLinks details");
+      assert.deepEqual(await groups.locator("summary").allTextContents(), ["학습", "자료·개념", "더보기"]);
+      const destinations = ["today.html", "past-practice.html", "wrong-notes.html", "files.html", "library.html", "map.html", "games.html", "ask.html"];
+      assert.deepEqual(await groups.locator("a").evaluateAll(links => links.map(link => link.getAttribute("href"))), destinations);
+      assert.ok(destinations.every(file => fs.existsSync(path.join(root, file))));
+      assert.equal(await groups.locator("a:visible").count(), 0);
+      assert.equal(await page.locator("#homeTry").getAttribute("href"), "today.html");
+      assert.equal(await page.locator("#homeTry .home-welcome-label").innerText(), "오늘의 5문제 시작");
+      assert.deepEqual(await page.locator("#more a").evaluateAll(links => links.map(link => link.getAttribute("href"))), ["past-practice.html", "wrong-notes.html"]);
+      assert.equal(await page.locator(".home-main-action").count(), 0);
+      assert.equal(await page.locator("#homeProfileForm").count(), 0);
+      assert.equal(await page.locator(".student-account-button").isVisible(), true);
 
       /* 가입은 네 가지만 묻습니다 — 이름(선택)·학년·아이디·비밀번호.
          과목까지 고르게 하면 처음 온 학생에게 답하기 어려운 질문이 됩니다
@@ -112,27 +85,36 @@ const server=http.createServer((req,res)=>{
       assert.equal(errors.length,0,errors.join("\n"));
       await page.screenshot({path:"artifacts/home-simple-"+viewport.name+".png",fullPage:false});
 
-      /* '둘러보기'를 누르면 접힌 칸이 실제로 펼쳐져야 합니다
-         (전에는 그 자리로 내려가기만 하고 닫힌 채였습니다). */
-      /* 홈 맨 위는 다른 쪽과 같은 메뉴입니다 — 컴퓨터는 메뉴 줄, 폰은 ☰.
-         한때 홈만 메뉴를 숨기고 '둘러보기'를 두어서, 로그인한 학생은 카드가 길면 다른 쪽으로
-         가는 길이 첫 화면에 없었습니다. ☰ 를 눌러 메뉴가 실제로 열리는지까지 봅니다. */
-      assert.equal(await page.locator(".home-nav-more").count(),0,"홈에 '둘러보기'가 다시 생겼습니다");
-      const 메뉴=await page.evaluate(()=>[...document.querySelectorAll("#navLinks a")].map(a=>a.textContent.trim()));
-      assert.deepEqual(메뉴,["오늘의 학습","오답노트","기출·학습자료","직접 보는 수학","개념 지도","게임","질문"],"홈 메뉴가 다른 쪽과 다릅니다: "+메뉴.join(", "));
-      if(viewport.width>=900){
-        assert.equal(await page.locator("#navLinks").isVisible(),true,"컴퓨터 홈에 메뉴 줄이 안 보입니다");
-      }else{
-        assert.equal(await page.locator(".nav-toggle").isVisible(),true,"폰 홈에 ☰ 가 없습니다");
-        await page.locator("#navToggle").click();await page.waitForTimeout(250);
-        assert.equal(await page.locator("#navLinks a").first().isVisible(),true,"☰ 를 눌러도 메뉴가 안 열립니다");
-        await page.locator("#navToggle").click();await page.waitForTimeout(250);
+      for (const [index, expected] of [3, 3, 2].entries()) {
+        const group = groups.nth(index);
+        await group.locator("summary").click();
+        assert.equal(await groups.locator("a:visible").count(), expected);
+        const bounds = await group.locator("ul").boundingBox();
+        assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= viewport.width);
       }
-      await page.evaluate(()=>document.getElementById("more").scrollIntoView());
-      await page.waitForTimeout(300);
-      assert.equal(await page.locator(".home-more").evaluate(el=>el.open),true,"'둘러보기'를 눌러도 칸이 안 열립니다");
-      assert.equal(await page.locator("#more .portal-card:visible").count(),8);
-      await page.screenshot({path:"artifacts/home-"+viewport.name+".png",fullPage:false});
+      await groups.last().locator("a").first().focus();
+      await page.keyboard.press("Escape");
+      assert.equal(await groups.locator("a:visible").count(), 0);
+      assert.equal(await groups.last().locator("summary").evaluate(el => document.activeElement === el), true);
+      await groups.first().locator("summary").press("Enter");
+      assert.equal(await groups.locator("a:visible").count(), 3);
+      await page.locator(".home-guest-account > span").click();
+      assert.equal(await groups.locator("a:visible").count(), 0);
+      const guest = await browser.newPage({viewport});
+      try {
+        await guest.goto("http://127.0.0.1:5198/index.html");
+        await guest.locator("#homeTry").click();
+        await guest.waitForURL("**/today.html");
+        await guest.locator("#todayStart").click();
+        const questionLink = guest.getByRole("link", {name:"이 문제 질문하기 (새 탭)"});
+        const [questionPage] = await Promise.all([guest.waitForEvent("popup"), questionLink.click()]);
+        await questionPage.waitForURL("**/ask.html#askForm");
+        await questionPage.waitForSelector("#askForm");
+        assert.equal(await guest.locator(".daily-question").isVisible(), true);
+        await questionPage.close();
+      } finally {
+        await guest.close();
+      }
 
       /* 둘러보다 오늘의 5문제를 푼 학생 — 가입을 안 해도 홈이 그 사람 것이 됩니다 */
       await page.evaluate(()=>{
@@ -193,7 +175,7 @@ const server=http.createServer((req,res)=>{
       await 가입.waitForSelector(".home-main-action");
 
       assert.equal(await 가입.locator(".student-account-button").isVisible(),true,"가입했는데 계정 단추가 안 보입니다");
-      assert.equal(await 가입.locator(".home-start-card").count(),0,"가입했는데 아직 처음 화면이 남아 있습니다");
+      assert.equal(await 가입.locator(".home-welcome").isVisible(),false,"가입했는데 아직 처음 화면이 남아 있습니다");
       assert.match(await 가입.locator(".home-main-action").getAttribute("href"),/today\.html\?grade=2/);
       // 적은 학년·과목이 계정으로 올라갔는가 (다른 기기에서 로그인해도 따라오려면 이게 돼야 합니다)
       assert.equal(계정.기록?.profile?.grade,"2","가입할 때 고른 학년이 계정에 안 올라갔습니다");
@@ -229,6 +211,6 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.locator(".exam-bundle").count(),4);
     assert.equal(await page.locator("#yearFilter").inputValue(),"2025");
     await page.close();
-    console.log("메인 검사 통과: 맨 위 메뉴는 다른 쪽과 같음(☰ 열림)·첫 카드는 로그인/로그인 없이 둘 + 회원가입 한 줄·로그인 입구·가입·계정 찾기·명시적 체험·학년/과목 동기화·공개 자료·PC/태블릿/모바일");
+    console.log("메인 검사 통과: 상단 메뉴 3개·키보드로 열기와 닫기·오늘의 5문제 시작·질문 폼 새 탭·로그인 입구·가입·계정 찾기·명시적 체험·학년/과목 동기화·공개 자료·PC/태블릿/모바일");
   }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);server.close();process.exitCode=1});

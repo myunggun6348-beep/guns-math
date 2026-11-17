@@ -53,23 +53,13 @@
 .home-page .home-study-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
 .home-page .home-study-summary span { padding: 17px 20px; border: 1px solid var(--home-border); border-radius: 12px; background: var(--home-card); color: var(--home-muted); font-size: 13px; }
 .home-page .home-study-summary b { display: block; margin: 8px 0 0; color: var(--home-accent); font-size: 21px; font-weight: 700; }
-.home-page .home-more { max-width: calc(960px + 2 * var(--gutter)); margin: 24px auto 0; }
-.home-page .home-more > summary { min-height: 58px; padding: 0 20px; border-color: var(--home-border); border-radius: 12px; background: var(--home-card); font-size: 14px; }
-.home-page .home-start-card,
 .home-page .home-fork-card { border-color: var(--home-border); background: var(--home-card); border-radius: 20px; }
-.home-page .home-start-card h2 { font-size: clamp(25px,3vw,34px); letter-spacing: -.03em; }
-.home-page .home-start-go { border-radius: var(--r-pill); background: var(--ink); color: var(--canvas); }
-.home-page .home-entry-benefits{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;font-size:12px;color:var(--home-muted)}
-.home-page .home-entry-benefits span{padding:5px 9px;border:1px solid var(--home-border);border-radius:6px}
-.home-page .home-setup-lead { color: var(--home-muted); opacity: 1; }
-.home-page .home-join { border-color: var(--home-border); }
 .home-page .footer { background: transparent; color: var(--home-muted); border-top: 1px solid var(--home-border); }
 .home-page .footer-base,
 .home-page .footer .caption { color: var(--home-muted); }
 .home-page .footer-admin-link { border-color: var(--home-border); }
 .home-page .footer :focus-visible { outline-color: var(--home-accent); }
 .home-page .home-main-action:focus-visible,
-.home-page .home-more > summary:focus-visible,
 .home-page #homeProfileEdit:focus-visible { outline: 3px solid var(--home-accent); outline-offset: 4px; }
 .theme-dark .home-page .home-main-action > span { background: #243e35; color: #b5ddc8; }
 @media (max-width:650px) {
@@ -82,19 +72,76 @@
   .home-page .home-study-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
   .home-page .home-study-summary span { padding: 13px 10px; font-size: 11px; }
   .home-page .home-study-summary b { font-size: 18px; }
-  .home-page .home-more { margin-top: 18px; }
-  .home-page .home-start-go { min-width: 0; }
-  .home-page .home-start-card.has-art .home-start-art{display:none}
-    .home-page .home-start-actions .home-start-go{width:100%;min-width:0}
-  .home-page .home-more .home-start { padding-top: 20px; }
-  .home-page .home-more .home-start-head { padding-top: 0; margin-bottom: 14px; }
-  .home-page .home-more .home-start-head .headline { font-size: 20px; }
-  .home-page .home-more .home-start-head p { display: none; }
-  .home-page .home-more .portal-grid { grid-template-columns: 1fr; gap: 18px; }
-  .home-page .home-more .portal-group { grid-column: 1; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-top: 0; }
-  .home-page .home-more .portal-group > h3 { grid-column: 1 / -1; padding: 0; margin: 0 0 2px; font-size: 12px; color: var(--home-muted); }
-  .home-page .home-more .portal-card { min-height: 58px; gap: 6px; padding: 12px; border: 1px solid var(--home-border); border-radius: 10px; background: var(--home-card); color: inherit; }
-  .home-page .home-more .portal-card h4 { font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
-  .home-page .home-more .portal-card span { display: none; }
-  .home-page .home-more .portal-card > b { grid-row: 1; font-size: 15px; }
+}
+
+.home-welcome, .home-shortcuts {
+  max-width: calc(960px + 2 * var(--gutter));
+  scroll-margin-top: 100px;
+}
+.home-welcome { margin-top: clamp(20px, 5vw, 44px); }
+.home-welcome-card {
+  --welcome-surface: #f3f7e9;
+  --welcome-green: #365721;
+  --welcome-grid: #dbe5cc;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(20px, 5vw, 48px);
+  border-radius: 20px;
+  background: var(--welcome-surface);
+}
+.theme-dark .home-welcome-card {
+  --welcome-surface: #242e20;
+  --welcome-green: #c4e48d;
+  --welcome-grid: #43553a;
+}
+.home-welcome h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 56px);
+  line-height: 1.18;
+  letter-spacing: -.05em;
+}
+.home-welcome p { margin: 10px 0 0; color: var(--home-muted); word-break: keep-all; }
+.home-welcome-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin-top: 22px;
+  padding: 0 16px;
+  border-radius: 9px;
+  background: var(--block-lime);
+  color: #1c2c11;
+  font-weight: 700;
+  text-decoration: none;
+}
+.home-welcome-cta:hover { background: #cdea68; }
+.home-welcome-cta:focus-visible { outline-color: var(--welcome-green); }
+.home-welcome-graph { display: block; width: 100%; height: auto; max-height: 230px; }
+.home-welcome-graph path { fill: none; stroke: var(--welcome-green); }
+.home-welcome-graph .home-graph-grid { stroke: var(--welcome-grid); }
+.home-welcome-graph .home-graph-axes { opacity: .45; }
+.home-welcome-graph .home-graph-curve { stroke-width: 3; stroke-linecap: round; }
+.home-welcome-graph circle { fill: var(--block-lime); stroke: var(--welcome-green); stroke-width: 2; }
+.home-welcome-graph text { fill: var(--welcome-green); font: italic 16px Georgia, serif; }
+.home-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 12px; }
+.home-shortcuts a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--home-border);
+  text-decoration: none;
+  font-weight: 650;
+}
+.home-shortcuts a:hover { background: var(--surface-soft); }
+.home-guest-account { text-align: center; color: var(--home-muted); font-size: 14px; }
+.home-guest-account .home-text-link { min-height: 44px; }
+@media (max-width: 620px) {
+  .home-welcome-card { grid-template-columns: 1fr; gap: 8px; }
+  .home-welcome-graph { width: 65%; max-height: 108px; justify-self: end; }
+  .home-shortcuts { gap: 12px; font-size: 14px; }
 }

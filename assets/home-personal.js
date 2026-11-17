@@ -3,7 +3,12 @@
   "use strict";
   const KEY="math-home-profile-v1",root=document.getElementById("homePersonal"),tracks=window.TODAY_TRACKS||{};
   if(!root)return;
-  const directory=document.getElementById("more");
+  const welcome=document.getElementById("quick-start");
+  const shortcuts=document.getElementById("more");
+  const guestStart=document.getElementById("homeTry");
+  guestStart.addEventListener("click",()=>{
+    try{sessionStorage.setItem('math-home-explore','true')}catch{}
+  });
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}};
   const valid=(grade,track)=>["1","2","3"].includes(String(grade))&&tracks[track]?.grades.includes(String(grade));
@@ -60,35 +65,16 @@
   /* 단위원 위의 점이 돌면 사인 곡선이 따라 그려지는 그림(index.html 의 #heroArt).
      옛 히어로 칸은 홈에서 숨겨 두었으므로 그림만 이 카드로 옮겨 옵니다. 카드는 로그인·로그아웃 때
      다시 그려지면서 안의 것이 지워지니, 그림을 붙잡아 두었다가 그릴 때마다 다시 넣습니다. */
-  const 그림=document.querySelector(".hero-figure");
-  function 그림넣기(){const 자리=root.querySelector(".home-start-art");if(그림&&자리)자리.appendChild(그림)}
   function 갈래(pending){
-    root.hidden=false;root.innerHTML='<div class="home-personal-shell setup">'+
-      '<div class="home-start-card'+(그림?' has-art':'')+'">'+
-        '<div class="home-start-art"></div>'+
-        '<div class="home-start-body">'+
-        '<span class="eyebrow">나의 수학 공부</span><h2>로그인하고<br>내 공부를 이어가세요</h2>'+
-        /* 고를 것은 둘뿐입니다 — 로그인 / 로그인 없이. 회원가입은 로그인 아래 한 줄.
-           예전에는 로그인·회원가입·자료 둘러보기·가입 없이 체험하기·아이디 찾기 다섯 개였는데,
-           '자료 둘러보기'는 바로 아래 '이 사이트에 있는 것'·위쪽 메뉴 '둘러보기'와 같은 일이고,
-           '아이디·비밀번호 찾기'는 로그인 창 안에 이미 있습니다(잊은 학생도 로그인부터 누릅니다). */
-        '<p class="home-setup-lead">내 오답과 복습 기록을 한곳에서. 로그인하면 다른 기기에서도 이어 볼 수 있습니다.</p>'+
-        '<div class="home-entry-benefits"><span>맞춤 5문제</span><span>개인 오답노트</span><span>주간 복습 성과</span></div>'+
-        '<div class="home-start-actions">'+
-          '<button type="button" class="btn btn-primary home-start-go" id="homeLogin">로그인 →</button>'+
-        '</div>'+
-        '<p class="home-join-line">처음이에요? <button type="button" class="home-text-link" id="homeJoin">회원가입</button></p>'+
-        '<div class="home-join">'+
-          // '체험'은 맛보기처럼 들리지만 실제로는 기록도 남고 오답노트도 쓰는 제대로 된 길이라 이름을 바꿉니다
-          '<a class="btn btn-secondary home-try" id="homeTry" href="'+(pending?pending.href:'today.html')+'">'+(pending?'로그인 없이 이어하기':'로그인 없이 써 보기')+'</a>'+
-          '<small class="home-fork-note">기록은 이 기기에만 남습니다.</small>'+
-        '</div>'+
-        '</div>'+
-      '</div></div>';
-    그림넣기();
+    guestStart.href=pending?.href||'today.html';
+    guestStart.querySelector(".home-welcome-label").textContent=pending?'풀던 문제 이어하기':'오늘의 5문제 시작';
+    root.innerHTML='<div class="wrap home-guest-account">'+
+      '<span>다른 기기에서도 학습 기록을 이어 보세요.</span> '+
+      '<button type="button" class="home-text-link" id="homeLogin">로그인</button> · '+
+      '<button type="button" class="home-text-link" id="homeJoin">회원가입</button>'+
+      '</div>';
     root.querySelector("#homeJoin").onclick=()=>window.StudentAccountUI?.열기("register");
     root.querySelector("#homeLogin").onclick=()=>window.StudentAccountUI?.열기("login");
-    root.querySelector('#homeTry').onclick=()=>{try{sessionStorage.setItem('math-home-explore','true')}catch{}};
   }
 
   /* ---------- 개인 학습 설정 ---------- */
@@ -116,13 +102,13 @@
     if(account&&!account.ready){root.innerHTML='<div class="home-personal-shell"><p role="status">내 계정을 확인하고 있어요…</p></div>';return}
     if(window.StudentSync?.canUseLocal?.()===false){root.innerHTML='<div class="home-personal-shell"><p role="alert">'+esc(account?.error||'계정 기록을 준비하지 못했습니다. 다시 불러와 주세요.')+'</p><button type="button" class="btn btn-primary" id="retryAccount">기록 다시 불러오기</button></div>';root.querySelector('button').onclick=()=>account?.signedIn?window.StudentSync.sync():window.StudentSync.start();return}
     let exploring=false;try{exploring=sessionStorage.getItem('math-home-explore')==='true'}catch{}
-    // 처음 방문한 학생에게는 전체 메뉴를 먼저 보여 줍니다.
-    if(!account?.signedIn&&!exploring){
-      if(directory && directory.nextElementSibling!==root) root.before(directory);
-      if(directory) directory.open=true;
+    const showWelcome=!account?.signedIn&&!exploring;
+    welcome.hidden=!showWelcome;
+    if(showWelcome){
+      if(shortcuts.nextElementSibling!==root) root.before(shortcuts);
       갈래(resume());return;
     }
-    if(directory && root.nextElementSibling!==directory) root.after(directory);
+    if(root.nextElementSibling!==shortcuts) root.after(shortcuts);
     const pending=resume();
     if(pending&&!valid(profile?.grade,profile?.track))profile={name:"",grade:pending.grade,track:pending.track};
     if(!profile||!valid(profile.grade,profile.track)){

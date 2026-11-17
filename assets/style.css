@@ -2387,26 +2387,64 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
   .page-head-meta + .page-help-btn { margin-left: auto; }
 }
 
-/* 처음 방문했을 때 홈 기능을 로그인 카드 위에 표시합니다. */
-#more:has(+ #homePersonal) { margin-bottom: 0; }
-#more:has(+ #homePersonal) > summary { display: none; }
-#more:has(+ #homePersonal) .home-start { padding: 24px 0 0; }
-#more:has(+ #homePersonal) .home-start-head { margin-bottom: 16px; padding: 0; }
-#more:has(+ #homePersonal) .portal-card {
-  min-height: 62px;
-  padding-block: 8px;
+/* 학생 화면의 공통 메뉴 */
+.nav-grouped { height: auto; border-bottom: 1px solid var(--hairline); }
+.nav-grouped .wrap {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0 12px;
+  min-height: 56px;
 }
-#more + #homePersonal { padding-top: 24px; }
-@media (max-width: 650px) {
-  #more:has(+ #homePersonal) .home-start { padding-top: 16px; }
-  #more:has(+ #homePersonal) .home-start-head { margin-bottom: 10px; }
-  #more:has(+ #homePersonal) .portal-group {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 10px;
-    margin-top: 8px;
-  }
-  #more:has(+ #homePersonal) .portal-group > h3 { grid-column: 1 / -1; padding-bottom: 0; }
-  #more:has(+ #homePersonal) .portal-card { min-height: 55px; gap: 1px 4px; }
-  #more:has(+ #homePersonal) .portal-card h4 { font-size: 14px; overflow-wrap: anywhere; }
-  #more:has(+ #homePersonal) .portal-card span { font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+.nav-grouped .brand { justify-self: start; }
+.nav-grouped .nav-right { justify-self: end; }
+.nav-grouped .nav-right > button { min-height: 44px; }
+.site-nav { display: flex; gap: 4px; }
+.site-nav details { position: relative; min-width: 0; }
+.site-nav summary, .site-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.site-nav summary { gap: 7px; list-style: none; font-weight: 650; cursor: pointer; }
+.site-nav summary::-webkit-details-marker { display: none; }
+.site-nav summary::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+.site-nav details[open] summary::after { transform: translateY(2px) rotate(225deg); }
+.site-nav summary:hover, .site-nav details[open] summary,
+.site-nav a:hover, .site-nav a[aria-current="page"] { background: var(--surface-soft); }
+.site-nav details:has(a[aria-current="page"]) summary { text-decoration: underline; text-underline-offset: 5px; }
+.site-nav ul {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  width: max-content;
+  min-width: 160px;
+  margin: 0;
+  padding: 5px;
+  transform: translateX(-50%);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--canvas);
+  box-shadow: 0 8px 24px #0002;
+  list-style: none;
+}
+#askForm { scroll-margin-top: 108px; }
+@media (max-width: 620px) {
+  .nav-grouped .wrap { grid-template-columns: 1fr auto; row-gap: 0; padding-top: 4px; padding-bottom: 4px; }
+  .nav-grouped .nav-right { grid-column: 2; grid-row: 1; }
+  .site-nav { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; }
+  .site-nav details:first-child ul { left: 0; transform: none; }
+  .site-nav details:last-child ul { left: auto; right: 0; transform: none; }
 }

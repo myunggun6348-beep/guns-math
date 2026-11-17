@@ -125,6 +125,14 @@
     app.innerHTML=hero()+'<section class="today-panel"><div class="daily-top"><div class="daily-meta"><b>고'+grade+' · '+track.title+'</b><span>'+track.short+'</span></div><span class="daily-progress">'+(index+1)+' / '+questions.length+'</span></div><div class="daily-track"><div class="daily-bar" style="width:'+((index+1)/questions.length*100)+'%"></div></div><span class="daily-concept">'+meta.name+'</span><h2 class="daily-question" data-math>'+esc(q.prompt)+'</h2>'+window.GameScratch.markup()+answer+'<div id="feedbackSlot"></div><div class="daily-actions"><button type="button" class="today-primary" id="choiceSubmit" '+(q.type==="choice"?"disabled":"hidden")+'>답 제출</button></div></section>';
     window.MathView?.typeset(app);
     window.GameScratch.mount(index);
+    const ask = document.createElement("a");
+    ask.className = "daily-ask-link";
+    ask.href = "ask.html#askForm";
+    ask.target = "_blank";
+    ask.rel = "noopener";
+    ask.textContent = "이 문제 질문하기";
+    ask.setAttribute("aria-label", "이 문제 질문하기 (새 탭)");
+    app.querySelector(".today-panel").append(ask);
     if(diagnosticMode){const skip=document.createElement('button');skip.type='button';skip.className='today-secondary diagnostic-skip';skip.id='diagnosticSkip';skip.textContent='아직 배우지 않았어요';skip.onclick=()=>submit(true);app.querySelector('.daily-actions').append(skip)}
     if(!similarMode&&dailyFocus.length){const guide=document.createElement("p");guide.className="today-personal-guide";guide.textContent="맞춤 학습 · 집중 개념: "+dailyFocus.map(id=>concepts[id]?.name||id).join(" · ");app.querySelector(".daily-top").after(guide)}
     if(similarMode){

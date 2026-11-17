@@ -7,7 +7,7 @@
   const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}};
   let rows=[],catalog,review,touched=false,initialized=false,lastAccount=null;
   const explicit=['grade','subject','concept','topic','difficulty'].some(k=>params.has(k));
-  app.innerHTML='<header class="page-head g-study"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/></svg></span><div class="page-head-text"><h1>자동 선별 기출</h1><p>학년·과목 → 세부 개념 → 난도를 고르고, 실제 기출로 연습하세요.</p></div></header>'+
+  app.innerHTML='<header class="page-head g-study"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/></svg></span><div class="page-head-text"><h1>기출문제 풀기</h1><p>학년·과목 → 세부 개념 → 난도를 고르고, 실제 기출로 연습하세요.</p></div></header>'+
     '<p id="pastContext" class="past-context" role="status"></p><form id="pastChooser" class="past-chooser">'+
     '<fieldset><legend><span>1</span> 학년·과목</legend><div class="past-course-fields"><label for="pastGrade">학년<select id="pastGrade" required><option value="">학년 선택</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select></label><label for="pastTrack">과목<select id="pastTrack" required disabled><option value="">과목 선택</option></select></label></div></fieldset>'+
     '<fieldset><legend><span>2</span> 세부 개념</legend><label for="pastConcept" class="past-field-label">연습할 개념<select id="pastConcept" required disabled><option value="">개념 선택</option></select></label></fieldset>'+
