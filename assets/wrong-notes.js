@@ -3,7 +3,7 @@
   "use strict";
   const app=document.getElementById("wrongApp"),store=window.WrongNotes;
   const params=new URLSearchParams(location.search),journeyMode=params.get('journey')==='1';
-  function journey(){let pref={};try{pref=JSON.parse(localStorage.getItem('math-home-profile-v1')||'{}')||{}}catch{}return window.StudyJourney.get(params.get('grade')||pref.grade,params.get('subject')||pref.track)}
+  function journey(){let pref={};try{if(window.StudyDevice.canUseLocal())pref=JSON.parse(localStorage.getItem('math-home-profile-v1')||localStorage.getItem('today-study-pref')||'{}')||{}}catch{}return window.StudyJourney.get(params.get('grade')||pref.grade,params.get('subject')||pref.track)}
   let filter=new URLSearchParams(location.search).get("view")||"active",conceptFilter="";
   if(filter==="due")filter="active";   // '오늘 복습'은 간격 복습과 함께 없앴다 — 옛 링크는 '복습 필요'로
   if(!["active","mastered","all"].includes(filter))filter="active";
@@ -121,7 +121,6 @@
     });
   }
   window.addEventListener("wrong-work-message",event=>toast(event.detail));
-  window.addEventListener("student-sync-applied",draw);
-  let pageAccount='';window.addEventListener('student-account-change',()=>{const state=window.StudentSync.getState(),key=state.ready?(state.student?.id||'guest'):'pending';if(key!==pageAccount){pageAccount=key;draw()}});
-  draw();
+  window.addEventListener("study-device-change",draw);
+  window.StudyDevice.ready.then(draw);
 })();

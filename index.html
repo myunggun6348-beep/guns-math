@@ -8,7 +8,7 @@
 <script src="assets/theme.js"></script>
 <script src="assets/site-nav.js" defer></script>
 <title>수학을 보다 | 나의 수학 학습 · 오답 · 복습</title>
-<meta name="description" content="개인 계정으로 나에게 맞는 수학 문제를 풀고 오답·복습·주간 성과를 이어 보세요. 고등학교 수학 자료 둘러보기와 가입 없는 체험 학습도 제공합니다." />
+<meta name="description" content="오늘의 5문제, 오답 복습, 학습 진단과 고등학교 수학 자료를 누구나 이용할 수 있습니다. 학습 기록은 이 브라우저에 저장됩니다." />
 
 <!-- 카카오톡·문자로 링크 공유할 때 보이는 미리보기.
      인터넷에 올린 뒤라 주소를 실제 주소(https://guns-math.vercel.app)로 적어 둡니다. -->
@@ -19,7 +19,7 @@
      원본 HTML 을 그대로 읽어 가므로 자바스크립트로 고칠 수 없고, 자료를
      늘릴 때마다 손으로 고쳐야 해서 결국 틀린 숫자가 남습니다.
      (실제 개수는 '직접 보는 수학' 페이지에서 그때그때 세어 보여 줍니다) -->
-<meta property="og:description" content="내 수학 공부를 이어가는 곳. 맞춤 문제 · 개인 오답노트 · 복습 기록 · 공개 수학 자료" />
+<meta property="og:description" content="누구나 바로 시작하는 고등학교 수학. 오늘의 5문제 · 오답 복습 · 공개 수학 자료" />
 <meta property="og:locale" content="ko_KR" />
 <meta property="og:image" content="https://guns-math.vercel.app/assets/og.png" />
 <meta property="og:image:width" content="1200" />
@@ -91,7 +91,7 @@
     <div class="home-welcome-card">
       <div>
         <h1 id="homeWelcomeTitle">오늘의 5문제</h1>
-        <p>오늘의 수학, 5분이면 시작할 수 있어요.</p>
+        <p>매일 5문제를 풀고, 학습 기록을 이 브라우저에서 이어 보세요.</p>
         <a class="home-welcome-cta" id="homeTry" href="today.html"><span class="home-welcome-label">오늘의 5문제 시작</span><span aria-hidden="true">→</span></a>
       </div>
       <svg class="home-welcome-graph" viewBox="0 0 312 186" aria-hidden="true">
@@ -149,13 +149,12 @@
 <!-- 아래 셋은 각각 다른 페이지와 함께 쓰는 목록입니다. 홈은 셋을 한꺼번에 찾습니다. -->
 <script src="assets/today-data.js"></script>
 <script src="assets/study-state.js"></script>
-<script src="assets/student-sync.js"></script>
+<script src="assets/study-device.js"></script>
 <script src="assets/wrong-notes-store.js"></script>
 <script src="assets/study-draft.js"></script>
 <script src="assets/diagnostic-analysis.js"></script><script src="assets/learning-diagnostic.js"></script><script src="assets/daily-selection.js"></script>
 <script src="assets/problem-bank-client.js"></script>
 <script src="assets/study-journey.js"></script><script src="assets/home-personal.js"></script>
-<script src="assets/student-account-ui.js"></script>
 
 <script>
 /* =========================================================

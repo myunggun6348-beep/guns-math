@@ -1,14 +1,10 @@
-/* 개인 홈은 로그인 계정과 명시적으로 선택한 체험 기록을 분리한다. */
+/* 현재 브라우저에 저장된 학습 설정과 기록을 표시합니다. */
 (function(){
   "use strict";
   const KEY="math-home-profile-v1",root=document.getElementById("homePersonal"),tracks=window.TODAY_TRACKS||{};
   if(!root)return;
   const welcome=document.getElementById("quick-start");
   const shortcuts=document.getElementById("more");
-  const guestStart=document.getElementById("homeTry");
-  guestStart.addEventListener("click",()=>{
-    try{sessionStorage.setItem('math-home-explore','true')}catch{}
-  });
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}};
   const valid=(grade,track)=>["1","2","3"].includes(String(grade))&&tracks[track]?.grades.includes(String(grade));
@@ -25,7 +21,6 @@
     return '<details class="review-weekly weekly-study-plan"><summary>앞으로 7일 학습 계획</summary><p>고'+esc(value.grade)+' · '+esc(value.title)+' · '+esc(value.startsOn)+' ~ '+esc(value.endsOn)+' · 한국 시간</p><p>'+esc(value.reason)+'</p><ol class="study-plan-days">'+value.days.map((day,index)=>'<li><span class="study-plan-date">'+(index===0?'오늘':day.date.slice(5))+'<small>'+weekdays[new Date(day.date+'T12:00:00+09:00').getUTCDay()]+'요일 · 약 '+(day.minutes+day.reviewMinutes)+'분</small></span><div>'+(day.reviewCount?'<div class="study-plan-review"><b>오답 복습부터 · 예정 '+day.reviewCount+'문제</b><p>'+day.reviewConcepts.map(esc).join(' · ')+' · 먼저 '+day.reviewTarget+'문제만 확인해요.</p><a class="home-start-link" href="'+esc(day.reviewHref)+'">복습 목록 보기 →</a></div>':'')+'<b>'+esc(day.title)+'</b><p>'+esc(day.description)+'</p><a class="home-start-link" href="'+esc(day.href)+'">활동 시작 →</a></div></li>').join('')+'</ol><small>계획은 학습 결과와 복습 일정에 따라 갱신됩니다. 예상 시간은 풀이 속도에 따라 달라요. 예정된 복습을 미리 풀어도 원래 복습 날짜는 유지됩니다. 이 표는 완료 기록이 아닙니다.</small></details>';
   }
   function dailyPlan(record){
-    if(window.StudentSync&&!window.StudentSync.getState().ready)return '';
     const key=profile.grade+'|'+profile.track;if(!bankQuestions.has(key)){bankQuestions.set(key,null);window.ProblemBank.load({surface:'today',grade:profile.grade,track:profile.track}).then(added=>{bankQuestions.set(key,added);render()})}const added=bankQuestions.get(key);if(!added)return '';
     const stats=window.WrongNotes?.stats()||[],diagnostic=window.LearningDiagnostic.weak(profile.grade,profile.track,stats),selected=window.DailySelection.select({questions:tracks[profile.track].questions.concat(added),trackKey:profile.track,date:dateKey(new Date()),grade:profile.grade,stats,diagnostic,notes:window.WrongNotes?.all()||[],record});
     const focus=selected.focus.map(id=>window.TODAY_CONCEPTS?.[id]?.name).filter(Boolean);
@@ -34,47 +29,29 @@
     return plan(selected.questions.map(q=>q.concept),reason,selected.questions.length);
   }
   function resume(){
-    const state=window.StudentSync?.getState();if(state&&!state.ready)return null;
-    const owner=state?.signedIn?"student-"+state.student.id:"guest",notes=window.WrongNotes?.all()||[];
+    const owner=window.StudyDevice.draftOwner(),notes=window.WrongNotes?.all()||[];
     const row=window.StudyDraft?.list(owner).find(({slot,draft})=>valid(draft.grade,draft.trackKey)&&draft.questions.every(q=>window.TODAY_CONCEPTS?.[q.concept])&&(!slot.startsWith("similar-")||notes.some(note=>note.id===slot.slice(8))));
     if(!row)return null;const {slot,draft}=row,similar=slot.startsWith("similar-"),diagnostic=slot.startsWith('diagnostic-'),practice=slot.startsWith('practice-');
     return{grade:draft.grade,track:draft.trackKey,href:'today.html?'+(similar?'review='+encodeURIComponent(slot.slice(8)):(practice?'practice='+encodeURIComponent(draft.questions[0].concept)+'&':diagnostic?'diagnostic=1&':'')+'grade='+draft.grade+'&subject='+encodeURIComponent(draft.trackKey))+'&resume=1',description:esc(tracks[draft.trackKey].title)+' · '+(similar||practice?(practice?'추천 문제':'확인 문제'):(diagnostic?'학습 진단 · ':'')+(draft.index+1)+' / '+draft.questions.length+'문항')+' · 답과 필기를 이어서 볼 수 있어요.',plan:plan(draft.questions.slice(draft.index).map(q=>q.concept),'저장된 문제와 필기를 그대로 이어서 확인해요.',draft.questions.length-draft.answers.length)};
   }
   function initial(){
+    if(!window.StudyDevice.canUseLocal())return null;
     const own=read(KEY,null);if(own&&valid(own.grade,own.track))return own;
     const pref=read("today-study-pref",null);if(pref&&valid(pref.grade,pref.track))return{name:"",grade:String(pref.grade),track:pref.track};
     const latest=records().find(row=>valid(row.grade,row.track));return latest?{name:"",grade:String(latest.grade),track:latest.track}:null;
   }
-  let profile=initial();
-  function save(next){
-    if(window.StudentSync?.canUseLocal?.()===false)throw new Error('계정 기록을 준비한 뒤 학습 설정을 저장해 주세요.');
-    profile={...profile,name:String(next.name||"").trim().slice(0,20),grade:String(next.grade),track:next.track,updatedAt:new Date().toISOString()};
-    if(Object.hasOwn(next,'className'))profile.className=String(next.className||'');
-    localStorage.setItem(KEY,JSON.stringify(profile));localStorage.setItem("today-study-pref",JSON.stringify({grade:profile.grade,track:profile.track,updatedAt:profile.updatedAt}));window.StudentSync?.changed();render();
+  let profile;
+  function save(grade,track){
+    const next={...profile,grade,track,updatedAt:new Date().toISOString()};
+    localStorage.setItem(KEY,JSON.stringify(next));
+    localStorage.setItem("today-study-pref",JSON.stringify({grade,track,updatedAt:next.updatedAt}));
+    profile=next;render();
   }
-  // 계정 준비 후 가입 창에서 초기 학습 설정을 저장한다.
-  window.HomeProfile={저장:save};
   const dateKey=date=>new Date(date.getTime()+9*3600000).toISOString().slice(0,10);
   function streak(rows){
     const dates=[...new Set(rows.map(row=>row.date))].sort().reverse();if(!dates.length)return 0;
     const cursor=new Date(),today=dateKey(cursor);let count=0;if(dates[0]!==today)cursor.setUTCDate(cursor.getUTCDate()-1);
     for(const date of dates){if(date!==dateKey(cursor))break;count++;cursor.setUTCDate(cursor.getUTCDate()-1)}return count;
-  }
-
-  /* 로그인 전에는 기존 계정의 학습 요약을 노출하지 않는다. */
-  /* 단위원 위의 점이 돌면 사인 곡선이 따라 그려지는 그림(index.html 의 #heroArt).
-     옛 히어로 칸은 홈에서 숨겨 두었으므로 그림만 이 카드로 옮겨 옵니다. 카드는 로그인·로그아웃 때
-     다시 그려지면서 안의 것이 지워지니, 그림을 붙잡아 두었다가 그릴 때마다 다시 넣습니다. */
-  function 갈래(pending){
-    guestStart.href=pending?.href||'today.html';
-    guestStart.querySelector(".home-welcome-label").textContent=pending?'풀던 문제 이어하기':'오늘의 5문제 시작';
-    root.innerHTML='<div class="wrap home-guest-account">'+
-      '<span>다른 기기에서도 학습 기록을 이어 보세요.</span> '+
-      '<button type="button" class="home-text-link" id="homeLogin">로그인</button> · '+
-      '<button type="button" class="home-text-link" id="homeJoin">회원가입</button>'+
-      '</div>';
-    root.querySelector("#homeJoin").onclick=()=>window.StudentAccountUI?.열기("register");
-    root.querySelector("#homeLogin").onclick=()=>window.StudentAccountUI?.열기("login");
   }
 
   /* ---------- 개인 학습 설정 ---------- */
@@ -84,42 +61,33 @@
       '<div class="home-fork-card"><span class="eyebrow">내 학습 홈</span><h2>학년·과목 정하기</h2>'+
         '<p>한 번 정하면 다음부터 오늘 풀 5문제와 복습할 것을 바로 보여 줍니다.</p>'+
         '<form id="homeProfileForm" class="home-profile-form">'+
-          '<label class="home-profile-name">이름 또는 별명 <input name="name" maxlength="20" value="'+esc(name)+'" placeholder="선택 사항"></label>'+
-          '<label>학년 <select name="grade"><option value="1">고1</option><option value="2">고2</option><option value="3">고3</option></select></label>'+
+            '<label>학년 <select name="grade"><option value="1">고1</option><option value="2">고2</option><option value="3">고3</option></select></label>'+
           '<label class="home-profile-track">주로 공부할 과목 <select name="track"></select></label>'+
-          '<button class="btn btn-primary" type="submit">시작하기 →</button>'+
+          '<button class="btn btn-primary" type="submit">저장하기 →</button><p role="alert"></p>'+
         '</form></div></div>';
     const form=root.querySelector("#homeProfileForm"),gradeSelect=form.elements.grade,trackSelect=form.elements.track;
     gradeSelect.value=grade;
     const fillTracks=selected=>{const list=Object.entries(tracks).filter(([,track])=>track.grades.includes(gradeSelect.value));trackSelect.innerHTML=list.map(([id,track])=>'<option value="'+esc(id)+'">'+esc(track.title)+'</option>').join("");if(list.some(([id])=>id===selected))trackSelect.value=selected};
     fillTracks(seed?.track);gradeSelect.addEventListener("change",()=>fillTracks(""));
-    form.addEventListener("submit",event=>{event.preventDefault();save({name:form.elements.name.value,grade:gradeSelect.value,track:trackSelect.value})});
+    form.addEventListener("submit",event=>{
+      event.preventDefault();
+      try{save(gradeSelect.value,trackSelect.value)}
+      catch{form.querySelector("[role=alert]").textContent="설정을 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요."}
+    });
   }
 
   function render(){
     const expanded=new Set([...root.querySelectorAll('details[open] > summary')].map(el=>el.textContent));
-    const account=window.StudentSync?.getState();root.hidden=false;
-    if(account&&!account.ready){root.innerHTML='<div class="home-personal-shell"><p role="status">내 계정을 확인하고 있어요…</p></div>';return}
-    if(window.StudentSync?.canUseLocal?.()===false){root.innerHTML='<div class="home-personal-shell"><p role="alert">'+esc(account?.error||'계정 기록을 준비하지 못했습니다. 다시 불러와 주세요.')+'</p><button type="button" class="btn btn-primary" id="retryAccount">기록 다시 불러오기</button></div>';root.querySelector('button').onclick=()=>account?.signedIn?window.StudentSync.sync():window.StudentSync.start();return}
-    let exploring=false;try{exploring=sessionStorage.getItem('math-home-explore')==='true'}catch{}
-    const showWelcome=!account?.signedIn&&!exploring;
-    welcome.hidden=!showWelcome;
-    if(showWelcome){
-      if(shortcuts.nextElementSibling!==root) root.before(shortcuts);
-      갈래(resume());return;
-    }
-    if(root.nextElementSibling!==shortcuts) root.after(shortcuts);
     const pending=resume();
-    if(pending&&!valid(profile?.grade,profile?.track))profile={name:"",grade:pending.grade,track:pending.track};
-    if(!profile||!valid(profile.grade,profile.track)){
-      // 로그인은 했는데 학년·과목이 아직 없으면, 문 두 개가 아니라 고르는 칸을 보여 줍니다
-      setup();
-      return;
-    }
+    if(pending&&!valid(profile?.grade,profile?.track))profile={grade:pending.grade,track:pending.track};
+    const hasLearning=Boolean(profile&&valid(profile.grade,profile.track));
+    welcome.hidden=hasLearning;
+    root.hidden=!hasLearning;
+    if(!hasLearning)return;
+    if(root.nextElementSibling!==shortcuts)root.after(shortcuts);
     const track=tracks[profile.track],all=records().filter(row=>String(row.grade)===profile.grade&&row.track===profile.track),recent=all.slice(0,7);
     const today=all.find(row=>row.date===dateKey(new Date())),average=recent.length?Math.round(recent.reduce((sum,row)=>sum+(Number(row.correct)||0)/(Number(row.total)||5)*100,0)/recent.length):0,run=streak(all);
     const wrong=window.WrongNotes?.count?.()||{active:0,due:0,mastered:0};
-    const greeting=profile.name?esc(profile.name)+"님, 오늘도 한 걸음씩":"오늘의 수학 공부";
     const journey=window.StudyJourney.get(profile.grade,profile.track),review=wrong.due>0;
     const stage=pending?'in-progress':journey?.done?'complete':journey?.results.length||journey?.completed?'in-progress':'before';
     const actionHref=pending?pending.href:journey?(journey.next?.href||'#homeJourney'):review?'wrong-notes.html?view=due':'today.html?grade='+profile.grade+'&subject='+encodeURIComponent(profile.track);
@@ -127,10 +95,10 @@
     const actionDescription=pending?pending.description:journey?(stage==='before'?'오늘 '+journey.tasks.length+'활동 · 전체 약 '+journey.remainingMinutes+'분':journey.next?.id==='review'?esc(journey.next.detail):'남은 활동을 하나씩 이어가세요.'):review?'다시 풀어서 맞히면 바로 복습 완료예요.':today?'한 번 더 풀며 개념을 확인해 보세요.':'약 5분 동안 '+esc(track.title)+'의 핵심 개념을 확인해 보세요.';
     const dueNotes=review?window.WrongNotes.all().filter(window.WrongNotes.due):[];
     const learning=pending?pending.plan:journey?.done?'':journey?.next?.id==='practice'?plan([journey.conceptId],'오늘 정한 개념을 한 문제로 더 확인해요.',2):journey?.next?.id==='daily'?dailyPlan(today):review?plan(dueNotes.filter(note=>!journey||journey.noteIds.includes(note.id)).map(note=>note.conceptId),'오늘 정한 오답을 다시 풀어 개념을 확인해요.',journey?journey.noteIds.length*2:dueNotes.length):dailyPlan(today);
-    const recovered=window.StudentSync&&!window.StudentSync.getState().ready?[]:window.WrongNotes.recentReviews();
+    const recovered=window.WrongNotes.recentReviews();
     const names=[...new Set(recovered.map(note=>window.TODAY_CONCEPTS?.[note.conceptId]?.name||note.conceptName||'수학'))];
     const growth=recovered.length?'<section class="review-growth" aria-label="최근 복습 성과"><strong>최근 7일 동안 오답 '+recovered.length+'문제를 다시 맞혔어요.</strong><p>'+names.slice(0,3).map(esc).join(' · ')+(names.length>3?' 외 '+(names.length-3)+'개':'')+'</p></section>':'';
-    const weekly=window.StudentSync&&!window.StudentSync.getState().ready?null:window.StudyState.reviewSummary(window.WrongNotes.all());
+    const weekly=window.StudyState.reviewSummary(window.WrongNotes.all());
     const weekView=weekly?'<details class="review-weekly" id="homeReviewWeekly"><summary>주간 복습 성과 보기</summary><p>'+weekly.startDate+' ~ '+weekly.endDate+' · 한국 시간</p><p>이번 주 복습 완료 '+weekly.completed+'문제 · 아직 복습 필요 '+weekly.due+'문제</p><table><caption>날짜별 복습 완료</caption><thead><tr><th scope="col">날짜</th><th scope="col">복습 완료</th></tr></thead><tbody>'+weekly.days.map(day=>'<tr><th scope="row">'+day.date.slice(5)+'</th><td>'+day.completed+'문제</td></tr>').join('')+'</tbody></table><ul>'+weekly.concepts.map(row=>'<li>'+esc(window.TODAY_CONCEPTS?.[row.conceptId]?.name||row.name)+' · 복습 완료 '+row.completed+'문제</li>').join('')+'</ul><small>'+(weekly.confirmed?'':'이번 기간에 보관된 복습 정답 확인이 없습니다. ')+'현재 보관 중인 오답별 마지막 확인을 한 번 집계합니다. 삭제하거나 다시 틀린 노트는 제외하며, 전체 시도 횟수가 아닙니다.</small></details>':'';
 
     const diagnostic=window.LearningDiagnostic.read(profile.grade,profile.track),diagnosticSummary=diagnostic?'<p>최근 진단 · 정답 '+diagnostic.answers.filter(a=>a.correct).length+' · 다시 확인 '+diagnostic.answers.filter(a=>!a.correct&&!a.skipped).length+' · 미학습 '+diagnostic.answers.filter(a=>a.skipped).length+'</p><p>다시 확인할 개념: '+([...new Set(diagnostic.answers.filter(a=>!a.correct&&!a.skipped).map(a=>window.TODAY_CONCEPTS[a.concept].name))].map(esc).join(' · ')||'없음')+'</p>':'';
@@ -139,17 +107,20 @@
     const action='<a class="home-main-action" href="'+esc(actionHref)+'"><span>'+(stage==='before'?'학습 전':'학습 중')+'</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':stage==='before'?'시작하기':'다음 활동')+' →</b></a>';
     const homeJourney=pending&&(pending.grade!==profile.grade||pending.track!==profile.track)?null:journey;
     const primary=homeJourney?window.StudyJourney.view(homeJourney,true,{stage,action}):'<section class="home-learning-stage" data-home-stage="'+stage+'">'+action+'</section>';
-    root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">'+(account?.signedIn?'내 학습 홈':'체험 학습 · 이 브라우저에 저장')+'</span><h2>'+greeting+'</h2><p>고'+profile.grade+' 과정 · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학습 설정</button></div>'+
+    root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">이 브라우저에 저장</span><h2>오늘의 수학 공부</h2><p>고'+profile.grade+' 과정 · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학습 설정</button></div>'+
       '<div id="homeJourney">'+primary+'</div>'+
       '<details class="home-learning-records" id="homeLearningRecords"><summary>학습 기록 보기</summary>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>복습할 오답 <b>'+wrong.active+'문제</b></span></div>'+
-      growth+weekView+'</details>'+(account?.signedIn?weeklyPlanView(window.LearningDiagnostic.weeklyPlan(profile.grade,profile.track),journey)+'<details class="review-weekly"><summary>나의 학습 진단'+(next?' · 추천 학습':'')+'</summary>'+diagnosticSummary+nextView+'<p>5문항으로 기본 개념을 확인해요. 오늘의 학습 점수와 오답 기록에는 포함하지 않습니다.</p><a class="home-start-link" href="today.html?diagnostic=1&grade='+profile.grade+'&subject='+encodeURIComponent(profile.track)+'">'+(diagnostic?'진단 다시하기':'학습 진단 시작')+' →</a></details>':'')+'</div>';
+      growth+weekView+'</details>'+weeklyPlanView(window.LearningDiagnostic.weeklyPlan(profile.grade,profile.track),journey)+'<details class="review-weekly"><summary>나의 학습 진단'+(next?' · 추천 학습':'')+'</summary>'+diagnosticSummary+nextView+'<p>5문항으로 기본 개념을 확인해요. 오늘의 학습 점수와 오답 기록에는 포함하지 않습니다.</p><a class="home-start-link" href="today.html?diagnostic=1&grade='+profile.grade+'&subject='+encodeURIComponent(profile.track)+'">'+(diagnostic?'진단 다시하기':'학습 진단 시작')+' →</a></details></div>';
     root.querySelector("#homeProfileEdit").addEventListener("click",()=>setup(profile));
     root.querySelectorAll('details').forEach(el=>{if(expanded.has(el.querySelector(':scope > summary')?.textContent))el.open=true});
     if(new URLSearchParams(location.search).get('weekly')==='review'){root.querySelector('#homeLearningRecords').open=true;root.querySelector('#homeReviewWeekly').open=true}
   }
-  window.addEventListener("wrong-notes-change",render);
-  window.addEventListener("student-account-change",()=>{profile=initial();render()});
-  window.addEventListener("student-sync-applied",()=>{profile=initial();render()});render();
-  window.addEventListener("pageshow",()=>{profile=initial();render()});window.addEventListener("storage",render);
+  function refresh(){profile=initial();render()}
+  window.StudyDevice.ready.then(()=>{
+    refresh();
+    window.addEventListener("wrong-notes-change",render);
+    window.addEventListener("study-device-change",refresh);
+    window.addEventListener("pageshow",refresh);
+  });
 })();

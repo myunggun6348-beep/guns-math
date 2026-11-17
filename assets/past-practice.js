@@ -5,7 +5,7 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const url=value=>{try{const u=new URL(value,location.href);return ['https:','http:'].includes(u.protocol)?esc(u.href):'#'}catch{return '#'}};
   const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}};
-  let rows=[],catalog,review,touched=false,initialized=false,lastAccount=null;
+  let rows=[],catalog,review,touched=false,initialized=false;
   const explicit=['grade','subject','concept','topic','difficulty'].some(k=>params.has(k));
   app.innerHTML='<header class="page-head g-study"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/></svg></span><div class="page-head-text"><h1>기출문제 풀기</h1><p>학년·과목 → 세부 개념 → 난도를 고르고, 실제 기출로 연습하세요.</p></div></header>'+
     '<p id="pastContext" class="past-context" role="status"></p><form id="pastChooser" class="past-chooser">'+
@@ -38,11 +38,8 @@
   }
   function seed(){
     if(!initialized)return;
-    const account=window.StudentSync?.getState(),identity=account?.ready?(account.signedIn?'student-'+account.student?.id:'guest'):null;
-    if(identity&&lastAccount&&identity!==lastAccount){touched=false;results.innerHTML='';results.hidden=true}
-    if(identity)lastAccount=identity;
     if(touched)return;
-    const canRead=account?.ready&&window.StudentSync.canUseLocal();
+    const canRead=window.StudyDevice.canUseLocal();
     const profile=canRead?read('math-home-profile-v1',null):null,pref=canRead?read('today-study-pref',null):null;
     let recs=[];
     if(canRead){try{recs=window.DiagnosticAnalysis.summary(profile,Date.now(),window.WrongNotes?.stats()||[],window.WrongNotes?.all()||[])}catch{/* 잘못된 옛 기록이 있어도 공개 기출은 직접 고를 수 있습니다. */}}
@@ -86,6 +83,7 @@
       const retry=document.createElement('button');retry.type='button';retry.className='past-button secondary';retry.textContent='다시 불러오기';retry.onclick=()=>{retry.remove();load()};status.append(' ',retry);
     }
   }
-  window.addEventListener('student-account-change',seed);window.addEventListener('student-sync-applied',seed);
+  window.addEventListener('study-device-change',seed);
+  window.StudyDevice.ready.then(seed);
   load();
 })();

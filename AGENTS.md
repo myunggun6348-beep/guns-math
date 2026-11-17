@@ -16,8 +16,7 @@ Node.js가 있는 환경에서 저장소 루트를 기준으로 다음 검사를
 
 ```sh
 node scripts/check-spaced-review.cjs
-node scripts/check-study-sync.cjs
-node scripts/check-student-reset.cjs
+node scripts/check-study-device.cjs
 node scripts/check-student-attention.cjs
 git diff --check
 ```

@@ -1,5 +1,5 @@
 const games = [
-  {title:"마지막 종이 울리기 전에",category:"방탈출 게임",description:"교실 속 단서를 풀고 세 개의 열쇠를 찾으세요.",detail:"15분 · 교실 3개",image:"assets/escape-classroom.png",url:"escape.html",note:"사이트 안에서 바로 실행 · 로그인 불필요"},
+  {title:"마지막 종이 울리기 전에",category:"방탈출 게임",description:"교실 속 단서를 풀고 세 개의 열쇠를 찾으세요.",detail:"15분 · 교실 3개",image:"assets/escape-classroom.png",url:"escape.html",note:"사이트 안에서 바로 실행"},
   {title:"그래프 짝 맞추기",category:"함수 · 그래프",description:"함수의 식과 그래프의 핵심 특징을 빠르게 연결하세요.",detail:"4분 · 20문항 중 5문제",symbol:"f(x)",color:"#d9f26e",url:"quick-game.html?game=graph"},
   {title:"미분 부호 탐정",category:"미적분 · 변화율",description:"도함수의 부호로 증가와 감소를 추리하세요.",detail:"4분 · 20문항 중 5문제",symbol:"f′",color:"#cfc7f8",url:"quick-game.html?game=derivative"},
   {title:"수열 암호 해독",category:"대수 · 수열",description:"수의 규칙을 찾아 암호의 다음 값을 완성하세요.",detail:"4분 · 20문항 중 5문제",symbol:"aₙ",color:"#c6eddc",url:"quick-game.html?game=sequence"},

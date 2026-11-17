@@ -200,5 +200,5 @@
     document.getElementById("retryBtn").addEventListener("click",start);
   }
   const loadCustom=window.ProblemBank?.load({surface:"game",game:key})||Promise.resolve([]);
-  loadCustom.then(added=>{if(Array.isArray(added))game.questions.push(...added)}).finally(intro);
+  Promise.all([loadCustom,window.StudyDevice?.ready]).then(([added])=>{if(Array.isArray(added))game.questions.push(...added)}).finally(intro);
 })();

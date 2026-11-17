@@ -11,9 +11,9 @@
 @media(max-width:400px){
   .home-page .brand{font-size:15px;gap:6px}.home-page .brand svg{width:20px;height:20px}
   .home-page .nav .wrap{gap:8px}.home-page .nav-right{gap:6px}
-  .home-page .student-account-button{width:54px;padding:0 6px}
 }
 .home-page .nav { background: var(--home-card); border-bottom: 1px solid var(--home-border); }
+.home-page main { padding-bottom: clamp(24px, 5vw, 54px); }
 .home-page .home-personal { padding: 38px 0 22px; background: transparent; }
 .home-page .home-personal-shell,
 .home-page .home-personal-shell.setup { max-width: 960px; }
@@ -63,7 +63,6 @@
 .home-page #homeProfileEdit:focus-visible { outline: 3px solid var(--home-accent); outline-offset: 4px; }
 .theme-dark .home-page .home-main-action > span { background: #243e35; color: #b5ddc8; }
 @media (max-width:650px) {
-  .home-page .student-account-button{font-size:0}.home-page .student-account-button.signed-in::after{content:"내 계정";font-size:12px}
   .home-page .home-personal { padding: 25px 0 18px; }
   .home-page .home-personal-head { align-items: flex-start; flex-direction: column; gap: 12px; margin-bottom: 18px; }
   .home-page .home-personal-head h2 { font-size: 24px; }
@@ -138,8 +137,6 @@
   font-weight: 650;
 }
 .home-shortcuts a:hover { background: var(--surface-soft); }
-.home-guest-account { text-align: center; color: var(--home-muted); font-size: 14px; }
-.home-guest-account .home-text-link { min-height: 44px; }
 @media (max-width: 620px) {
   .home-welcome-card { grid-template-columns: 1fr; gap: 8px; }
   .home-welcome-graph { width: 65%; max-height: 108px; justify-self: end; }

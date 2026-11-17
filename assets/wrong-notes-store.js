@@ -4,9 +4,9 @@
   const KEY="math-wrong-notes-v1",STATS_KEY="math-concept-stats-v1",DELETED_KEY="math-wrong-deletions-v1",device=crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
   function deletions(){try{const value=JSON.parse(localStorage.getItem(DELETED_KEY)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return{}}}
   function operationTime(id){const note=read().find(row=>row.id===id);return new Date(Math.max(Date.now(),Date.parse(window.StudyState.noteStamp(note||{}))||0,Date.parse(deletions()[id])||0)+1).toISOString()}
-  const canUseLocal=()=>window.StudentSync?.canUseLocal?.()!==false;
+  const canUseLocal=()=>window.StudyDevice?.canUseLocal()!==false;
   function read(){if(!canUseLocal())return[];try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v.map(window.StudyState.settle):[]}catch{return[]}}
-  function persist(items){if(!canUseLocal())throw new Error('계정 기록을 분리한 뒤 저장해 주세요.');localStorage.setItem(KEY,JSON.stringify(items));window.StudentSync?.changed();window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
+  function persist(items){if(!canUseLocal())throw new Error('기기 기록을 확인한 뒤 저장해 주세요.');localStorage.setItem(KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
   function write(items){
     try{return persist(items.slice(0,200))}catch{return false}
   }
@@ -26,7 +26,7 @@
     if(Object.keys(migrated).length)writeStats(migrated);
     return migrated;
   }
-  function writeStats(value){if(!canUseLocal())return false;try{localStorage.setItem(STATS_KEY,JSON.stringify(value));window.StudentSync?.changed();return true}catch{return false}}
+  function writeStats(value){if(!canUseLocal())return false;try{localStorage.setItem(STATS_KEY,JSON.stringify(value));return true}catch{return false}}
   function track(data,isCorrect){
     if(!data.conceptId&&!data.conceptName)return;
     const all=readStats(),key=statKey(data),row=window.StudyState.totals(all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""});

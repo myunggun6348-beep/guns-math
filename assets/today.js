@@ -9,13 +9,10 @@
   const diagnosticMode=!similarMode&&params.get("diagnostic")==="1";
   const difficulties={basic:"기초",standard:"표준",challenge:"도전"};
   let difficulty=practiceMode&&Object.hasOwn(difficulties,params.get('difficulty'))?params.get('difficulty'):"standard",subtype="",hintCount=0,wrongSaved=true,dailyFocus=[];
-  let saved={};try{saved=JSON.parse(localStorage.getItem("today-study-pref")||"{}")}catch{}
-  let grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):(saved.grade||"1");
-  let trackKey=params.get("subject")||saved.track||"common1";
-  if(!tracks[trackKey]||!tracks[trackKey].grades.includes(grade))trackKey=Object.keys(tracks).find(k=>tracks[k].grades.includes(grade));
+  let grade,trackKey;
   let questions=[],index=0,correct=0,answers=[],selected=null,locked=false;
-  let active=false,runOwner=null,runSlot=null,pageOwner=null,runId="",studyDate,timer;
-  const owner=()=>window.StudentSync?.getState().signedIn?"student-"+window.StudentSync.getState().student.id:"guest";
+  let active=false,runOwner=null,runSlot=null,runId="",studyDate,timer;
+  const owner=()=>window.StudyDevice.draftOwner();
   const slot=()=>practiceMode?'practice-'+grade+'-'+trackKey+'-'+practiceId:similarMode?"similar-"+reviewId:(diagnosticMode?"diagnostic-":"daily-")+grade+"-"+trackKey;
 
   const now=new Date(Date.now()+9*3600000);
@@ -25,8 +22,8 @@
   const esc=v=>String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   const norm=v=>String(v).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"");
   function saveStatus(text){let el=document.getElementById("draftStatus");if(!el){el=document.createElement("p");el.id="draftStatus";el.className="today-draft-status";el.setAttribute("role","status");app.querySelector(".today-panel")?.append(el)}el.textContent=text}
-  function saveDraft(previousOwner){
-    clearTimeout(timer);if(!active||(owner()!==runOwner&&!(previousOwner===true&&pageOwner===runOwner)))return false;
+  function saveDraft(){
+    clearTimeout(timer);if(!active||owner()!==runOwner)return false;
     const saved=window.StudyDraft.save(runOwner,runSlot,{grade,trackKey,date:studyDate,runId,questions,index,answers,selected,locked,hintCount,input:document.getElementById("dailyInput")?.value||"",wrongSaved,dailyFocus,ink:window.GameScratch.snapshot()});
     saveStatus(saved?"이 기기에 풀이를 자동 저장했습니다.":"풀이를 자동 저장하지 못했습니다. 창을 닫기 전에 기기 저장 공간을 확인해 주세요.");return saved;
   }
@@ -41,18 +38,17 @@
     if(params.get("resume")==="1"){params.delete("resume");const url=new URL(location.href);url.searchParams.delete("resume");history.replaceState(null,"",url);box.querySelector("button").click()}
   }
   function records(){
-    if(window.StudentSync?.canUseLocal?.()===false)return[];
+    if(window.StudyDevice.canUseLocal()===false)return[];
     try{return JSON.parse(localStorage.getItem("today-study-records")||"[]")}catch{return[]}
   }
   function latest(){
     return records().find(r=>r.date===today&&r.grade===grade&&r.track===trackKey);
   }
   function saveRecord(){
-    if(window.StudentSync?.canUseLocal?.()===false)throw new Error('계정 기록을 분리한 뒤 저장해 주세요.');
+    if(window.StudyDevice.canUseLocal()===false)throw new Error('기기 기록을 확인한 뒤 저장해 주세요.');
     const list=records().filter(r=>!(r.date===studyDate&&r.grade===grade&&r.track===trackKey));
     list.unshift({date:studyDate,grade,track:trackKey,correct,total:5,questionPrompts:questions.map(q=>q.prompt),focusConcepts:dailyFocus,weakConcepts:[...new Set(answers.filter(a=>!a.correct).map(a=>a.concept))],finishedAt:new Date().toISOString()});
     localStorage.setItem("today-study-records",JSON.stringify(list.slice(0,60)));
-    window.StudentSync?.changed();
   }
   function streak(){
     const dates=[...new Set(records().map(r=>r.date))].sort().reverse();
@@ -75,7 +71,7 @@
   function updateUrl(){
     const u=new URL(location.href);u.searchParams.set("grade",grade);u.searchParams.set("subject",trackKey);history.replaceState(null,"",u);
     let previous={};try{previous=JSON.parse(localStorage.getItem("today-study-pref")||"{}")||{}}catch{}
-    if(previous.grade!==grade||previous.track!==trackKey){localStorage.setItem("today-study-pref",JSON.stringify({grade,track:trackKey,updatedAt:new Date().toISOString()}));window.StudentSync?.changed()}
+    if(window.StudyDevice.canUseLocal()&&(previous.grade!==grade||previous.track!==trackKey)){try{localStorage.setItem("today-study-pref",JSON.stringify({grade,track:trackKey,updatedAt:new Date().toISOString()}))}catch{}}
   }
   function setup(){
     active=false;studyDate=today;window.GameScratch.destroy();updateUrl();
@@ -208,7 +204,7 @@
   }
   function finish(){
     if(diagnosticMode){
-      try{window.LearningDiagnostic.save(grade,trackKey,answers)}catch{index=questions.length-1;saveStatus('진단 결과를 저장하지 못했습니다. 임시 풀이를 유지했습니다. 저장 공간과 로그인을 확인한 뒤 결과 확인을 다시 눌러 주세요.');return}
+      try{window.LearningDiagnostic.save(grade,trackKey,answers)}catch{index=questions.length-1;saveStatus('진단 결과를 저장하지 못했습니다. 임시 풀이를 유지했습니다. 브라우저 저장 공간을 확인한 뒤 결과 확인을 다시 눌러 주세요.');return}
       active=false;clearTimeout(timer);window.StudyDraft.remove(runOwner,runSlot);window.GameScratch.destroy();diagnosticResult();return;
     }
     for(let i=0;i<answers.length;i++){if(!answers[i].correct&&!answers[i].noteSaved){if(!window.WrongNotes.record(answerData(i,false),false,false)){index=questions.length-1;saveDraft();saveStatus("오답 풀이를 저장하지 못했습니다. 임시 기록을 유지했습니다. 저장 공간을 확인하고 결과 확인을 다시 눌러 주세요.");return}answers[i].noteSaved=true}}
@@ -236,7 +232,7 @@
   function diagnosticResult(){
     const ids=[...new Set(answers.map(a=>a.concept))],skipped=answers.filter(a=>a.skipped).length;
     const summary=ids.map(id=>{const rows=answers.filter(a=>a.concept===id),wrong=rows.filter(a=>!a.correct&&!a.skipped).length,unlearned=rows.filter(a=>a.skipped).length;return '<article class="weak-card"><h3>'+esc(concepts[id].name)+'</h3><p>정답 '+rows.filter(a=>a.correct).length+' · 다시 확인 '+wrong+' · 미학습 '+unlearned+'</p><p>'+esc(concepts[id].about)+'</p><div class="weak-actions"><a href="map.html?grade='+grade+'&n='+encodeURIComponent(id)+'">개념 살펴보기 →</a><a href="past-practice.html?grade='+grade+'&concept='+encodeURIComponent(id)+'">관련 기출 연습 →</a></div></article>'}).join('');
-    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">진단 완료</span><h2>다음 공부를 준비했어요</h2><p class="result-lead">정답 '+correct+'문항 · 다시 확인 '+(answers.length-correct-skipped)+'문항 · 미학습 '+skipped+'문항.</p><p>다시 확인할 개념을 오늘의 맞춤 문제에 반영해요. 미학습은 취약 개념으로 분류하지 않습니다. 5문항의 결과는 다음 공부를 정하는 참고자료로 활용하세요.</p><div class="weak-list">'+summary+'</div><p role="status">진단 결과를 저장했어요. 계정 메뉴에서 동기화 상태를 확인할 수 있습니다.</p><div class="result-actions"><a class="today-primary" href="today.html?grade='+grade+'&subject='+encodeURIComponent(trackKey)+'">맞춤 5문제 풀기 →</a><a class="today-secondary" href="index.html">내 학습 홈으로</a></div></section>';
+    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">진단 완료</span><h2>다음 공부를 준비했어요</h2><p class="result-lead">정답 '+correct+'문항 · 다시 확인 '+(answers.length-correct-skipped)+'문항 · 미학습 '+skipped+'문항.</p><p>다시 확인할 개념을 오늘의 맞춤 문제에 반영해요. 미학습은 취약 개념으로 분류하지 않습니다. 5문항의 결과는 다음 공부를 정하는 참고자료로 활용하세요.</p><div class="weak-list">'+summary+'</div><p role="status">진단 결과를 이 브라우저에 저장했어요.</p><div class="result-actions"><a class="today-primary" href="today.html?grade='+grade+'&subject='+encodeURIComponent(trackKey)+'">맞춤 5문제 풀기 →</a><a class="today-secondary" href="index.html">내 학습 홈으로</a></div></section>';
     app.querySelector('.result-actions').before(nextStudyElement());window.scrollTo(0,0);
   }
   function nextStudyView(){
@@ -266,10 +262,8 @@
     offerResume(document.getElementById("similarStart"));
   }
   function initialize(){
-    if(window.StudentSync&&!window.StudentSync.getState().ready)return;
-    if(pageOwner===owner())return;if(active)saveDraft(true);pageOwner=owner();active=false;clearTimeout(timer);window.GameScratch.reset();questions=[];
-    let pref={};try{pref=JSON.parse(localStorage.getItem("today-study-pref")||"{}")||{}}catch{}
-    grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):(pref.grade||"1");
+    let pref={};try{if(window.StudyDevice.canUseLocal())pref=JSON.parse(localStorage.getItem("today-study-pref")||"{}")||{}}catch{}
+    grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):String(["1","2","3"].includes(String(pref.grade))?pref.grade:"1");
     trackKey=params.get("subject")||pref.track||"common1";
     if(!tracks[trackKey]||!tracks[trackKey].grades.includes(grade))trackKey=Object.keys(tracks).find(key=>tracks[key].grades.includes(grade));
     window.StudyJourney.get(grade,trackKey);
@@ -277,9 +271,8 @@
     if(similarMode){
       setupSimilar(window.WrongNotes.all().find(row=>row.id===reviewId));return;
     }
-    if(diagnosticMode&&(!window.StudentSync?.getState().signedIn||window.StudentSync.canUseLocal()===false)){app.innerHTML=hero()+'<section class="today-panel"><h2>내 계정에 진단 결과를 저장해요</h2><p>로그인한 뒤 진단을 시작해 주세요.</p><button type="button" class="today-primary" id="diagnosticLogin">로그인</button><a class="today-secondary" href="index.html">홈으로</a></section>';document.getElementById('diagnosticLogin').onclick=()=>window.StudentAccountUI.열기('login');return}
     setup();
   }
-  window.addEventListener("student-account-change",initialize);initialize();
+  window.StudyDevice.ready.then(initialize);
   window.addEventListener("game-scratch-change",saveDraft);window.addEventListener("pagehide",saveDraft);document.addEventListener("visibilitychange",()=>{if(document.hidden)saveDraft()});
 })();

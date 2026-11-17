@@ -1,9 +1,8 @@
 const assert=require('assert/strict'),fs=require('fs'),path=require('path'),http=require('http');
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||path.join(require('os').homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'));
-const root=path.join(__dirname,'..'),catalog=require('../assets/exam-catalog.json'),review=require('../assets/past-practice-review.json'),model=require('../assets/past-practice-model'),study=require('../assets/study-state');
-let signedIn=false,serverData={},failReview=false;
+const root=path.join(__dirname,'..'),catalog=require('../assets/exam-catalog.json'),review=require('../assets/past-practice-review.json'),model=require('../assets/past-practice-model');
+let failReview=false;
 const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost');
- if(u.pathname==='/api/student-account'){res.setHeader('Content-Type','application/json');if(req.method!=='POST')return res.end(JSON.stringify(signedIn?{signedIn:true,student:{id:'past-test',name:'검사'}}:{signedIn:false}));let body='';req.on('data',c=>body+=c);req.on('end',()=>{const p=JSON.parse(body);serverData=study.merge(serverData,p.data);res.end(JSON.stringify({ok:true,data:serverData}))});return}
  if(u.pathname.startsWith('/api/'))return res.end('[]');
  if(failReview&&u.pathname==='/assets/past-practice-review.json'){res.writeHead(503).end();return}
  const f=path.join(root,decodeURIComponent(u.pathname));if(!f.startsWith(root+path.sep)||!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.writeHead(404).end();return}
@@ -39,15 +38,13 @@ const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://local
    await page.goto(base+'/past-practice.html?grade=1&subject=geometry&concept=vec&difficulty=unknown');await page.waitForFunction(()=>document.querySelector('#pastSelectionStatus').textContent.includes('과목을 선택'));assert.equal(await page.locator('.past-card').count(),0);assert.match(await page.locator('#pastContext').textContent(),/맞지 않거나/);
    assert.deepEqual(errors,[]);await ctx.close();
   }
-  // 계정 추천은 동기화 준비가 끝난 뒤에만 읽으며 선택 동작은 학습 기록을 쓰지 않습니다.
-  signedIn=true;const at=new Date().toISOString();serverData={profile:{grade:'3',track:'stats',name:'검사',updatedAt:at,diagnostics:{stats:{grade:'3',completedAt:at,answers:Array.from({length:5},()=>({concept:'prob',correct:true,skipped:false}))}}}};
-  const ctx=await browser.newContext(),p=await ctx.newPage();await p.goto(base+'/past-practice.html');await p.waitForFunction(()=>document.querySelector('#pastContext').textContent.startsWith('추천:'));
+  // 브라우저에 저장된 진단을 읽으며 선택 동작은 학습 기록을 쓰지 않습니다.
+  const at=new Date().toISOString();const profile={grade:'3',track:'stats',name:'검사',updatedAt:at,diagnostics:{stats:{grade:'3',completedAt:at,answers:Array.from({length:5},()=>({concept:'prob',correct:true,skipped:false}))}}};
+  const ctx=await browser.newContext(),p=await ctx.newPage();await p.addInitScript(profile=>localStorage.setItem('math-home-profile-v1',JSON.stringify(profile)),profile);await p.goto(base+'/past-practice.html');await p.waitForFunction(()=>document.querySelector('#pastContext').textContent.startsWith('추천:'));
   assert.equal(await p.inputValue('#pastGrade'),'3');assert.equal(await p.inputValue('#pastTrack'),'stats');assert.equal(await p.inputValue('#pastConcept'),'prob');assert.equal(await p.locator('[name=pastDifficulty]:checked').inputValue(),'standard');
-  const accountBefore=JSON.stringify(serverData);await p.click('#pastShow');await p.selectOption('#pastConcept','prob::조건부확률');await p.check('[name=pastDifficulty][value=challenge]');await p.click('#pastShow');assert.equal(JSON.stringify(serverData),accountBefore);
-  // 같은 브라우저에서 로그아웃한 뒤 이전 계정의 추천을 남기지 않습니다.
-  await p.evaluate(()=>window.StudentSync.logout());await p.waitForFunction(()=>document.querySelector('#pastGrade').value==='');assert.equal(await p.locator('#pastResults').isVisible(),false);
-  await ctx.close();signedIn=false;
+  const profileBefore=await p.evaluate(()=>localStorage.getItem('math-home-profile-v1'));await p.click('#pastShow');await p.selectOption('#pastConcept','prob::조건부확률');await p.check('[name=pastDifficulty][value=challenge]');await p.click('#pastShow');assert.equal(await p.evaluate(()=>localStorage.getItem('math-home-profile-v1')),profileBefore);
+  await ctx.close();
   const failure=await browser.newPage();failReview=true;await failure.goto(base+'/past-practice.html');await failure.getByRole('button',{name:'다시 불러오기'}).waitFor();failReview=false;await failure.getByRole('button',{name:'다시 불러오기'}).click();await failure.waitForFunction(()=>document.querySelector('#pastSelectionStatus').textContent.includes('학년부터'));await failure.close();
-  console.log('기출 화면 검사 통과: 320/390/820/1280px 밝음·어두움, 순서 선택·세 난도·빈 결과·기존 링크·계정 추천/로그아웃·기록 보존·목록 재시도');
+  console.log('기출 화면 검사 통과: 320/390/820/1280px 밝음·어두움, 순서 선택·세 난도·빈 결과·기존 링크·브라우저 기록 추천·기록 보존·목록 재시도');
  }finally{await browser.close();server.close()}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1});

@@ -2013,8 +2013,6 @@ html.theme-dark .canvas-host {
 @media(max-width:600px){.home-personal{padding-top:22px}.home-personal-shell{padding:20px;border-radius:16px}.home-personal-head{align-items:stretch;flex-direction:column}.home-personal-head>button{align-self:flex-start}.home-personal-grid{grid-template-columns:1fr}.home-personal-card{min-height:166px}.home-profile-form{grid-template-columns:1fr}.home-profile-form label:nth-child(3),.home-profile-form button{grid-column:1}}
 
 /* 학생 계정과 기기 간 학습 기록 동기화 */
-.student-account-button{height:40px;padding:0 13px;border:1px solid var(--hairline);border-radius:999px;background:var(--canvas);color:var(--ink);font:650 12px inherit;white-space:nowrap;cursor:pointer}.student-account-button.signed-in{background:var(--block-mint);border-color:transparent}.student-account-dialog{width:min(470px,calc(100% - 28px));padding:0;border:0;border-radius:20px;background:var(--canvas);color:var(--ink);box-shadow:0 24px 80px rgba(0,0,0,.28)}.student-account-dialog::backdrop{background:rgba(18,20,18,.52);backdrop-filter:blur(3px)}.student-account-card{position:relative;margin:0;padding:30px}.student-account-card h2{margin:7px 0 8px;font-size:28px}.student-account-card>p{margin:0 0 20px;line-height:1.6;opacity:.7}.student-dialog-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border:1px solid var(--hairline);border-radius:50%;background:transparent;color:inherit;font-size:24px;cursor:pointer}.student-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:20px 0;padding:4px;border-radius:12px;background:var(--surface-soft)}.student-tabs button{min-height:40px;border:0;border-radius:9px;background:transparent;color:inherit;font:650 13px inherit;cursor:pointer}.student-tabs button.on{background:var(--canvas);box-shadow:0 2px 9px rgba(0,0,0,.08)}.student-account-form{display:grid;gap:12px}.student-account-form label{display:grid;gap:6px;font-size:12px;font-weight:650}.student-account-form input{min-height:46px;padding:10px 12px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);color:var(--ink);font:inherit}.student-account-help,.student-account-error{margin:0!important;font-size:12px;line-height:1.5}.student-account-error{min-height:18px;color:#c43b2f}.student-sync-status{margin:18px 0;padding:13px;border-radius:10px;background:var(--surface-soft);font-size:13px}.student-logout{display:block;margin:16px auto 0;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;opacity:.65}
-@media(max-width:600px){.student-account-button{width:64px;padding:0 8px;font-size:0}.student-account-button::after{content:"로그인";font-size:12px}.student-account-button.signed-in::after{content:"동기화"}.student-account-card{padding:25px 20px}}
 
 /* 선생님 방 학생 학습 현황 */
 .student-admin-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:20px 0}.student-admin-summary span{display:grid;gap:4px;padding:14px;border:1px solid var(--hairline);border-radius:12px;font-size:12px}.student-admin-summary b{font:700 24px var(--mono)}.student-admin-search{display:grid;grid-template-columns:auto minmax(220px,420px);align-items:center;gap:12px;margin:0 0 12px;font-size:12px;font-weight:650}.student-admin-search input{min-height:42px;padding:9px 12px;border:1px solid var(--hairline);border-radius:10px;background:var(--canvas);color:var(--ink);font:inherit}.student-admin-table{overflow:hidden;border:1px solid var(--hairline);border-radius:14px}.student-admin-row{display:grid;grid-template-columns:1.2fr 1fr 1fr .8fr 1.1fr 1fr;align-items:center;gap:12px;padding:13px 15px;border-top:1px solid var(--hairline);font-size:13px}.student-admin-row:first-child{border-top:0}.student-admin-row.head{background:var(--surface-soft);font-size:11px;font-weight:700}.student-admin-row>span{display:grid;gap:3px;min-width:0}.student-admin-row small{overflow:hidden;color:var(--muted);font-size:11px;text-overflow:ellipsis;white-space:nowrap}.student-admin-name b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2033,11 +2031,8 @@ html.theme-dark .canvas-host {
 
 /* 두 번째 단순화: 처음에는 학습 행동만, 나머지는 요청할 때 펼친다. */
 .home-page .portal-hero,.home-page .teacher-entry,.home-page .footer-line ul{display:none}.home-page .nav-right{gap:10px}.home-page .home-personal{padding:clamp(35px,7vw,78px) 0 28px}.home-page .home-personal-shell{max-width:780px;padding:0;border:0;background:transparent}.home-page .home-personal-head h2{font-size:clamp(30px,4vw,44px)}.home-page .home-main-action{min-height:230px;justify-content:center}.home-page .home-personal-shell.setup{max-width:780px;grid-template-columns:1fr;gap:20px}.home-page .home-profile-form{max-width:600px}.home-more{max-width:780px;margin:0 auto 90px;padding:0 var(--gutter)}.home-more>summary{display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:0 16px;border:1px solid var(--hairline);border-radius:12px;list-style:none;font-size:14px;font-weight:650;cursor:pointer}.home-more>summary::-webkit-details-marker{display:none}.home-more>summary span{font-size:22px;font-weight:400}.home-more[open]>summary span{transform:rotate(45deg)}.home-more .home-start,.home-more #fresh,.home-more #find{padding:35px 0 0}.home-more .home-start .wrap,.home-more #fresh .wrap,.home-more #find .wrap{width:100%}.home-more .home-start-head{margin-bottom:5px}.home-more .find{max-width:none;text-align:left}.home-more .find-box{margin-top:18px}.home-more .find-note{font-size:13px}.home-page .footer{padding-top:30px}.home-page .footer-line{justify-content:center}
-@media(max-width:650px){.home-page .home-personal{padding:45px 0 24px}.home-page .home-main-action{min-height:210px}.home-more{margin-bottom:60px}.home-page .student-account-button{width:64px}}
+@media(max-width:650px){.home-page .home-personal{padding:45px 0 24px}.home-page .home-main-action{min-height:210px}.home-more{margin-bottom:60px}}
 
-/* 첫 방문 학생은 가입 없이 시작하고, 계정은 기록 동기화가 필요할 때만 만든다. */
-.student-account-dialog{max-height:min(720px,calc(100dvh - 24px));overflow-y:auto}.student-account-card [hidden]{display:none!important}.student-account-card h2{margin:12px 0 10px}.student-guest>p,.student-account-entry>p{margin:0 0 22px;color:var(--muted);font-size:14px;line-height:1.6}.student-guest{display:grid;gap:12px}.student-guest h2,.student-guest p{grid-column:1}.student-guest .btn{width:100%;min-height:48px}.student-secondary-action{min-height:46px;border:1px solid var(--hairline);border-radius:999px;background:var(--canvas);color:var(--ink);font:650 14px inherit;cursor:pointer}.student-text-action{padding:9px;border:0;background:transparent;color:var(--ink);font:600 13px inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.student-back{padding:4px 0;border:0;background:transparent;color:var(--ink);font:600 12px inherit;cursor:pointer}.student-account-form label span{font-weight:400;opacity:.65}.student-account-form .btn{width:100%;margin-top:3px}.student-account-help{color:var(--muted)}.student-account-error:empty{display:none}.student-account-button:not(.signed-in){font-size:0}.student-account-button:not(.signed-in)::after{content:"내 기록";font-size:12px}
-@media(max-width:600px){.student-account-card{padding:27px 22px}.student-account-dialog{width:min(470px,calc(100% - 20px))}.student-account-button:not(.signed-in)::after{content:"내 기록"}}
 
 /* =========================================================
    홈 첫 화면 — 길을 크게 둘로 (내 학습 홈 만들기 / 그냥 둘러보기)
@@ -2141,22 +2136,6 @@ html.theme-dark .canvas-host {
   font: inherit; text-decoration: underline; cursor: pointer;
 }
 @media (max-width: 860px) { .home-fork-login { min-height: 44px; } }
-
-/* 가입 창의 학년·과목 — 한 줄에 둘 */
-.student-account-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-@media (max-width: 480px) { .student-account-pair { grid-template-columns: 1fr; } }
-
-/* 가입 창의 칸들. 여기도 font:inherit 이라 설명 글씨(12px)를 따라가고 있었고,
-   select 는 아예 꾸며 주지도 않아 브라우저 기본 모양으로 남아 있었습니다.
-   (input 종류를 하나하나 적는 방식이 같은 실수를 계속 만듭니다 — 세 번째입니다) */
-.student-account-form input,
-.student-account-form select {
-  min-height: 46px; padding: 10px 12px;
-  border: 1px solid var(--hairline); border-radius: 10px;
-  background: var(--canvas); color: var(--ink);
-  font-family: inherit; font-size: 16px;
-}
 
 /* 좁은 화면에서는 표의 제목 줄이 숨겨집니다(위 @media 참고). 그러면 '3문제 · 완료 9'
    처럼 숫자만 남아서 그게 오답인지 무엇인지 알 수가 없었습니다. 그래서 그때는
@@ -2262,7 +2241,6 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
 /* 폰에서는 띠 오른쪽 끝의 날짜·개수를 뺍니다 — 좁은 띠에 끼면 설명이 세 줄로 늘어납니다 */
 @media (max-width: 650px) { .page-head-meta { display: none; } }
 
-.student-reset-button{width:fit-content;min-height:40px;margin-top:5px;padding:7px 10px;border:1px solid var(--hairline);border-radius:9px;background:var(--canvas);color:var(--ink);font-size:12px;cursor:pointer}
 .student-attention-filters{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}.student-attention-filters button{min-height:40px}.student-attention-badge{width:fit-content;padding:4px 7px;border-radius:6px;background:var(--surface-soft);font-size:11px;font-weight:650}.student-common-concepts{display:grid;gap:4px;margin-top:8px;padding-top:9px;border-top:1px solid var(--hairline)}
 
 .wrong-reason{display:grid;gap:8px;margin:16px 0;font-size:14px;font-weight:650}.wrong-reason select{width:100%;max-width:420px;min-height:44px;padding:9px 12px;border:1px solid var(--hairline);border-radius:9px;background:var(--canvas);color:var(--ink);font:inherit}.wrong-reason small,.wrong-reason span{font-size:13px;font-weight:400}
@@ -2272,12 +2250,9 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
 .review-growth{margin:16px 0;padding:16px 18px;border:1px solid var(--hairline);border-radius:12px;background:var(--surface-soft);color:var(--ink);overflow-wrap:anywhere}.review-growth strong{font-size:15px;line-height:1.6}.review-growth p{margin:6px 0;font-size:13px;line-height:1.65}.review-growth small{display:block;font-size:12px;line-height:1.6}
 .review-weekly{margin:14px 0;min-width:0;font-size:13px;line-height:1.65;overflow-wrap:anywhere}.review-weekly>summary{min-height:44px;padding:10px 0;cursor:pointer;font-weight:650}.review-weekly p{margin:8px 0}.review-weekly table{width:100%;border-collapse:collapse;font-size:12px}.review-weekly caption{text-align:left;font-weight:650;padding:6px 0}.review-weekly th,.review-weekly td{padding:6px 4px;border-bottom:1px solid var(--hairline);text-align:center}.review-weekly ul{padding-left:18px;margin:10px 0}.review-weekly small{display:block;font-size:12px}.student-review-analysis{width:100%;font-weight:400}
 .legacy-class-view{margin:16px 0;padding:12px 16px;border:1px solid var(--hairline);border-radius:12px}.legacy-class-view>summary{min-height:44px;cursor:pointer;font-size:14px;font-weight:650}
-.student-account-button:not(.signed-in)::after{content:"로그인"}
-@media(max-width:600px){.student-account-button.signed-in::after{content:"내 계정"}}
 @media(max-width:360px){.nav .brand{font-size:15px;gap:6px}.nav .brand svg{width:20px;height:20px}.nav-right{gap:6px}}
 .student-diagnostic-analysis{grid-column:1/-1;margin:0;border-top:1px solid var(--hairline);font-weight:400}.student-diagnostic-course{padding:14px 0;border-top:1px solid var(--hairline)}.student-diagnostic-course h3{margin:0;font-size:16px}.student-diagnostic-course th:first-child{text-align:left;max-width:140px;overflow-wrap:anywhere}.student-diagnostic-course a{color:inherit;text-underline-offset:3px}.student-diagnostic-course small{white-space:normal}
 .student-diagnostic-analysis>small{white-space:normal;overflow:visible;text-overflow:clip}
-.student-reset-rules{margin:16px 0;padding:14px 16px;border:1px solid var(--hairline);border-radius:12px;background:var(--surface-soft);font-size:14px;line-height:1.65}.student-reset-rules ul{margin:8px 0 0;padding-left:20px}.student-reset-rules li+li{margin-top:5px}.student-account-form input[aria-invalid="true"]{border-color:#b83c3c;outline-color:#b83c3c}
 .student-daily-journey{grid-column:1/-1;margin:0;border-top:1px solid var(--hairline)}.student-daily-journey>small,.student-daily-journey small,.student-admin-row small.student-journey-status{white-space:normal;overflow:visible;text-overflow:clip}.student-journey-course{padding:14px 0;border-top:1px solid var(--hairline)}.student-journey-course h3{margin:0;font-size:16px}.student-journey-course progress{display:block;width:100%;height:10px;accent-color:#39795d}.student-journey-course ul{list-style:none;padding:0}.student-journey-course li{padding:12px 0;border-bottom:1px solid var(--hairline)}.student-journey-course li p{margin:6px 0}.student-daily-journey{overflow-wrap:anywhere}.student-admin-summary{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:900px){.student-admin-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .student-learning-analysis small{display:block;white-space:normal;overflow:visible;text-overflow:clip}.student-admin-search input{min-width:0;width:100%}
 .adm-row input[type=file]{min-width:0;max-width:100%}

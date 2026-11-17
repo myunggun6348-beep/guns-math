@@ -6,8 +6,9 @@
      고른 학년 → 전체. 폰에서 41개를 다 내려 보며 내 학년을 찾지 않게 하려는 것입니다. */
   const 기억=key=>{try{return JSON.parse(localStorage.getItem(key)||"null")}catch{return null}};
   const 고른칸="files-grade-tab";
+  const 학습학년=()=>{try{if(!localStorage.getItem("math-student-data-owner"))return 기억("math-home-profile-v1")?.grade||기억("today-study-pref")?.grade}catch{}};
   const 처음칸=()=>{
-    const 후보=[params.get("grade"),(()=>{try{return localStorage.getItem(고른칸)}catch{return null}})(),기억("math-home-profile-v1")?.grade,기억("today-study-pref")?.grade];
+    const 후보=[params.get("grade"),(()=>{try{return localStorage.getItem(고른칸)}catch{return null}})(),학습학년()];
     return 후보.map(String).find(g=>g==="all"||grades.includes(g))||"all";
   };
   let files=[],selected=처음칸();
