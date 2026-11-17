@@ -4,11 +4,11 @@
   const params=new URLSearchParams(location.search);
   /* 처음 열 때 어느 학년 칸을 보여 줄지: 주소(?grade=) → 지난번에 고른 칸 → 오늘의 학습에서
      고른 학년 → 전체. 폰에서 41개를 다 내려 보며 내 학년을 찾지 않게 하려는 것입니다. */
-  const 기억=key=>{try{return JSON.parse(localStorage.getItem(key)||"null")}catch{return null}};
+  const 기억=key=>{try{return JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(key)||"null")}catch{return null}};
   const 고른칸="files-grade-tab";
-  const 학습학년=()=>{try{if(!localStorage.getItem("math-student-data-owner"))return 기억("math-home-profile-v1")?.grade||기억("today-study-pref")?.grade}catch{}};
+  const 학습학년=()=>{try{if(!(globalThis.StudyStorage ?? localStorage).getItem("math-student-data-owner"))return 기억("math-home-profile-v1")?.grade||기억("today-study-pref")?.grade}catch{}};
   const 처음칸=()=>{
-    const 후보=[params.get("grade"),(()=>{try{return localStorage.getItem(고른칸)}catch{return null}})(),학습학년()];
+    const 후보=[params.get("grade"),(()=>{try{return (globalThis.StudyStorage ?? localStorage).getItem(고른칸)}catch{return null}})(),학습학년()];
     return 후보.map(String).find(g=>g==="all"||grades.includes(g))||"all";
   };
   let files=[],selected=처음칸();
@@ -86,7 +86,7 @@
     const 다펼침=Boolean(search.value.trim()||year.value||subject.value||kind.value);
     list.innerHTML=[...groups.entries()].sort((a,b)=>String(b[0]).localeCompare(String(a[0]))).map(([y,items],i)=>'<details class="archive-year-group" data-year="'+safe(y)+'"'+((yearOpen.has(y)?yearOpen.get(y):다펼침||i===0)?" open":"")+'><summary class="archive-year">'+safe(y)+(/^\d{4}$/.test(y)?"년":"")+'<span>'+items.length+'개</span></summary><div class="archive-list">'+items.map(f=>f.sets?bundleCard(f):singleCard(f)).join("")+"</div></details>").join("");
   }
-  tabs.addEventListener("click",e=>{const b=e.target.closest("[data-grade]");if(b){selected=b.dataset.grade;try{localStorage.setItem(고른칸,selected)}catch{}drawSubjects();draw()}});
+  tabs.addEventListener("click",e=>{const b=e.target.closest("[data-grade]");if(b){selected=b.dataset.grade;try{(globalThis.StudyStorage ?? localStorage).setItem(고른칸,selected)}catch{}drawSubjects();draw()}});
   [subject,kind,year].forEach(e=>e.addEventListener("change",draw));
   search.addEventListener("input",draw);
   Promise.allSettled([fetch("/assets/exam-catalog.json").then(r=>r.ok?r.json():{items:[]}),fetch("/api/files").then(r=>r.ok?r.json():[])]).then(([catalogResult,uploadResult])=>{

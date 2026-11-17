@@ -2,11 +2,11 @@
 (function(){
   "use strict";
   const KEY="math-wrong-notes-v1",STATS_KEY="math-concept-stats-v1",DELETED_KEY="math-wrong-deletions-v1",device=crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  function deletions(){try{const value=JSON.parse(localStorage.getItem(DELETED_KEY)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return{}}}
+  function deletions(){try{const value=JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(DELETED_KEY)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return{}}}
   function operationTime(id){const note=read().find(row=>row.id===id);return new Date(Math.max(Date.now(),Date.parse(window.StudyState.noteStamp(note||{}))||0,Date.parse(deletions()[id])||0)+1).toISOString()}
   const canUseLocal=()=>window.StudyDevice?.canUseLocal()!==false;
-  function read(){if(!canUseLocal())return[];try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(v)?v.map(window.StudyState.settle):[]}catch{return[]}}
-  function persist(items){if(!canUseLocal())throw new Error('기기 기록을 확인한 뒤 저장해 주세요.');localStorage.setItem(KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
+  function read(){if(!canUseLocal())return[];try{const v=JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(KEY)||"[]");return Array.isArray(v)?v.map(window.StudyState.settle):[]}catch{return[]}}
+  function persist(items){if(!canUseLocal())throw new Error('기기 기록을 확인한 뒤 저장해 주세요.');(globalThis.StudyStorage ?? localStorage).setItem(KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("wrong-notes-change"));return true}
   function write(items){
     try{return persist(items.slice(0,200))}catch{return false}
   }
@@ -14,7 +14,7 @@
   function readStats(){
     if(!canUseLocal())return{};
     try{
-      const value=JSON.parse(localStorage.getItem(STATS_KEY)||"{}");
+      const value=JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(STATS_KEY)||"{}");
       if(value&&typeof value==="object"&&!Array.isArray(value)&&Object.keys(value).length)return value;
     }catch{}
     const migrated={};
@@ -26,7 +26,7 @@
     if(Object.keys(migrated).length)writeStats(migrated);
     return migrated;
   }
-  function writeStats(value){if(!canUseLocal())return false;try{localStorage.setItem(STATS_KEY,JSON.stringify(value));return true}catch{return false}}
+  function writeStats(value){if(!canUseLocal())return false;try{(globalThis.StudyStorage ?? localStorage).setItem(STATS_KEY,JSON.stringify(value));return true}catch{return false}}
   function track(data,isCorrect){
     if(!data.conceptId&&!data.conceptName)return;
     const all=readStats(),key=statKey(data),row=window.StudyState.totals(all[key]||{key,conceptId:data.conceptId||"",name:data.conceptName||"기타",subject:data.subject||"",attempts:0,correct:0,wrong:0,lastAt:""});
@@ -109,7 +109,7 @@
     const image=solutionImage(value),items=read(),index=items.findIndex(x=>x.id===id);if(!image||index<0)return false;
     items[index]={...items[index],feedbackImage:image,feedbackAt:new Date().toISOString()};return write(items);
   }
-  function removeIds(ids){if(!canUseLocal())return false;const deleted=deletions();ids.forEach(id=>deleted[id]=operationTime(id));try{localStorage.setItem(DELETED_KEY,JSON.stringify(deleted))}catch{return false}return write(read().filter(note=>!ids.includes(note.id)))}
+  function removeIds(ids){if(!canUseLocal())return false;const deleted=deletions();ids.forEach(id=>deleted[id]=operationTime(id));try{(globalThis.StudyStorage ?? localStorage).setItem(DELETED_KEY,JSON.stringify(deleted))}catch{return false}return write(read().filter(note=>!ids.includes(note.id)))}
   function remove(id){return removeIds([id])}
   function clearMastered(){return removeIds(read().filter(note=>note.mastered).map(note=>note.id))}
   function count(){const items=read();return{all:items.length,active:items.filter(x=>!x.mastered).length,due:items.filter(due).length,mastered:items.filter(x=>x.mastered).length}}

@@ -25,12 +25,12 @@
   function saveDraft(){
     clearTimeout(timer);if(!active||owner()!==runOwner)return false;
     const saved=window.StudyDraft.save(runOwner,runSlot,{grade,trackKey,date:studyDate,runId,questions,index,answers,selected,locked,hintCount,input:document.getElementById("dailyInput")?.value||"",wrongSaved,dailyFocus,ink:window.GameScratch.snapshot()});
-    saveStatus(saved?"이 기기에 풀이를 자동 저장했습니다.":"풀이를 자동 저장하지 못했습니다. 창을 닫기 전에 기기 저장 공간을 확인해 주세요.");return saved;
+    saveStatus(saved?(window.StudyStorage?"현재 학습에 풀이를 임시 저장했습니다.":"이 기기에 풀이를 자동 저장했습니다."):"풀이를 자동 저장하지 못했습니다. 창을 닫기 전에 기기 저장 공간을 확인해 주세요.");return saved;
   }
   const scheduleSave=()=>{clearTimeout(timer);timer=setTimeout(saveDraft,150)};
   function offerResume(startButton){
     const saved=window.StudyDraft.load(owner(),slot());if(!saved||!tracks[saved.trackKey]?.grades.includes(saved.grade)||saved.questions.some(q=>!concepts[q.concept]))return;
-    const box=document.createElement("section");box.className="today-resume";box.innerHTML='<h3>풀던 문제가 있어요</h3><p>'+esc(saved.date)+' · '+(saved.index+1)+' / '+saved.questions.length+'문항 · 입력 답과 필기를 이어서 볼 수 있습니다.</p><button type="button" class="today-primary" id="resumeStudy">이어서 풀기 →</button><small>같은 기기·브라우저에 저장됩니다. 새로 시작하면 이 임시 풀이가 바뀝니다.</small>';startButton.before(box);startButton.textContent="처음부터 새로 풀기";startButton.classList.add("today-secondary");
+    const box=document.createElement("section");box.className="today-resume";box.innerHTML='<h3>풀던 문제가 있어요</h3><p>'+esc(saved.date)+' · '+(saved.index+1)+' / '+saved.questions.length+'문항 · 입력 답과 필기를 이어서 볼 수 있습니다.</p><button type="button" class="today-primary" id="resumeStudy">이어서 풀기 →</button><small>'+(window.StudyStorage?'현재 학습을 끝내기 전에 파일을 저장하세요.':'같은 기기·브라우저에 저장됩니다.')+' 새로 시작하면 이 임시 풀이가 바뀝니다.</small>';startButton.before(box);startButton.textContent="처음부터 새로 풀기";startButton.classList.add("today-secondary");
     box.querySelector("button").onclick=()=>{
       if(!window.GameScratch.restore(saved.ink)){saveStatus("저장된 필기를 읽지 못했습니다. 기존 임시 기록은 유지했습니다.");return}
       grade=saved.grade;trackKey=saved.trackKey;studyDate=saved.date;runId=saved.runId||crypto.randomUUID();questions=saved.questions;index=saved.index;answers=saved.answers;correct=answers.filter(a=>a.correct).length;dailyFocus=Array.isArray(saved.dailyFocus)?saved.dailyFocus:[];runOwner=owner();runSlot=slot();active=true;renderQuestion(saved);
@@ -39,7 +39,7 @@
   }
   function records(){
     if(window.StudyDevice.canUseLocal()===false)return[];
-    try{return JSON.parse(localStorage.getItem("today-study-records")||"[]")}catch{return[]}
+    try{return JSON.parse((globalThis.StudyStorage ?? localStorage).getItem("today-study-records")||"[]")}catch{return[]}
   }
   function latest(){
     return records().find(r=>r.date===today&&r.grade===grade&&r.track===trackKey);
@@ -48,7 +48,7 @@
     if(window.StudyDevice.canUseLocal()===false)throw new Error('기기 기록을 확인한 뒤 저장해 주세요.');
     const list=records().filter(r=>!(r.date===studyDate&&r.grade===grade&&r.track===trackKey));
     list.unshift({date:studyDate,grade,track:trackKey,correct,total:5,questionPrompts:questions.map(q=>q.prompt),focusConcepts:dailyFocus,weakConcepts:[...new Set(answers.filter(a=>!a.correct).map(a=>a.concept))],finishedAt:new Date().toISOString()});
-    localStorage.setItem("today-study-records",JSON.stringify(list.slice(0,60)));
+    (globalThis.StudyStorage ?? localStorage).setItem("today-study-records",JSON.stringify(list.slice(0,60)));
   }
   function streak(){
     const dates=[...new Set(records().map(r=>r.date))].sort().reverse();
@@ -70,8 +70,8 @@
   }
   function updateUrl(){
     const u=new URL(location.href);u.searchParams.set("grade",grade);u.searchParams.set("subject",trackKey);history.replaceState(null,"",u);
-    let previous={};try{previous=JSON.parse(localStorage.getItem("today-study-pref")||"{}")||{}}catch{}
-    if(window.StudyDevice.canUseLocal()&&(previous.grade!==grade||previous.track!==trackKey)){try{localStorage.setItem("today-study-pref",JSON.stringify({grade,track:trackKey,updatedAt:new Date().toISOString()}))}catch{}}
+    let previous={};try{previous=JSON.parse((globalThis.StudyStorage ?? localStorage).getItem("today-study-pref")||"{}")||{}}catch{}
+    if(window.StudyDevice.canUseLocal()&&(previous.grade!==grade||previous.track!==trackKey)){try{(globalThis.StudyStorage ?? localStorage).setItem("today-study-pref",JSON.stringify({grade,track:trackKey,updatedAt:new Date().toISOString()}))}catch{}}
   }
   function setup(){
     active=false;studyDate=today;window.GameScratch.destroy();updateUrl();
@@ -124,10 +124,12 @@
     const ask = document.createElement("a");
     ask.className = "daily-ask-link";
     ask.href = "ask.html#askForm";
-    ask.target = "_blank";
-    ask.rel = "noopener";
     ask.textContent = "이 문제 질문하기";
-    ask.setAttribute("aria-label", "이 문제 질문하기 (새 탭)");
+    if (!window.StudyStorage) {
+      ask.target = "_blank";
+      ask.rel = "noopener";
+      ask.setAttribute("aria-label", "이 문제 질문하기 (새 탭)");
+    }
     app.querySelector(".today-panel").append(ask);
     if(diagnosticMode){const skip=document.createElement('button');skip.type='button';skip.className='today-secondary diagnostic-skip';skip.id='diagnosticSkip';skip.textContent='아직 배우지 않았어요';skip.onclick=()=>submit(true);app.querySelector('.daily-actions').append(skip)}
     if(!similarMode&&dailyFocus.length){const guide=document.createElement("p");guide.className="today-personal-guide";guide.textContent="맞춤 학습 · 집중 개념: "+dailyFocus.map(id=>concepts[id]?.name||id).join(" · ");app.querySelector(".daily-top").after(guide)}
@@ -232,7 +234,7 @@
   function diagnosticResult(){
     const ids=[...new Set(answers.map(a=>a.concept))],skipped=answers.filter(a=>a.skipped).length;
     const summary=ids.map(id=>{const rows=answers.filter(a=>a.concept===id),wrong=rows.filter(a=>!a.correct&&!a.skipped).length,unlearned=rows.filter(a=>a.skipped).length;return '<article class="weak-card"><h3>'+esc(concepts[id].name)+'</h3><p>정답 '+rows.filter(a=>a.correct).length+' · 다시 확인 '+wrong+' · 미학습 '+unlearned+'</p><p>'+esc(concepts[id].about)+'</p><div class="weak-actions"><a href="map.html?grade='+grade+'&n='+encodeURIComponent(id)+'">개념 살펴보기 →</a><a href="past-practice.html?grade='+grade+'&concept='+encodeURIComponent(id)+'">관련 기출 연습 →</a></div></article>'}).join('');
-    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">진단 완료</span><h2>다음 공부를 준비했어요</h2><p class="result-lead">정답 '+correct+'문항 · 다시 확인 '+(answers.length-correct-skipped)+'문항 · 미학습 '+skipped+'문항.</p><p>다시 확인할 개념을 오늘의 맞춤 문제에 반영해요. 미학습은 취약 개념으로 분류하지 않습니다. 5문항의 결과는 다음 공부를 정하는 참고자료로 활용하세요.</p><div class="weak-list">'+summary+'</div><p role="status">진단 결과를 이 브라우저에 저장했어요.</p><div class="result-actions"><a class="today-primary" href="today.html?grade='+grade+'&subject='+encodeURIComponent(trackKey)+'">맞춤 5문제 풀기 →</a><a class="today-secondary" href="index.html">내 학습 홈으로</a></div></section>';
+    app.innerHTML=hero()+'<section class="today-panel"><span class="daily-concept">진단 완료</span><h2>다음 공부를 준비했어요</h2><p class="result-lead">정답 '+correct+'문항 · 다시 확인 '+(answers.length-correct-skipped)+'문항 · 미학습 '+skipped+'문항.</p><p>다시 확인할 개념을 오늘의 맞춤 문제에 반영해요. 미학습은 취약 개념으로 분류하지 않습니다. 5문항의 결과는 다음 공부를 정하는 참고자료로 활용하세요.</p><div class="weak-list">'+summary+'</div><p role="status">'+(window.StudyStorage?'진단 결과를 현재 학습에 임시 저장했어요.':'진단 결과를 이 브라우저에 저장했어요.')+'</p><div class="result-actions"><a class="today-primary" href="today.html?grade='+grade+'&subject='+encodeURIComponent(trackKey)+'">맞춤 5문제 풀기 →</a><a class="today-secondary" href="index.html">내 학습 홈으로</a></div></section>';
     app.querySelector('.result-actions').before(nextStudyElement());window.scrollTo(0,0);
   }
   function nextStudyView(){
@@ -262,7 +264,7 @@
     offerResume(document.getElementById("similarStart"));
   }
   function initialize(){
-    let pref={};try{if(window.StudyDevice.canUseLocal())pref=JSON.parse(localStorage.getItem("today-study-pref")||"{}")||{}}catch{}
+    let pref={};try{if(window.StudyDevice.canUseLocal())pref=JSON.parse((globalThis.StudyStorage ?? localStorage).getItem("today-study-pref")||"{}")||{}}catch{}
     grade=["1","2","3"].includes(params.get("grade"))?params.get("grade"):String(["1","2","3"].includes(String(pref.grade))?pref.grade:"1");
     trackKey=params.get("subject")||pref.track||"common1";
     if(!tracks[trackKey]||!tracks[trackKey].grades.includes(grade))trackKey=Object.keys(tracks).find(key=>tracks[key].grades.includes(grade));
@@ -274,5 +276,5 @@
     setup();
   }
   window.StudyDevice.ready.then(initialize);
-  window.addEventListener("game-scratch-change",saveDraft);window.addEventListener("pagehide",saveDraft);document.addEventListener("visibilitychange",()=>{if(document.hidden)saveDraft()});
+  window.addEventListener("game-scratch-change",saveDraft);window.addEventListener("pagehide",saveDraft);window.addEventListener("shared-study-flush",saveDraft);document.addEventListener("visibilitychange",()=>{if(document.hidden)saveDraft()});
 })();

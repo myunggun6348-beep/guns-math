@@ -40,7 +40,7 @@ const state = {
 };
 
 try {
-  const toolPrefs = JSON.parse(localStorage.getItem("math-solve-tool-prefs") || "{}");
+  const toolPrefs = JSON.parse((globalThis.StudyStorage ?? localStorage).getItem("math-solve-tool-prefs") || "{}");
   if (/^#[0-9a-f]{6}$/i.test(toolPrefs.penColor || "")) state.penColor = toolPrefs.penColor;
   if (/^#[0-9a-f]{6}$/i.test(toolPrefs.highlighterColor || "")) state.highlighterColor = toolPrefs.highlighterColor;
   if ([1,2,3,4,5].includes(toolPrefs.penSize)) state.penSize = toolPrefs.penSize;
@@ -100,7 +100,7 @@ function pageHistory(bucket) {
 
 function openDatabase() {
   return new Promise(resolve => {
-    if (!("indexedDB" in window)) return resolve(null);
+    if (globalThis.StudyStorage || !("indexedDB" in window)) return resolve(null);
     const request = indexedDB.open("math-solve-notes", 1);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains("notes")) request.result.createObjectStore("notes", { keyPath: "key" });
@@ -121,7 +121,7 @@ async function loadNotes() {
     });
   }
   if (!record) {
-    try { record = JSON.parse(localStorage.getItem("math-solve:" + state.docKey) || "null"); } catch {}
+    try { record = JSON.parse((globalThis.StudyStorage ?? localStorage).getItem("math-solve:" + state.docKey) || "null"); } catch {}
   }
   if (record && record.pages && typeof record.pages === "object") state.pages = record.pages;
 }
@@ -139,9 +139,9 @@ async function persistNotes() {
     });
   }
   if (!saved) {
-    try { localStorage.setItem("math-solve:" + state.docKey, JSON.stringify(record)); saved = true; } catch {}
+    try { (globalThis.StudyStorage ?? localStorage).setItem("math-solve:" + state.docKey, JSON.stringify(record)); saved = true; } catch {}
   }
-  setSaveState(saved ? "저장됨" : "저장 실패", saved ? "" : "error");
+  setSaveState(saved ? (globalThis.StudyStorage ? "현재 학습에 임시 저장됨" : "저장됨") : "저장 실패", saved ? "" : "error");
 }
 
 function scheduleSave() {
@@ -342,7 +342,7 @@ const HIGHLIGHT_WIDTHS = [0, .012, .017, .022, .028, .036];
 
 function saveToolPrefs() {
   try {
-    localStorage.setItem("math-solve-tool-prefs", JSON.stringify({
+    (globalThis.StudyStorage ?? localStorage).setItem("math-solve-tool-prefs", JSON.stringify({
       penColor: state.penColor, highlighterColor: state.highlighterColor,
       penSize: state.penSize, highlighterSize: state.highlighterSize,
       showGrid: state.showGrid, showAxes: state.showAxes, snapToGrid: state.snapToGrid
@@ -765,7 +765,7 @@ function stopTimer() {
   clearInterval(state.timerId);
 }
 try {
-  const savedLimit = Number(localStorage.getItem("math-solve-timer-limit"));
+  const savedLimit = Number((globalThis.StudyStorage ?? localStorage).getItem("math-solve-timer-limit"));
   if ([0,10,20,30,40,50,80,100].includes(savedLimit)) state.timerLimit = savedLimit;
 } catch {}
 $("#timerLimit").value = String(state.timerLimit);
@@ -773,7 +773,7 @@ drawTimer();
 $("#timerLimit").addEventListener("change", event => {
   state.timerLimit = Number(event.target.value) || 0;
   state.timerElapsed = 0; state.timerEnded = false; state.timerOvertime = false;
-  try { localStorage.setItem("math-solve-timer-limit", String(state.timerLimit)); } catch {}
+  try { (globalThis.StudyStorage ?? localStorage).setItem("math-solve-timer-limit", String(state.timerLimit)); } catch {}
   drawTimer();
 });
 $("#timerToggle").addEventListener("click", event => {
@@ -810,10 +810,10 @@ function writtenPageCount() {
 function submissionClientId(student) {
   const key = "math-solve-client:" + state.docKey + ":" + student;
   let id = "";
-  try { id = localStorage.getItem(key) || ""; } catch {}
+  try { id = (globalThis.StudyStorage ?? localStorage).getItem(key) || ""; } catch {}
   if (!/^[a-zA-Z0-9-]{20,80}$/.test(id)) {
     id = crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(20)), x => x.toString(16).padStart(2, "0")).join("");
-    try { localStorage.setItem(key, id); } catch {}
+    try { (globalThis.StudyStorage ?? localStorage).setItem(key, id); } catch {}
   }
   return id;
 }
@@ -825,7 +825,7 @@ function openSubmission() {
   $("#submissionStatus").textContent = "";
   $("#submissionStatus").className = "dialog-status";
   form.querySelector('button[type="submit"]').disabled = false;
-  try { form.student.value = localStorage.getItem("math-solve-student") || ""; } catch {}
+  try { form.student.value = (globalThis.StudyStorage ?? localStorage).getItem("math-solve-student") || ""; } catch {}
   $("#submissionSummary").textContent = state.item.title + " · " + state.subjectSet.subject + " · 필기 " + count + "쪽 · 풀이 " + timerText(elapsedNow());
   if (!dialog.open) dialog.showModal();
 }
@@ -848,7 +848,7 @@ $("#submissionForm").addEventListener("submit", async event => {
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "제출하지 못했습니다.");
-    try { localStorage.setItem("math-solve-student", student); } catch {}
+    try { (globalThis.StudyStorage ?? localStorage).setItem("math-solve-student", student); } catch {}
     status.textContent = result.updated ? "기존 제출본을 최신 풀이로 바꿨습니다." : "선생님께 풀이를 제출했습니다.";
     status.className = "dialog-status success";
     $("#submissionDialog").classList.add("submitted");
@@ -873,7 +873,7 @@ window.addEventListener("resize", () => {
   resizeTimer = setTimeout(() => renderPage().catch(showRenderError), 180);
 });
 document.addEventListener("visibilitychange", () => { if (document.hidden && state.docKey) persistNotes(); });
-window.addEventListener("pagehide", () => { if (state.docKey) persistNotes(); });
+for (const event of ["pagehide", "shared-study-flush"]) { window.addEventListener(event, () => { if (state.docKey) persistNotes(); }); }
 
 updateEditButtons();
 start().catch(error => {

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>공용 컴퓨터에서 학습 | 수학을 보다</title>
+  <link rel="stylesheet" href="assets/vendor/fonts/pretendard.css">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/shared-study.css">
+  <script defer src="assets/study-state.js"></script>
+  <script defer src="assets/study-draft.js"></script>
+  <script defer src="assets/shared-study-file.js"></script>
+  <script defer src="assets/shared-study.js"></script>
+</head>
+<body class="shared-study">
+  <header class="shared-header">
+    <div class="shared-brand">
+      <span class="brand">수학을 보다</span>
+      <span>공용 PC</span>
+    </div>
+    <div class="shared-session-actions" hidden>
+      <button class="btn btn-secondary" type="button" id="sharedEnd">학습 끝내기</button>
+    </div>
+  </header>
+  <main class="shared-shell" id="sharedShell">
+    <section id="sharedEntry" class="shared-entry">
+      <h1>공용 컴퓨터에서 학습</h1>
+      <p>이 창에서 풀이와 오답을 확인할 수 있어요. 다음에 이어 풀려면 끝내기 전에 내 학습 파일을 저장하세요.</p>
+      <div class="shared-entry-actions">
+        <button class="btn btn-primary" type="button" id="sharedStart">새 학습 시작</button>
+        <button class="btn btn-secondary" type="button" id="sharedOpen">이어서 하기</button>
+      </div>
+      <p class="shared-note">10분 동안 활동이 없으면 화면을 비우고 학습을 끝냅니다.</p>
+      <p id="sharedStatus" class="shared-note" role="status"></p>
+    </section>
+    <div class="shared-run" id="sharedRun" hidden></div>
+  </main>
+  <dialog class="shared-dialog" id="sharedOpenDialog" aria-labelledby="sharedOpenTitle">
+    <form id="sharedOpenForm">
+      <h2 id="sharedOpenTitle">내 학습 파일 열기</h2>
+      <label>학습 파일 <input type="file" name="file" accept=".mathstudy" required></label>
+      <label>파일 암호 <input type="password" name="password" maxlength="128" autocomplete="off" required></label>
+      <p class="shared-error" role="alert"></p>
+      <div class="shared-entry-actions">
+        <button class="btn btn-primary" type="submit">학습 파일 열기</button>
+        <button class="btn btn-secondary" type="button" data-close>취소</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog class="shared-dialog" id="sharedEndDialog" aria-labelledby="sharedEndTitle">
+    <form id="sharedSaveForm">
+      <h2 id="sharedEndTitle">학습 끝내기</h2>
+      <p>이어서 풀고 싶다면 암호화된 파일을 내 기기나 USB에 보관하세요.</p>
+      <div id="sharedSaveFields">
+        <label>파일 암호 <input type="password" name="password" minlength="12" maxlength="128" autocomplete="off" required></label>
+        <label>파일 암호 확인 <input type="password" name="confirmPassword" minlength="12" maxlength="128" autocomplete="off" required></label>
+        <p class="shared-note">추측하기 어려운 문구를 12자 이상 입력하세요. 파일을 열 때 같은 암호가 필요합니다.</p>
+        <button class="btn btn-primary" type="submit">암호화 파일 내려받기</button>
+      </div>
+      <p class="shared-error" role="alert"></p>
+      <p id="sharedSaved" role="status" hidden>파일을 저장한 것을 확인한 뒤 학습을 끝내세요.</p>
+      <div class="shared-entry-actions">
+        <button class="btn btn-secondary" id="sharedDiscard" type="button">저장 없이 끝내기</button>
+        <button class="btn btn-secondary" type="button" data-close>학습으로 돌아가기</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

@@ -3,7 +3,7 @@
   const key="math-home-profile-v1";
   function read(grade,track){
     if(window.StudyDevice?.canUseLocal()===false)return null;
-    try{const result=JSON.parse(localStorage.getItem(key)||"{}").diagnostics?.[track];return result?.grade===String(grade)&&Number.isFinite(Date.parse(result.completedAt))&&Array.isArray(result.answers)&&result.answers.length===5&&result.answers.every(row=>row&&window.TODAY_CONCEPTS[row.concept]&&typeof row.correct==='boolean'&&typeof row.skipped==='boolean')?result:null}catch{return null}
+    try{const result=JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(key)||"{}").diagnostics?.[track];return result?.grade===String(grade)&&Number.isFinite(Date.parse(result.completedAt))&&Array.isArray(result.answers)&&result.answers.length===5&&result.answers.every(row=>row&&window.TODAY_CONCEPTS[row.concept]&&typeof row.correct==='boolean'&&typeof row.skipped==='boolean')?result:null}catch{return null}
   }
   function select(track){
     const pool=window.SIMILAR_QUESTIONS[track].filter(q=>q.difficulty!=="challenge"),picked=[];
@@ -16,10 +16,10 @@
   }
   function save(grade,track,answers){
     if(window.StudyDevice?.canUseLocal()===false)throw new Error("기기 기록을 확인한 뒤 진단 결과를 저장해 주세요.");
-    const previous=JSON.parse(localStorage.getItem(key)||"null")||{},updatedAt=new Date().toISOString();
+    const previous=JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(key)||"null")||{},updatedAt=new Date().toISOString();
     if(!window.TODAY_TRACKS[track]?.grades.includes(String(grade))||answers.length!==5||!answers.every(row=>row&&window.TODAY_CONCEPTS[row.concept]&&typeof row.correct==='boolean'))throw new Error('진단 결과를 확인해 주세요.');
     const profile={name:'',...previous,grade:String(grade),track,updatedAt,diagnostics:{...previous.diagnostics,[track]:{grade:String(grade),completedAt:updatedAt,answers:answers.map(({concept,correct,skipped})=>({concept,correct,skipped:Boolean(skipped)}))}}};
-    localStorage.setItem(key,JSON.stringify(profile));
+    (globalThis.StudyStorage ?? localStorage).setItem(key,JSON.stringify(profile));
     return profile.diagnostics[track];
   }
   function weak(grade,track,stats){
@@ -28,11 +28,11 @@
   }
   function recommendation(grade,track){
     if(window.StudyDevice?.canUseLocal()===false)return null;
-    try{return window.DiagnosticAnalysis.summary(JSON.parse(localStorage.getItem(key)||'null'),Date.now(),window.WrongNotes.stats(),window.WrongNotes.all()).find(row=>row.grade===String(grade)&&row.track===track)?.recommendation||null}catch{return null}
+    try{return window.DiagnosticAnalysis.summary(JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(key)||'null'),Date.now(),window.WrongNotes.stats(),window.WrongNotes.all()).find(row=>row.grade===String(grade)&&row.track===track)?.recommendation||null}catch{return null}
   }
   function weeklyPlan(grade,track){
     if(window.StudyDevice?.canUseLocal()===false)return null;
-    try{const diagnostics=window.DiagnosticAnalysis.summary(JSON.parse(localStorage.getItem(key)||'null'),Date.now(),window.WrongNotes.stats(),window.WrongNotes.all());return window.DiagnosticAnalysis.weeklyPlan({grade,track,diagnostics,notes:window.WrongNotes.all()})}catch{return null}
+    try{const diagnostics=window.DiagnosticAnalysis.summary(JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(key)||'null'),Date.now(),window.WrongNotes.stats(),window.WrongNotes.all());return window.DiagnosticAnalysis.weeklyPlan({grade,track,diagnostics,notes:window.WrongNotes.all()})}catch{return null}
   }
   window.LearningDiagnostic={read,select,save,weak,recommendation,weeklyPlan};
 })();

@@ -4,9 +4,9 @@
   const apiUrl = "/api/math-escape";
   const roomNames = ["복도의 자물쇠", "수학 준비실", "마지막 교실"];
   const roomStories = ["첫 단서를 풀면 보너스 단서가 열립니다.", "흩어진 식을 연결해 다음 문을 여세요.", "마지막 두 단서가 종이 울리기 전에 기다립니다."];
-  const playerKey = localStorage.getItem("mathEscapePlayer") || (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}-${Math.random()}`);
-  localStorage.setItem("mathEscapePlayer", playerKey);
-  let run = null, currentQuestion = null, timerId = null, teacherPassword = sessionStorage.getItem("mathEscapeTeacher") || "";
+  const playerKey = (globalThis.StudyStorage ?? localStorage).getItem("mathEscapePlayer") || (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}-${Math.random()}`);
+  (globalThis.StudyStorage ?? localStorage).setItem("mathEscapePlayer", playerKey);
+  let run = null, currentQuestion = null, timerId = null, teacherPassword = (globalThis.StudyStorage ?? sessionStorage).getItem("mathEscapeTeacher") || "";
   let strokes = [], redo = [], drawing = false, activeStroke = null, tool = "pen", inkRevision = 0;
   const canvas = $("#scratchCanvas"), ctx = canvas.getContext("2d");
 
@@ -43,7 +43,7 @@
     }
     try {
       const data = await call("start", { playerKey, student: values.student, code: roomCode(values.roomCode), course: values.course, difficulty: values.difficulty });
-      run = data.run; localStorage.setItem("mathEscapeRun", run.id); renderGame();
+      run = data.run; (globalThis.StudyStorage ?? localStorage).setItem("mathEscapeRun", run.id); renderGame();
     } catch (error) { errorMessage(error); }
   });
   $("#studentForm [name=roomCode]").addEventListener("input", event => {
@@ -77,7 +77,7 @@
   $("#teacherForm").addEventListener("submit", async event => {
     event.preventDefault(); const values = Object.fromEntries(new FormData(event.currentTarget));
     try {
-      const data = await call("createRoom", values); teacherPassword = values.password; sessionStorage.setItem("mathEscapeTeacher", teacherPassword);
+      const data = await call("createRoom", values); teacherPassword = values.password; (globalThis.StudyStorage ?? sessionStorage).setItem("mathEscapeTeacher", teacherPassword);
       const box = $("#roomResult"); box.hidden = false; box.replaceChildren();
       const intro = document.createElement("div"); intro.textContent = `${data.room.course} · ${difficultyLabel(data.room.difficulty)}`;
       const code = document.createElement("div"); code.className = "room-code"; code.textContent = data.room.code;
@@ -102,7 +102,7 @@
     } catch (error) { errorMessage(error); }
   });
   $("#refreshRooms").addEventListener("click", () => {
-    teacherPassword = $("#teacherForm [name=password]").value; if (teacherPassword) sessionStorage.setItem("mathEscapeTeacher", teacherPassword); loadRooms();
+    teacherPassword = $("#teacherForm [name=password]").value; if (teacherPassword) (globalThis.StudyStorage ?? sessionStorage).setItem("mathEscapeTeacher", teacherPassword); loadRooms();
   });
   function difficultyLabel(value) { return ({ basic:"기본", standard:"표준", advanced:"도전" })[value] || value; }
   async function loadRooms(selected) {
@@ -174,7 +174,7 @@
   }
   async function advance() { try { const data = await call("next", { id: run.id, playerKey }); run = data.run; renderGame(); } catch (error) { errorMessage(error); } }
   function renderFinish() {
-    clearInterval(timerId); show("#finish"); localStorage.removeItem("mathEscapeRun");
+    clearInterval(timerId); show("#finish"); (globalThis.StudyStorage ?? localStorage).removeItem("mathEscapeRun");
     $("#finishTag").textContent = run.escaped ? "탈출 완료" : "시간 종료";
     $("#finishTitle").textContent = run.escaped ? "탈출 성공!" : "도전 종료";
     // 결과 숫자 셋 — 미니게임 결과 카드(정답·풀이 시간·최고 기록)와 같은 자리
@@ -220,10 +220,10 @@
   $("#undoInk").addEventListener("click", () => { if (strokes.length) redo.push(strokes.pop()); saveDraft(); redraw(); });
   $("#redoInk").addEventListener("click", () => { if (redo.length) strokes.push(redo.pop()); saveDraft(); redraw(); });
   $("#clearInk").addEventListener("click", () => { if (strokes.length) { redo = strokes; strokes = []; saveDraft(); redraw(); } });
-  function saveDraft() { if (draftKey()) sessionStorage.setItem(draftKey(), JSON.stringify(strokes)); }
-  function loadDraft() { try { strokes = JSON.parse(sessionStorage.getItem(draftKey()) || "[]"); if (!Array.isArray(strokes)) strokes = []; } catch { strokes = []; } redo = []; }
+  function saveDraft() { if (draftKey()) (globalThis.StudyStorage ?? sessionStorage).setItem(draftKey(), JSON.stringify(strokes)); }
+  function loadDraft() { try { strokes = JSON.parse((globalThis.StudyStorage ?? sessionStorage).getItem(draftKey()) || "[]"); if (!Array.isArray(strokes)) strokes = []; } catch { strokes = []; } redo = []; }
   window.addEventListener("resize", () => { if ($("#questionDialog").open) resizeCanvas(); });
 
-  async function resume() { const id = localStorage.getItem("mathEscapeRun"); if (!id) return; try { const data = await call("resume", { id, playerKey }); run = data.run; renderGame(); } catch { localStorage.removeItem("mathEscapeRun"); } }
+  async function resume() { const id = (globalThis.StudyStorage ?? localStorage).getItem("mathEscapeRun"); if (!id) return; try { const data = await call("resume", { id, playerKey }); run = data.run; renderGame(); } catch { (globalThis.StudyStorage ?? localStorage).removeItem("mathEscapeRun"); } }
   resume();
 })();

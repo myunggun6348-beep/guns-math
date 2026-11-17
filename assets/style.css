@@ -2374,6 +2374,24 @@ html .page-head p { margin: 3px 0 0; max-width: 46em; color: #111; font-size: 14
 .nav-grouped .nav-right { justify-self: end; }
 .nav-grouped .nav-right > button { min-height: 44px; }
 .site-nav { display: flex; gap: 4px; }
+.home-shared-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding-inline: 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  font-size: 13px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.home-shared-link:hover { background: var(--surface-soft); }
+.shared-study-frame .home-shared-link,
+.shared-study-frame #saveImageButton,
+.shared-study-frame [data-download],
+.shared-study-frame .wrong-work [data-share],
+.shared-study-frame .escape-teacher-line { display: none; }
 .site-nav details { position: relative; min-width: 0; }
 .site-nav summary, .site-nav a {
   display: flex;

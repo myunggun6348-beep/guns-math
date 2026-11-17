@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <!-- 어두운 화면 기억 — 여기서 바로(defer 없이) 불러야 화면이 밝게 그려졌다가
      검게 바뀌는 깜빡임이 없습니다. 자세한 건 assets/theme.js 참고 -->
-<script src="assets/theme.js"></script>
+<script src="assets/study-storage.js"></script><script src="assets/theme.js"></script>
 <script src="assets/site-nav.js" defer></script>
 <title>수학을 보다 | 나의 수학 학습 · 오답 · 복습</title>
 <meta name="description" content="오늘의 5문제, 오답 복습, 학습 진단과 고등학교 수학 자료를 누구나 이용할 수 있습니다. 학습 기록은 이 브라우저에 저장됩니다." />
@@ -76,6 +76,7 @@
       </details>
     </nav>
     <div class="nav-right">
+      <a class="home-shared-link" href="shared.html">공용 PC</a>
       <!-- ✏️ 이 사이트를 더 밝거나 어둡게 보고 싶어질 때 누르는 단추입니다.
            지금 상태가 아니라 눌렀을 때 어떻게 바뀌는지를 보여줍니다. -->
       <button type="button" id="themeToggle" class="theme-toggle" aria-pressed="false" aria-label="어두운 화면으로 보기">

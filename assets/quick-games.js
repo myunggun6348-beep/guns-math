@@ -127,14 +127,14 @@
   }
   function esc(value){return String(value).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
   function norm(value){return String(value).trim().toLowerCase().replace(/[−–—]/g,"-").replace(/\s+/g,"").replace(/,/g,"")}
-  function best(){return Number(localStorage.getItem("quick-game-best-"+key)||0)}
+  function best(){return Number((globalThis.StudyStorage ?? localStorage).getItem("quick-game-best-"+key)||0)}
   function hero(){
     /* 다른 쪽과 같은 머리 띠. 예전에는 큰 라임 카드에 가늘고 큰 제목(58px)이라
        수학 탈출·나머지 사이트와 다른 화면처럼 보였습니다. 게임 쪽이라 코랄입니다. */
     return '<header class="page-head g-play"><span class="page-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h.01M15 9h.01M9 15h.01M15 15h.01"/></svg></span><div class="page-head-text"><h1>'+game.title+'</h1><p>'+game.kicker+' — '+game.desc+'</p></div></header>'
   }
   function intro(){
-    app.innerHTML=hero()+'<div class="start-panel"><h2>준비되면 시작하세요</h2><div class="quick-meta"><span>4분</span><span>매회 5문제</span><span>문제은행 '+game.questions.length+'</span><span>펜 풀이</span><span>즉시 해설</span><span>최고 '+best()+'점</span></div><p>문제마다 답을 한 번 제출할 수 있습니다. 빠르고 정확하게 풀수록 점수가 올라갑니다.</p><ul class="start-list"><li>각 문제에서 태블릿 펜으로 바로 계산</li><li>정답 160점 + 연속 정답 보너스</li><li>오답도 풀이 흔적과 함께 해설 확인</li><li>기록은 이 기기에 자동 저장</li></ul><button class="quick-btn" id="startBtn">게임 시작</button></div>';
+    app.innerHTML=hero()+'<div class="start-panel"><h2>준비되면 시작하세요</h2><div class="quick-meta"><span>4분</span><span>매회 5문제</span><span>문제은행 '+game.questions.length+'</span><span>펜 풀이</span><span>즉시 해설</span><span>최고 '+best()+'점</span></div><p>문제마다 답을 한 번 제출할 수 있습니다. 빠르고 정확하게 풀수록 점수가 올라갑니다.</p><ul class="start-list"><li>각 문제에서 태블릿 펜으로 바로 계산</li><li>정답 160점 + 연속 정답 보너스</li><li>오답도 풀이 흔적과 함께 해설 확인</li><li>'+(window.StudyStorage?'기록은 현재 학습에 임시 저장':'기록은 이 기기에 자동 저장')+'</li></ul><button class="quick-btn" id="startBtn">게임 시작</button></div>';
     document.getElementById("startBtn").addEventListener("click",start);
   }
   function start(){
@@ -193,7 +193,7 @@
   function finish(){
     clearInterval(timerId);window.GameScratch.destroy();
     const previous=best();const finalScore=score+Math.floor(timeLeft/4);
-    if(finalScore>previous)localStorage.setItem("quick-game-best-"+key,String(finalScore));
+    if(finalScore>previous)(globalThis.StudyStorage ?? localStorage).setItem("quick-game-best-"+key,String(finalScore));
     const elapsed=Math.min(240,Math.max(0,Math.floor((Date.now()-startedAt)/1000)));
     let message=correct===5?"완벽합니다. 속도와 정확성을 모두 잡았습니다.":correct>=3?"핵심 개념을 잘 연결했습니다. 틀린 문제의 해설을 떠올리며 한 번 더 도전해 보세요.":"해설에서 판단 기준을 확인했습니다. 다시 풀면 훨씬 빠르게 보일 겁니다.";
     app.innerHTML=hero()+'<section class="result-panel"><span class="question-tag">게임 완료</span><h2>'+message+'</h2><div class="result-score">'+finalScore+'점</div><div class="result-grid"><div class="result-stat"><b>'+correct+'/5</b><span>정답</span></div><div class="result-stat"><b>'+formatTime(elapsed)+'</b><span>풀이 시간</span></div><div class="result-stat"><b>'+best()+'</b><span>최고 기록</span></div></div><div class="result-actions"><button class="quick-btn" id="retryBtn">다시 도전</button><a class="quick-btn secondary" href="games.html">다른 게임</a><a class="quick-btn secondary" href="wrong-notes.html">오답노트</a></div></section>';

@@ -9,7 +9,7 @@
    ========================================================= */
 (function () {
   try {
-    if (localStorage.getItem("theme") === "dark") {
+    if ((globalThis.StudyStorage ?? localStorage).getItem("theme") === "dark") {
       document.documentElement.classList.add("theme-dark");
     }
   } catch (e) {}
@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
   btn.addEventListener("click", function () {
     root.classList.toggle("theme-dark");
     try {
-      localStorage.setItem("theme", root.classList.contains("theme-dark") ? "dark" : "light");
+      (globalThis.StudyStorage ?? localStorage).setItem("theme", root.classList.contains("theme-dark") ? "dark" : "light");
     } catch (e) {}
     표시();
   });

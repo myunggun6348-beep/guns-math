@@ -6,7 +6,7 @@
   const welcome=document.getElementById("quick-start");
   const shortcuts=document.getElementById("more");
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
-  const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}};
+  const read=(key,fallback)=>{try{return JSON.parse((globalThis.StudyStorage ?? localStorage).getItem(key)||JSON.stringify(fallback))}catch{return fallback}};
   const valid=(grade,track)=>["1","2","3"].includes(String(grade))&&tracks[track]?.grades.includes(String(grade));
   const records=()=>{const value=read("today-study-records",[]);return Array.isArray(value)?value:[]};
   const bankQuestions=new Map();
@@ -43,8 +43,8 @@
   let profile;
   function save(grade,track){
     const next={...profile,grade,track,updatedAt:new Date().toISOString()};
-    localStorage.setItem(KEY,JSON.stringify(next));
-    localStorage.setItem("today-study-pref",JSON.stringify({grade,track,updatedAt:next.updatedAt}));
+    (globalThis.StudyStorage ?? localStorage).setItem(KEY,JSON.stringify(next));
+    (globalThis.StudyStorage ?? localStorage).setItem("today-study-pref",JSON.stringify({grade,track,updatedAt:next.updatedAt}));
     profile=next;render();
   }
   const dateKey=date=>new Date(date.getTime()+9*3600000).toISOString().slice(0,10);
@@ -107,7 +107,7 @@
     const action='<a class="home-main-action" href="'+esc(actionHref)+'"><span>'+(stage==='before'?'학습 전':'학습 중')+'</span><strong>'+actionTitle+'</strong><small>'+actionDescription+'</small>'+learning+'<b>'+(pending?'이어서 풀기':stage==='before'?'시작하기':'다음 활동')+' →</b></a>';
     const homeJourney=pending&&(pending.grade!==profile.grade||pending.track!==profile.track)?null:journey;
     const primary=homeJourney?window.StudyJourney.view(homeJourney,true,{stage,action}):'<section class="home-learning-stage" data-home-stage="'+stage+'">'+action+'</section>';
-    root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">이 브라우저에 저장</span><h2>오늘의 수학 공부</h2><p>고'+profile.grade+' 과정 · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학습 설정</button></div>'+
+    root.hidden=false;root.innerHTML='<div class="home-personal-shell"><div class="home-personal-head"><div><span class="eyebrow">'+(window.StudyStorage?'공용 PC · 임시 저장':'이 브라우저에 저장')+'</span><h2>오늘의 수학 공부</h2><p>고'+profile.grade+' 과정 · '+esc(track.title)+'</p></div><button type="button" id="homeProfileEdit">학습 설정</button></div>'+
       '<div id="homeJourney">'+primary+'</div>'+
       '<details class="home-learning-records" id="homeLearningRecords"><summary>학습 기록 보기</summary>'+
       '<div class="home-study-summary" aria-label="나의 학습 기록"><span>최근 평균 <b>'+(recent.length?average+'%':'기록 전')+'</b></span><span>연속 학습 <b>'+run+'일</b></span><span>복습할 오답 <b>'+wrong.active+'문제</b></span></div>'+
